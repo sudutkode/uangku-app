@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "UangKu",
-    "slug": "uangku",
+    "slug": "UangKu",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -50,6 +50,7 @@
       "eas": {
         "projectId": "a4fdd8e3-7d73-4c21-882d-f5f96a0a23ae"
       }
-    }
+    },
+    "owner": "tondikiandika"
   }
 }
