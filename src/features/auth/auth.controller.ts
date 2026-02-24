@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { successResponse } from '../../common/utils/response.util';
+import { GoogleSignInDto } from './dto/google-sign-in.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -22,6 +23,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async signIn(@Body() dto: SignInDto) {
     const result = await this.authService.signIn(dto);
+    return successResponse(
+      result,
+      'User signed in successfully',
+      HttpStatus.OK,
+    );
+  }
+
+  @Post('google-sign-in')
+  @HttpCode(HttpStatus.OK)
+  async googleSignIn(@Body() dto: GoogleSignInDto) {
+    const result = await this.authService.googleSignIn(dto);
     return successResponse(
       result,
       'User signed in successfully',

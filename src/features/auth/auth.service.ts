@@ -15,6 +15,8 @@ import { SignInDto } from './dto/sign-in.dto';
 import { JwtPayload } from './types/jwt-payload.type';
 import { JwtService } from '@nestjs/jwt';
 import TRANSACTION_CATEGORIES from '../../common/constants/transaction-categories.constant';
+import { GoogleSignInDto } from './dto/google-sign-in.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -70,7 +72,7 @@ export class AuthService {
       if (error instanceof BadRequestException) throw error;
 
       throw new InternalServerErrorException(
-        'Something went wrong during sign-up',
+        'Something went wrong during sign up',
       );
     } finally {
       await queryRunner.release();
@@ -99,8 +101,74 @@ export class AuthService {
       if (error instanceof UnauthorizedException) throw error;
 
       throw new InternalServerErrorException(
-        'Something went wrong during sign-in',
+        'Something went wrong during sign in',
       );
+    }
+  }
+
+  async googleSignIn(
+    dto: GoogleSignInDto,
+  ): Promise<{ user: User; accessToken: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      let user = await queryRunner.manager.findOne(User, {
+        where: { email: dto.email },
+      });
+
+      if (!user) {
+        if (!dto.name) {
+          throw new BadRequestException(
+            'Name is required for new users signing in with Google',
+          );
+        }
+        const randomPassword = randomBytes(32).toString('hex');
+        const hashed = await hashPassword(randomPassword);
+
+        const newUser = queryRunner.manager.create(User, {
+          email: dto.email,
+          password: hashed,
+          name: dto.name,
+          avatar: dto.avatar,
+        });
+        user = await queryRunner.manager.save(User, newUser);
+
+        const wallet = queryRunner.manager.create(Wallet, {
+          name: 'Cash',
+          user: user,
+        });
+        await queryRunner.manager.save(Wallet, wallet);
+
+        const categories = TRANSACTION_CATEGORIES.map((c) =>
+          queryRunner.manager.create(TransactionCategory, {
+            ...c,
+            user: user,
+          }),
+        );
+        await queryRunner.manager.save(TransactionCategory, categories);
+
+        await queryRunner.commitTransaction();
+      } else {
+        await queryRunner.commitTransaction();
+      }
+
+      const payload: JwtPayload = { id: user.id, email: user.email };
+      const accessToken = await this.jwtService.signAsync(payload);
+
+      if (user.password) delete user.password;
+
+      return {
+        user,
+        accessToken,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Google Sign-In failed');
+    } finally {
+      await queryRunner.release();
     }
   }
 }
