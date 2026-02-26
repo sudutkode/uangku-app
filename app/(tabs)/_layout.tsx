@@ -1,51 +1,39 @@
-import {Tabs} from "expo-router";
+import { Tabs } from "expo-router";
 import React from "react";
+import { useTheme } from "react-native-paper";
 
-import {HapticTab} from "@/components/haptic-tab";
-// import { IconSymbol } from '@/components/ui/icon-symbol';
-import {Icon} from "@/components/ui";
-import {Colors} from "@/constants/theme";
-import {useColorScheme} from "@/hooks/use-color-scheme";
+import { HapticTab } from "@/components/haptic-tab";
+import { Icon } from "@/components/ui";
 
 const tabs = [
-  {name: "index", title: "Transactions", icon: "money-bill-transfer"},
-  {name: "wallets", title: "Wallets", icon: "wallet"},
-  {name: "report", title: "Report", icon: "chart-pie"},
-  {name: "profile", title: "Profile", icon: "user"},
+  { name: "index", title: "Transactions", icon: "money-bill-transfer" },
+  { name: "wallets", title: "Wallets", icon: "wallet" },
+  { name: "report", title: "Report", icon: "chart-pie" },
+  { name: "profile", title: "Profile", icon: "user" },
 ];
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const theme = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.outline,
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+           backgroundColor: theme.colors.surface,
+        }
       }}
     >
-      {/* <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      /> */}
-      {tabs.map(({name, title, icon}) => (
+      {tabs.map(({ name, title, icon }) => (
         <Tabs.Screen
           key={name}
           name={name}
           options={{
             title: title,
-            tabBarIcon: ({color}) => (
+            tabBarIcon: ({ color }) => (
               <Icon size={20} name={icon} color={color} />
             ),
           }}

@@ -1,6 +1,6 @@
-import {api} from "@/lib/axios";
-import {AxiosError, AxiosRequestConfig} from "axios";
-import {useCallback, useEffect, useRef, useState} from "react";
+import { api } from "@/lib/axios";
+import { AxiosError, AxiosRequestConfig } from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type MutationMethod = "post" | "put" | "patch" | "delete";
 
@@ -56,6 +56,7 @@ export const useMutation = <T, P>(
         setData(response.data);
         return response.data;
       } catch (err) {
+        console.log("Error in useMutation:", err);
         const axiosError = err as AxiosError;
         if (axiosError.code !== "ERR_CANCELED") {
           setError(axiosError);

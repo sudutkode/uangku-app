@@ -1,112 +1,411 @@
-import {StyleSheet, View} from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import {ThemedText} from "@/components/themed-text";
-import {useAuthStore} from "@/store/auth-store";
+import { Icon, TransactionBadge } from "@/components/ui";
+import { useAuthStore } from "@/store/auth-store";
+import { formatDateLabel } from "@/utils/formatter-utils";
+import { List, Text, useTheme } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const dummyData = {
+  "statusCode": 200,
+  "success": true,
+  "message": "Transactions fetched successfully",
+  "data": {
+    "data": [
+      {
+        "id": 14,
+        "amount": 75000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:55:00.829Z",
+        "updatedAt": "2026-02-17T01:55:00.829Z",
+        "transactionType": {
+          "id": 1,
+          "name": "Income"
+        },
+        "transactionCategory": {
+          "id": 112,
+          "name": "Investments",
+          "iconName": "chart-line"
+        },
+        "transactionWallets": [
+          {
+            "id": 17,
+            "isIncoming": true,
+            "amount": 75000,
+            "wallet": {
+              "id": 7,
+              "name": "BCA",
+              "balance": 13797500,
+              "createdAt": "2026-02-17T01:43:40.563Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "amount": 20000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:52:53.553Z",
+        "updatedAt": "2026-02-17T01:52:53.553Z",
+        "transactionType": {
+          "id": 2,
+          "name": "Expense"
+        },
+        "transactionCategory": {
+          "id": 88,
+          "name": "Balance Correction",
+          "iconName": "scale-unbalanced"
+        },
+        "transactionWallets": [
+          {
+            "id": 16,
+            "isIncoming": false,
+            "amount": 20000,
+            "wallet": {
+              "id": 7,
+              "name": "BCA",
+              "balance": 13797500,
+              "createdAt": "2026-02-17T01:43:40.563Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "amount": 25000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:51:59.328Z",
+        "updatedAt": "2026-02-17T01:51:59.328Z",
+        "transactionType": {
+          "id": 2,
+          "name": "Expense"
+        },
+        "transactionCategory": {
+          "id": 106,
+          "name": "Education",
+          "iconName": "book-open"
+        },
+        "transactionWallets": [
+          {
+            "id": 15,
+            "isIncoming": false,
+            "amount": 25000,
+            "wallet": {
+              "id": 8,
+              "name": "Seabank",
+              "balance": 500000,
+              "createdAt": "2026-02-17T01:49:41.378Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "amount": 50000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:51:14.538Z",
+        "updatedAt": "2026-02-17T01:51:14.538Z",
+        "transactionType": {
+          "id": 2,
+          "name": "Expense"
+        },
+        "transactionCategory": {
+          "id": 118,
+          "name": "Health",
+          "iconName": "heart-pulse"
+        },
+        "transactionWallets": [
+          {
+            "id": 14,
+            "isIncoming": false,
+            "amount": 50000,
+            "wallet": {
+              "id": 8,
+              "name": "Seabank",
+              "balance": 500000,
+              "createdAt": "2026-02-17T01:49:41.378Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "amount": 25000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:50:52.953Z",
+        "updatedAt": "2026-02-17T01:50:52.953Z",
+        "transactionType": {
+          "id": 2,
+          "name": "Expense"
+        },
+        "transactionCategory": {
+          "id": 102,
+          "name": "Sports",
+          "iconName": "dumbbell"
+        },
+        "transactionWallets": [
+          {
+            "id": 13,
+            "isIncoming": false,
+            "amount": 25000,
+            "wallet": {
+              "id": 8,
+              "name": "Seabank",
+              "balance": 500000,
+              "createdAt": "2026-02-17T01:49:41.378Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "amount": 500000,
+        "adminFee": 2500,
+        "createdAt": "2026-02-17T01:50:21.381Z",
+        "updatedAt": "2026-02-17T01:50:21.381Z",
+        "transactionType": {
+          "id": 3,
+          "name": "Transfer"
+        },
+        "transactionCategory": {
+          "id": 115,
+          "name": "Bank Transfer",
+          "iconName": "building-columns"
+        },
+        "transactionWallets": [
+          {
+            "id": 12,
+            "isIncoming": true,
+            "amount": 500000,
+            "wallet": {
+              "id": 8,
+              "name": "Seabank",
+              "balance": 500000,
+              "createdAt": "2026-02-17T01:49:41.378Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          },
+          {
+            "id": 11,
+            "isIncoming": false,
+            "amount": 502500,
+            "wallet": {
+              "id": 7,
+              "name": "BCA",
+              "balance": 13797500,
+              "createdAt": "2026-02-17T01:43:40.563Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "amount": 25000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:47:37.212Z",
+        "updatedAt": "2026-02-17T01:47:37.212Z",
+        "transactionType": {
+          "id": 2,
+          "name": "Expense"
+        },
+        "transactionCategory": {
+          "id": 120,
+          "name": "Transportation",
+          "iconName": "bus"
+        },
+        "transactionWallets": [
+          {
+            "id": 10,
+            "isIncoming": false,
+            "amount": 25000,
+            "wallet": {
+              "id": 6,
+              "name": "Cash",
+              "balance": 75000,
+              "createdAt": "2026-02-17T01:42:27.773Z",
+              "updatedAt": "2026-02-17T01:47:37.212Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "amount": 100000,
+        "adminFee": 2500,
+        "createdAt": "2026-02-17T01:46:05.624Z",
+        "updatedAt": "2026-02-17T01:46:05.624Z",
+        "transactionType": {
+          "id": 3,
+          "name": "Transfer"
+        },
+        "transactionCategory": {
+          "id": 114,
+          "name": "Withdrawal",
+          "iconName": "hand-holding-dollar"
+        },
+        "transactionWallets": [
+          {
+            "id": 7,
+            "isIncoming": true,
+            "amount": 100000,
+            "wallet": {
+              "id": 6,
+              "name": "Cash",
+              "balance": 75000,
+              "createdAt": "2026-02-17T01:42:27.773Z",
+              "updatedAt": "2026-02-17T01:47:37.212Z"
+            }
+          },
+          {
+            "id": 6,
+            "isIncoming": false,
+            "amount": 102500,
+            "wallet": {
+              "id": 7,
+              "name": "BCA",
+              "balance": 13797500,
+              "createdAt": "2026-02-17T01:43:40.563Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "amount": 50000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:44:51.364Z",
+        "updatedAt": "2026-02-17T01:44:51.364Z",
+        "transactionType": {
+          "id": 2,
+          "name": "Expense"
+        },
+        "transactionCategory": {
+          "id": 128,
+          "name": "Food",
+          "iconName": "utensils"
+        },
+        "transactionWallets": [
+          {
+            "id": 4,
+            "isIncoming": false,
+            "amount": 50000,
+            "wallet": {
+              "id": 7,
+              "name": "BCA",
+              "balance": 13797500,
+              "createdAt": "2026-02-17T01:43:40.563Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "amount": 14500000,
+        "adminFee": 0,
+        "createdAt": "2026-02-17T01:44:04.563Z",
+        "updatedAt": "2026-02-17T01:44:04.563Z",
+        "transactionType": {
+          "id": 1,
+          "name": "Income"
+        },
+        "transactionCategory": {
+          "id": 129,
+          "name": "Salary",
+          "iconName": "money-bill-wave"
+        },
+        "transactionWallets": [
+          {
+            "id": 3,
+            "isIncoming": true,
+            "amount": 14500000,
+            "wallet": {
+              "id": 7,
+              "name": "BCA",
+              "balance": 13797500,
+              "createdAt": "2026-02-17T01:43:40.563Z",
+              "updatedAt": "2026-02-18T08:29:56.178Z"
+            }
+          }
+        ]
+      }
+    ],
+    "summary": {
+      "income": 14575000,
+      "expense": 200000,
+      "balance": 14375000
+    },
+    "pagination": {
+      "total": 10,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 1
+    }
+  }
+}
+
+const dummyObject = {
+  "id": 14,
+  "amount": 75000,
+  "adminFee": 0,
+  "createdAt": "2026-02-17T01:55:00.829Z",
+  "updatedAt": "2026-02-17T01:55:00.829Z",
+  "transactionType": {
+    "id": 1,
+    "name": "Income"
+  },
+  "transactionCategory": {
+    "id": 112,
+    "name": "Investments",
+    "iconName": "chart-line"
+  },
+  "transactionWallets": [
+    {
+      "id": 17,
+      "isIncoming": true,
+      "amount": 75000,
+      "wallet": {
+        "id": 7,
+        "name": "BCA",
+        "balance": 13797500,
+        "createdAt": "2026-02-17T01:43:40.563Z",
+        "updatedAt": "2026-02-18T08:29:56.178Z"
+      }
+    }
+  ]
+}
 
 export default function HomeScreen() {
-  const {user} = useAuthStore();
+  const { colors } = useTheme();
+  const { user } = useAuthStore();
 
   return (
-    <View style={styles.container}>
-      <ThemedText type="title">Welcome {user?.name}!</ThemedText>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Text>Welcome {user?.name}!</Text>
+      <List.Item
+        title={dummyObject.transactionCategory.name}
+        description={formatDateLabel(dummyObject.createdAt)}
+        left={props => <Icon {...props} name={dummyObject.transactionCategory.iconName} />}
+        right={() => <View style={{ gap: 4, alignItems: "flex-end" }}>
+          <Text style={{ fontSize: 14 }}>{dummyObject.transactionType.name === "Income" ? "+" : "-"}{dummyObject.amount}</Text>
+          <TransactionBadge isIncome={true}>{dummyObject.transactionWallets[0].wallet.name}</TransactionBadge>
+        </View>}
+        descriptionStyle={{ fontSize: 10 }}
+        titleStyle={{ fontSize: 14 }}
+      />
+    </SafeAreaView>
   );
-
-  // return (
-  //   <ParallaxScrollView
-  //     headerBackgroundColor={{light: "#A1CEDC", dark: "#1D3D47"}}
-  //     headerImage={
-  //       <Image
-  //         source={require("@/assets/images/partial-react-logo.png")}
-  //         style={styles.reactLogo}
-  //       />
-  //     }
-  //   >
-  //     <ThemedView style={styles.titleContainer}>
-  //       <ThemedText type="title">Welcome!</ThemedText>
-  //       <HelloWave />
-  //     </ThemedView>
-  //     <ThemedView style={styles.stepContainer}>
-  //       <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-  //       <ThemedText>
-  //         Edit{" "}
-  //         <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-  //         to see changes. Press{" "}
-  //         <ThemedText type="defaultSemiBold">
-  //           {Platform.select({
-  //             ios: "cmd + d",
-  //             android: "cmd + m",
-  //             web: "F12",
-  //           })}
-  //         </ThemedText>{" "}
-  //         to open developer tools.
-  //       </ThemedText>
-  //     </ThemedView>
-  //     <ThemedView style={styles.stepContainer}>
-  //       <Link href="/modal">
-  //         <Link.Trigger>
-  //           <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-  //         </Link.Trigger>
-  //         <Link.Preview />
-  //         <Link.Menu>
-  //           <Link.MenuAction
-  //             title="Action"
-  //             icon="cube"
-  //             onPress={() => alert("Action pressed")}
-  //           />
-  //           <Link.MenuAction
-  //             title="Share"
-  //             icon="square.and.arrow.up"
-  //             onPress={() => alert("Share pressed")}
-  //           />
-  //           <Link.Menu title="More" icon="ellipsis">
-  //             <Link.MenuAction
-  //               title="Delete"
-  //               icon="trash"
-  //               destructive
-  //               onPress={() => alert("Delete pressed")}
-  //             />
-  //           </Link.Menu>
-  //         </Link.Menu>
-  //       </Link>
-
-  //       <ThemedText>
-  //         {`Tap the Explore tab to learn more about what's included in this starter app.`}
-  //       </ThemedText>
-  //     </ThemedView>
-  //     <ThemedView style={styles.stepContainer}>
-  //       <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-  //       <ThemedText>
-  //         {`When you're ready, run `}
-  //         <ThemedText type="defaultSemiBold">
-  //           npm run reset-project
-  //         </ThemedText>{" "}
-  //         to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-  //         directory. This will move the current{" "}
-  //         <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-  //         <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-  //       </ThemedText>
-  //     </ThemedView>
-  //   </ParallaxScrollView>
-  // );
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1, justifyContent: "center", alignItems: "center"},
-  // titleContainer: {
-  //   flexDirection: "row",
-  //   alignItems: "center",
-  //   gap: 8,
-  // },
-  // stepContainer: {
-  //   gap: 8,
-  //   marginBottom: 8,
-  // },
-  // reactLogo: {
-  //   height: 178,
-  //   width: 290,
-  //   bottom: 0,
-  //   left: 0,
-  //   position: "absolute",
-  // },
+  container: {
+    flex: 1, justifyContent: "center", alignItems: "center",
+  },
 });

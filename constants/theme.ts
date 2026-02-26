@@ -3,8 +3,8 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import {Platform} from "react-native";
-import {MD3DarkTheme, MD3LightTheme} from "react-native-paper";
+import { Platform } from "react-native";
+import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 
 const tintColorLight = "#0a7ea4";
 const tintColorDark = "#fff";
@@ -59,7 +59,7 @@ const customColors = {
   // --- Primary ---
   primary: "#4CAF7A",
   onPrimary: "#FFFFFF",
-  primaryContainer: "#92E3A9",
+  primaryContainer: "#e5ffec",
   onPrimaryContainer: "#1B4D2E",
 
   // --- Secondary (Info/Blue) ---

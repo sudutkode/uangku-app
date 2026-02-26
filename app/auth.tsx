@@ -1,19 +1,19 @@
-import {ManageMoney} from "@/components/illustrations";
-import {useMutation} from "@/hooks/axios/use-mutation";
-import {useAuthStore} from "@/store/auth-store";
-import {SigninPayload, SignInResponse} from "@/types";
+import { ManageMoney } from "@/components/illustrations";
+import { useMutation } from "@/hooks/axios/use-mutation";
+import { useAuthStore } from "@/store/auth-store";
+import { SigninPayload, SignInResponse } from "@/types";
 import {
   GoogleSignin,
   SignInResponse as GoogleSignInResponse,
 } from "@react-native-google-signin/google-signin";
-import {View} from "react-native";
-import {Button, Text} from "react-native-paper";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
+import { Button, Text } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AuthScreen() {
-  const {signin} = useAuthStore();
+  const { signin } = useAuthStore();
 
-  const {mutate: mutateSignin, loading: loadingSignin} = useMutation<
+  const { mutate: mutateSignin, loading: loadingSignin } = useMutation<
     SignInResponse,
     SigninPayload
   >("/auth/google-sign-in");
@@ -37,17 +37,12 @@ export default function AuthScreen() {
 
   return (
     <SafeAreaView
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 16,
-      }}
+      style={styles.container}
     >
       <ManageMoney width={260} height={260} />
 
       <View
-        style={{width: "100%", gap: 16, marginTop: 32, alignItems: "center"}}
+        style={{ width: "100%", gap: 16, marginTop: 32, alignItems: "center" }}
       >
         <Text>Welcome to UangKu</Text>
 
@@ -55,8 +50,9 @@ export default function AuthScreen() {
 
         <Button
           mode="contained"
-          style={{width: "100%"}}
+          style={{ width: "100%" }}
           onPress={handleSignIn}
+          loading={isLoading}
           disabled={isLoading}
         >
           Sign In
@@ -65,3 +61,12 @@ export default function AuthScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+})
