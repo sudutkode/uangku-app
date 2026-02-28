@@ -121,11 +121,11 @@ export default function TransactionScreen() {
 
   return (
     <SafeAreaView edges={["left", "right"]} style={styles.container}>
+      <SummaryCard data={data?.summary} />
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
-        ListHeaderComponent={<SummaryCard data={data?.summary} />}
         ItemSeparatorComponent={() => <Divider />}
         refreshControl={
           <RefreshControl
@@ -164,7 +164,6 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 14,
-    fontWeight: "600",
     alignSelf: "flex-start",
   },
 
@@ -193,7 +192,6 @@ const styles = StyleSheet.create({
 
   amount: {
     fontSize: 14,
-    fontWeight: "600",
   },
 
   fee: {

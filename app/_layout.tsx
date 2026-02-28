@@ -1,21 +1,21 @@
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useAuthStore } from "@/store/auth-store";
+import {useColorScheme} from "@/hooks/use-color-scheme";
+import {useAuthStore} from "@/store/auth-store";
 import {
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
-import { PaperProvider, adaptNavigationTheme } from "react-native-paper";
+import {Stack} from "expo-router";
+import {StatusBar} from "expo-status-bar";
+import React, {useEffect} from "react";
+import {PaperProvider, adaptNavigationTheme} from "react-native-paper";
 import {
   SafeAreaProvider,
   initialWindowMetrics,
 } from "react-native-safe-area-context";
 
-import { darkTheme, lightTheme } from "@/constants/theme";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {darkTheme, lightTheme} from "@/constants/theme";
+import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import "react-native-reanimated";
 
 // adapt navigation theme to match react-native-paper theme
@@ -44,7 +44,6 @@ export default function RootLayout() {
       <PaperProvider theme={paperTheme}>
         <ThemeProvider value={navigationTheme}>
           <Stack screenOptions={{headerShown: false}}>
-            {/* Grouping Protected Routes */}
             <Stack.Protected guard={!user}>
               <Stack.Screen name="auth" />
             </Stack.Protected>

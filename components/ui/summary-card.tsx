@@ -1,32 +1,40 @@
 import {TransactionSummary} from "@/types";
 import {formatIdr} from "@/utils/common-utils";
 import {StyleSheet, View} from "react-native";
-import {Surface, Text} from "react-native-paper";
+import {Surface, Text, useTheme} from "react-native-paper";
 
 interface SummaryCardProps {
   data?: TransactionSummary;
 }
 
 const SummaryCard = ({data}: SummaryCardProps) => {
+  const {colors} = useTheme();
   return (
-    <Surface style={styles.wrapper}>
+    <Surface
+      style={[styles.wrapper, {backgroundColor: colors.surface}]}
+      mode="flat"
+    >
       <View style={styles.summaryItem}>
         <Text variant="labelSmall">Income</Text>
-        <Text variant="titleSmall">+ {formatIdr(data?.income || 0)}</Text>
+        <Text variant="bodySmall" style={styles.body}>
+          + {formatIdr(data?.income || 0)}
+        </Text>
       </View>
 
       <View style={styles.summaryDivider} />
 
       <View style={styles.summaryItem}>
         <Text variant="labelSmall">Expenses</Text>
-        <Text variant="titleSmall">- {formatIdr(data?.expense || 0)}</Text>
+        <Text variant="bodySmall" style={styles.body}>
+          - {formatIdr(data?.expense || 0)}
+        </Text>
       </View>
 
       <View style={styles.summaryDivider} />
 
       <View style={styles.summaryItem}>
         <Text variant="labelSmall">Balance</Text>
-        <Text variant="titleSmall">
+        <Text variant="bodySmall" style={styles.body}>
           {data?.balance && data.balance >= 0 ? "+" : "-"}{" "}
           {formatIdr(Math.abs(data?.balance || 0))}
         </Text>
@@ -39,7 +47,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flexDirection: "row",
     margin: 16,
-    paddingVertical: 18,
+    padding: 16,
     borderRadius: 16,
     elevation: 2,
     justifyContent: "space-between",
@@ -60,6 +68,8 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: "rgba(255,255,255,0.1)",
   },
+
+  body: {fontWeight: "700"},
 });
 
 export default SummaryCard;
