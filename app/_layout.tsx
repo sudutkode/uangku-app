@@ -18,6 +18,10 @@ import {darkTheme, lightTheme} from "@/constants/theme";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import "react-native-reanimated";
 
+// app/_layout.tsx  (or index.js)
+import {en, registerTranslation} from "react-native-paper-dates";
+registerTranslation("en", en);
+
 // adapt navigation theme to match react-native-paper theme
 const {LightTheme, DarkTheme} = adaptNavigationTheme({
   reactNavigationLight: NavigationDefaultTheme,

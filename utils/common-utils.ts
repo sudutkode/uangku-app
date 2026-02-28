@@ -1,5 +1,7 @@
 import {format} from "date-fns";
 
+import {Dimensions} from "react-native";
+
 export const camelToTitleCase = (params?: string) => {
   if (!params) return "";
   const result = params.replace(/([A-Z])/g, " $1");
@@ -33,3 +35,5 @@ export const formatDateLabel = (date: Date | string) => {
 export const formatMonth = (date: Date | string) => {
   return format(date, "yyyy-MM");
 };
+export const screenHeight = Dimensions.get("window").height;
+export const screenWidth = Dimensions.get("window").width;

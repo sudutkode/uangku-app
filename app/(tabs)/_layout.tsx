@@ -6,7 +6,11 @@ import {HapticTab} from "@/components/haptic-tab";
 import {Icon} from "@/components/ui";
 
 const tabs = [
-  {name: "index", title: "Transactions", icon: "money-bill-transfer"},
+  {
+    name: "transactions",
+    title: "Transactions",
+    icon: "money-bill-transfer",
+  },
   {name: "wallets", title: "Wallets", icon: "wallet"},
   {name: "report", title: "Report", icon: "chart-pie"},
   {name: "profile", title: "Profile", icon: "user"},
@@ -28,6 +32,7 @@ export default function TabLayout() {
           backgroundColor: theme.colors.surface,
         },
       }}
+      initialRouteName="transactions"
     >
       {tabs.map(({name, title, icon}) => (
         <Tabs.Screen
@@ -38,6 +43,7 @@ export default function TabLayout() {
             tabBarIcon: ({color}) => (
               <Icon size={20} name={icon} color={color} />
             ),
+            headerShown: name === "transactions" ? false : true,
           }}
         />
       ))}

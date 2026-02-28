@@ -1,4 +1,10 @@
-import {Transaction, TransactionSummary, User, Wallet} from "./";
+import {
+  Transaction,
+  TransactionCategory,
+  TransactionSummary,
+  User,
+  Wallet,
+} from "./";
 
 export interface ApiResponse {
   statusCode: number;
@@ -34,4 +40,16 @@ export interface TransactionResponse {
     summary: TransactionSummary;
     pagination: Pagination;
   };
+}
+
+export interface TransactionCategoriesResponse extends ApiResponse {
+  data?: {data: TransactionCategory[]; pagination: Pagination};
+}
+
+export interface WalletsResponse extends ApiResponse {
+  data?: Wallet[];
+}
+
+export interface MutationTransactionResponse extends ApiResponse {
+  data?: Transaction;
 }
