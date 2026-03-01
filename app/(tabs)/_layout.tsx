@@ -17,19 +17,19 @@ const tabs = [
 ];
 
 export default function TabLayout() {
-  const theme = useTheme();
+  const {colors} = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.outline,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.outline,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: colors.surface,
         },
         headerStyle: {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: colors.surface,
         },
       }}
       initialRouteName="transactions"
@@ -37,7 +37,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          href: null, // Ini kuncinya: menyembunyikan dari bottom bar
+          href: null,
         }}
       />
       {tabs.map(({name, title, icon}) => (
@@ -49,7 +49,7 @@ export default function TabLayout() {
             tabBarIcon: ({color}) => (
               <Icon size={20} name={icon} color={color} />
             ),
-            headerShown: name === "transactions" ? false : true,
+            headerShown: false,
           }}
         />
       ))}

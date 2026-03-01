@@ -1,6 +1,6 @@
 import {useFetch} from "@/hooks/axios/use-fetch";
 import {useMutation} from "@/hooks/axios/use-mutation";
-import {useTransactionsStore} from "@/store/use-transactions-store";
+import {useTransactionsStore} from "@/store";
 import {
   MutationTransactionResponse,
   TransactionResponse,
@@ -33,11 +33,10 @@ const INITIAL_FORM = {
 };
 
 export default function TransactionForm({id}: {id?: string}) {
-  const theme = useTheme();
+  const {colors} = useTheme();
   const router = useRouter();
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
-  console.log("Form state:", form); // Debug log untuk melihat perubahan state form
   const [modalVisible, setModalVisible] = useState(false);
 
   // Ref keeps the active field stable so handleKeyPress has zero deps.
@@ -51,7 +50,6 @@ export default function TransactionForm({id}: {id?: string}) {
     useFetch<TransactionResponse>(`/transactions/${id}`, {}, !id);
 
   useEffect(() => {
-    console.log("Fetched existing transaction data:", existingData);
     if (existingData) {
       const d = existingData.data;
       setForm({
@@ -156,23 +154,22 @@ export default function TransactionForm({id}: {id?: string}) {
     !form.amount || !form.walletId || (isTransfer && !form.targetWalletId);
 
   const handleDelete = async () => {
-    // Tambahkan Alert.alert confirmation di sini
     await deleteTransaction({});
     setNeedsRefetch(true);
     router.back();
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: theme.colors.background}}>
+    <View style={{flex: 1, backgroundColor: colors.background}}>
       <Stack.Screen
         options={{
           headerRight: () =>
             id ? (
               <Button
-                textColor={theme.colors.error}
+                textColor={colors.error}
                 onPress={handleDelete}
                 loading={loadingDelete}
-                disabled={!existingData}
+                disabled={!existingData || loadingDelete}
               >
                 Delete
               </Button>
@@ -195,7 +192,7 @@ export default function TransactionForm({id}: {id?: string}) {
           onDismiss={handleDismiss}
           contentContainerStyle={[
             styles.modalContent,
-            {backgroundColor: theme.colors.surface},
+            {backgroundColor: colors.surface},
           ]}
         >
           <View style={styles.dragHandle} />

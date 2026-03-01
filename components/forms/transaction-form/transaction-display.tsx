@@ -21,19 +21,19 @@ const TransactionDisplay = React.memo(
     isTransfer,
     onFieldPress,
   }: TransactionDisplayProps) => {
-    const theme = useTheme();
+    const {colors} = useTheme();
 
-    const dividerColor = theme.colors.onPrimaryContainer + "33";
+    const dividerColor = colors.onPrimaryContainer + "33";
 
     const amountBoxStyle = useMemo(
       () => [
         styles.box,
         activeField === "amount" && {
           borderBottomWidth: 2,
-          borderBottomColor: theme.colors.primary,
+          borderBottomColor: colors.primary,
         },
       ],
-      [activeField, theme.colors.primary],
+      [activeField, colors.primary],
     );
 
     const adminFeeBoxStyle = useMemo(
@@ -43,26 +43,24 @@ const TransactionDisplay = React.memo(
         {borderLeftColor: dividerColor},
         activeField === "adminFee" && {
           borderBottomWidth: 2,
-          borderBottomColor: theme.colors.primary,
+          borderBottomColor: colors.primary,
         },
       ],
-      [activeField, theme.colors.primary, dividerColor],
+      [activeField, colors.primary, dividerColor],
     );
 
     return (
       <Surface
         elevation={0}
-        style={[styles.container, {backgroundColor: theme.colors.surface}]}
+        style={[styles.container, {backgroundColor: colors.surface}]}
       >
         <TouchableOpacity
           onPress={() => onFieldPress("amount")}
           style={amountBoxStyle}
         >
-          <Text style={[styles.label, {color: theme.colors.onSurface}]}>
-            Amount
-          </Text>
+          <Text style={[styles.label, {color: colors.onSurface}]}>Amount</Text>
           <Text
-            style={[styles.valueLarge, {color: theme.colors.onSurface}]}
+            style={[styles.valueLarge, {color: colors.onSurface}]}
             numberOfLines={1}
             adjustsFontSizeToFit
           >
@@ -75,11 +73,11 @@ const TransactionDisplay = React.memo(
             onPress={() => onFieldPress("adminFee")}
             style={adminFeeBoxStyle}
           >
-            <Text style={[styles.label, {color: theme.colors.onSurface}]}>
+            <Text style={[styles.label, {color: colors.onSurface}]}>
               Admin Fee
             </Text>
             <Text
-              style={[styles.valueSmall, {color: theme.colors.onSurface}]}
+              style={[styles.valueSmall, {color: colors.onSurface}]}
               numberOfLines={1}
               adjustsFontSizeToFit
             >

@@ -1,4 +1,4 @@
-import {Transaction, TransactionResponse, TransactionSummary} from "@/types";
+import {Transaction, TransactionsResponse, TransactionSummary} from "@/types";
 import {create} from "zustand";
 
 interface TransactionState {
@@ -6,17 +6,17 @@ interface TransactionState {
   setSelectedDate: (date: Date) => void;
   transactions: Transaction[];
   summary: TransactionSummary | undefined;
-  setTransactionData: (data: TransactionResponse["data"]) => void;
+  setTransactionsData: (data: TransactionsResponse["data"]) => void;
   needsRefetch: boolean;
   setNeedsRefetch: (val: boolean) => void;
 }
 
-export const useTransactionsStore = create<TransactionState>((set) => ({
+const useTransactionsStore = create<TransactionState>((set) => ({
   selectedDate: new Date(),
   setSelectedDate: (date) => set({selectedDate: date}),
   transactions: [],
   summary: undefined,
-  setTransactionData: (data) =>
+  setTransactionsData: (data) =>
     set({
       transactions: data?.data || [],
       summary: data?.summary,
@@ -24,3 +24,5 @@ export const useTransactionsStore = create<TransactionState>((set) => ({
   needsRefetch: false,
   setNeedsRefetch: (val) => set({needsRefetch: val}),
 }));
+
+export default useTransactionsStore;

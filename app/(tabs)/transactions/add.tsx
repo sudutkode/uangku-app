@@ -1,4 +1,4 @@
-import TransactionForm from "@/components/forms/transaction-form/transaction-form";
+import {TransactionForm} from "@/components/forms";
 import React from "react";
 
 const AddTransactionScreen = () => {

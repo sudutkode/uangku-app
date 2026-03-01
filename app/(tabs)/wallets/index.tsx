@@ -2,39 +2,30 @@ import React, {useEffect} from "react";
 import {StyleSheet, View} from "react-native";
 import {ActivityIndicator, Button, Text, useTheme} from "react-native-paper";
 
-import {AddButton, Icon, TransactionsFlatList} from "@/components/ui";
+import {AddButton, Icon, WalletsFlatList} from "@/components/ui";
 import {useFetch} from "@/hooks/axios/use-fetch";
-import {useTransactionsStore} from "@/store";
-import {TransactionsResponse} from "@/types";
+import {useWalletsStore} from "@/store";
+import {WalletsResponse} from "@/types";
 
-export default function TransactionScreen() {
+export default function WalletsScreen() {
   const {colors} = useTheme();
 
-  const {
-    selectedDate,
-    setTransactionsData,
-    transactions,
-    needsRefetch,
-    setNeedsRefetch,
-  } = useTransactionsStore();
+  const {setWalletsData, wallets, needsRefetch, setNeedsRefetch} =
+    useWalletsStore();
 
   const {
     data: fetchedData,
     loading,
     error,
     refetch,
-  } = useFetch<TransactionsResponse>("/transactions", {
-    params: {
-      date: selectedDate.toLocaleDateString("sv-SE"),
-    },
-  });
+  } = useFetch<WalletsResponse>("/wallets");
 
   const renderContent = () => {
     if (loading) {
       return (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{marginTop: 12}}>Loading transactions...</Text>
+          <Text style={{marginTop: 12}}>Loading wallets...</Text>
         </View>
       );
     }
@@ -53,32 +44,28 @@ export default function TransactionScreen() {
       );
     }
 
-    if (!transactions.length) {
+    if (!wallets.length) {
       return (
         <View style={styles.centerContainer}>
           <Icon name="receipt" size={32} color={colors.secondary} />
-          <Text style={{marginTop: 12}}>No transactions yet</Text>
+          <Text style={{marginTop: 12}}>No wallets yet</Text>
           <Text style={{fontSize: 12, color: colors.secondary}}>
-            Your transactions will appear here
+            Your wallets will appear here
           </Text>
         </View>
       );
     }
 
     return (
-      <TransactionsFlatList
-        data={transactions}
-        loading={loading}
-        refetch={refetch}
-      />
+      <WalletsFlatList data={wallets} loading={loading} refetch={refetch} />
     );
   };
 
   useEffect(() => {
     if (fetchedData?.data) {
-      setTransactionsData(fetchedData.data);
+      setWalletsData(fetchedData.data);
     }
-  }, [fetchedData, setTransactionsData]);
+  }, [fetchedData, setWalletsData]);
 
   useEffect(() => {
     if (needsRefetch) {
@@ -90,7 +77,7 @@ export default function TransactionScreen() {
   return (
     <View style={styles.container}>
       {renderContent()}
-      <AddButton screenName="transactions" />
+      <AddButton screenName="wallets" />
     </View>
   );
 }

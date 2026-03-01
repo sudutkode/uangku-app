@@ -1,5 +1,4 @@
 import {useColorScheme} from "@/hooks/use-color-scheme";
-import {useAuthStore} from "@/store/use-auth-store";
 import {
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
@@ -18,7 +17,7 @@ import {darkTheme, lightTheme} from "@/constants/theme";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import "react-native-reanimated";
 
-// app/_layout.tsx  (or index.js)
+import {useAuthStore} from "@/store";
 import {en, registerTranslation} from "react-native-paper-dates";
 registerTranslation("en", en);
 

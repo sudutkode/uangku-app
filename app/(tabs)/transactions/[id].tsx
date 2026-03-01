@@ -1,4 +1,4 @@
-import TransactionForm from "@/components/forms/transaction-form/transaction-form";
+import {TransactionForm} from "@/components/forms";
 import {Stack, useLocalSearchParams} from "expo-router";
 import React from "react";
 

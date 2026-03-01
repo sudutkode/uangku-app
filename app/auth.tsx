@@ -1,7 +1,7 @@
 import {FinanceAppIllustration} from "@/components/illustrations";
 import {Icon} from "@/components/ui";
 import {useMutation} from "@/hooks/axios/use-mutation";
-import {useAuthStore} from "@/store/use-auth-store";
+import {useAuthStore} from "@/store";
 import {SignInResponse} from "@/types";
 import {screenWidth} from "@/utils/common-utils";
 import {
@@ -19,7 +19,7 @@ interface SigninPayload {
 }
 
 export default function AuthScreen() {
-  const theme = useTheme();
+  const {colors} = useTheme();
   const {signin} = useAuthStore();
 
   const {mutate: mutateSignin, loading: loadingSignin} = useMutation<
@@ -42,13 +42,13 @@ export default function AuthScreen() {
       const data = await mutateSignin(payload);
       signin(data);
     } catch (error) {
-      console.log("Google Sign-In Error:", error);
+      console.error("Google Sign-In Error:", error);
     }
   };
 
   return (
     <SafeAreaView
-      style={[styles.container, {backgroundColor: theme.colors.background}]}
+      style={[styles.container, {backgroundColor: colors.background}]}
     >
       <View style={{flex: 0.6}} />
 
@@ -63,13 +63,13 @@ export default function AuthScreen() {
         <View style={styles.textSection}>
           <Text
             variant="titleLarge"
-            style={[styles.title, {color: theme.colors.onSurface}]}
+            style={[styles.title, {color: colors.onSurface}]}
           >
             UangKu
           </Text>
           <Text
             variant="labelMedium"
-            style={[styles.subtitle, {color: theme.colors.secondary}]}
+            style={[styles.subtitle, {color: colors.secondary}]}
           >
             Manage your finances effortlessly and track every penny with ease.
           </Text>
@@ -77,15 +77,15 @@ export default function AuthScreen() {
 
         <View style={styles.actionSection}>
           <Button
-            mode="contained" // Menggunakan warna primary solid
+            mode="contained"
             onPress={handleSignIn}
             loading={loadingSignin}
             disabled={loadingSignin}
             style={styles.googleButton}
             contentStyle={styles.googleButtonContent}
             labelStyle={styles.googleLabel}
-            buttonColor={theme.colors.primary}
-            textColor={theme.colors.onPrimary}
+            buttonColor={colors.primary}
+            textColor={colors.onPrimary}
             icon={({size, color}) => (
               <Icon name="google" size={size} color={color} />
             )}
@@ -95,7 +95,7 @@ export default function AuthScreen() {
 
           <Text
             variant="labelSmall"
-            style={[styles.footerText, {color: theme.colors.outline}]}
+            style={[styles.footerText, {color: colors.outline}]}
           >
             Secure login with Google OAuth 2.0
           </Text>
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   illustrationContainer: {
-    flex: 2, // Mengambil ruang lebih besar agar gambar turun ke tengah
+    flex: 2,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   title: {
-    fontWeight: "700", // Tidak se-ekstrim 900, lebih clean
+    fontWeight: "700",
     letterSpacing: 0.2,
     marginBottom: 4,
   },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   googleButton: {
     width: "100%",
     borderRadius: 14,
-    elevation: 0, // Flat design lebih modern
+    elevation: 0,
   },
   googleButtonContent: {
     height: 52,

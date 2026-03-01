@@ -1,9 +1,9 @@
-import {useAuthStore} from "@/store/use-auth-store";
+import {useAuthStore} from "@/store";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import {StyleSheet, View} from "react-native";
 import {Button, useTheme} from "react-native-paper";
 
-export default function AuthScreen() {
+export default function ProfileScreen() {
   const {colors} = useTheme();
   const {signout} = useAuthStore();
 

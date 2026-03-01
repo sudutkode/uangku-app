@@ -8,7 +8,7 @@ interface KeypadButtonProps {
 }
 
 const KeypadButton = React.memo(({value, onPress}: KeypadButtonProps) => {
-  const theme = useTheme();
+  const {colors} = useTheme();
   const isBackspace = value === "backspace";
 
   return (
@@ -21,14 +21,11 @@ const KeypadButton = React.memo(({value, onPress}: KeypadButtonProps) => {
         <IconButton
           icon="backspace-outline"
           size={24}
-          iconColor={theme.colors.primary}
+          iconColor={colors.primary}
         />
       ) : (
         <Text
-          style={[
-            keypadButtonStyles.keypadText,
-            {color: theme.colors.onSurface},
-          ]}
+          style={[keypadButtonStyles.keypadText, {color: colors.onSurface}]}
         >
           {value}
         </Text>

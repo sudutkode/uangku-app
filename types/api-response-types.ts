@@ -54,3 +54,37 @@ export interface WalletsResponse extends ApiResponse {
 export interface MutationTransactionResponse extends ApiResponse {
   data?: Transaction;
 }
+
+export interface MonthlyReportResponse {
+  period: {
+    year: number;
+    month: number;
+    startDate: string;
+    endDate: string;
+  };
+  summary: TransactionSummary;
+  breakdown: {
+    expense: {
+      categories: {
+        categoryId: number;
+        categoryName: string;
+        iconName: string;
+        total: number;
+        percentage: number;
+      }[];
+      adminFee: {
+        total: number;
+        percentage: number;
+      };
+    };
+    income: {
+      categories: {
+        categoryId: number;
+        categoryName: string;
+        iconName: string;
+        total: number;
+        percentage: number;
+      }[];
+    };
+  };
+}

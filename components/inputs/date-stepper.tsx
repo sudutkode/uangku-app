@@ -10,7 +10,7 @@ interface DateStepperProps {
 }
 
 export default function DateStepper({date, onChange}: DateStepperProps) {
-  const theme = useTheme();
+  const {colors} = useTheme();
   const [open, setOpen] = useState(false);
 
   const handlePrev = () => {
@@ -26,12 +26,12 @@ export default function DateStepper({date, onChange}: DateStepperProps) {
   };
 
   return (
-    <View style={[styles.container, {backgroundColor: theme.colors.surface}]}>
+    <View style={[styles.container, {backgroundColor: colors.surface}]}>
       <IconButton
         icon="chevron-left"
         size={20}
         onPress={handlePrev}
-        iconColor={theme.colors.primary}
+        iconColor={colors.primary}
       />
 
       <TouchableOpacity
@@ -40,7 +40,7 @@ export default function DateStepper({date, onChange}: DateStepperProps) {
       >
         <Text
           variant="titleSmall"
-          style={{color: theme.colors.onSurface, fontWeight: "600"}}
+          style={{color: colors.onSurface, fontWeight: "600"}}
         >
           {format(date, "EEE, dd MMM yyyy")}
         </Text>
@@ -50,7 +50,7 @@ export default function DateStepper({date, onChange}: DateStepperProps) {
         icon="chevron-right"
         size={20}
         onPress={handleNext}
-        iconColor={theme.colors.primary}
+        iconColor={colors.primary}
       />
 
       <DatePickerModal
