@@ -49,7 +49,7 @@ export default function TabLayout() {
             tabBarIcon: ({color}) => (
               <Icon size={20} name={icon} color={color} />
             ),
-            headerShown: false,
+            headerShown: name === "report",
           }}
         />
       ))}

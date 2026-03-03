@@ -1,4 +1,3 @@
-import {Icon} from "@/components/ui";
 import {Wallet} from "@/types";
 import {formatIdr, screenWidth} from "@/utils/common-utils";
 import {format} from "date-fns";
@@ -6,6 +5,7 @@ import {useRouter} from "expo-router";
 import type {FC} from "react";
 import {FlatList, RefreshControl, StyleSheet, View} from "react-native";
 import {Divider, List, Text, useTheme} from "react-native-paper";
+import Icon from "./icon-fa6";
 
 interface WalletsFlatListProps {
   data: Wallet[];

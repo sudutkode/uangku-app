@@ -2,8 +2,8 @@ import {DateStepper} from "@/components/inputs";
 import {SummaryCard} from "@/components/ui";
 import {useTransactionsStore} from "@/store";
 import {Stack} from "expo-router";
-import {View} from "react-native";
 import {useTheme} from "react-native-paper";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 export default function TransactionsLayout() {
   const {colors} = useTheme();
@@ -23,10 +23,15 @@ export default function TransactionsLayout() {
         name="index"
         options={{
           header: () => (
-            <View style={{backgroundColor: colors.surface, paddingTop: 50}}>
+            <SafeAreaView
+              edges={["top"]}
+              style={{
+                backgroundColor: colors.surface,
+              }}
+            >
               <DateStepper date={selectedDate} onChange={setSelectedDate} />
               <SummaryCard data={summary} />
-            </View>
+            </SafeAreaView>
           ),
         }}
       />

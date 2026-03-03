@@ -1,4 +1,4 @@
-import {format} from "date-fns"; // disarankan: npm install date-fns
+import {format} from "date-fns";
 import React, {useState} from "react";
 import {StyleSheet, TouchableOpacity, View} from "react-native";
 import {IconButton, Text, useTheme} from "react-native-paper";
@@ -7,23 +7,53 @@ import {DatePickerModal} from "react-native-paper-dates";
 interface DateStepperProps {
   date: Date;
   onChange: (date: Date) => void;
+  mode?: "day" | "month";
 }
 
-export default function DateStepper({date, onChange}: DateStepperProps) {
+export default function DateStepper({
+  date,
+  onChange,
+  mode = "day",
+}: DateStepperProps) {
   const {colors} = useTheme();
   const [open, setOpen] = useState(false);
 
+  /* -------------------------------------------------------------------------- */
+  /*                                  NAVIGATION                                */
+  /* -------------------------------------------------------------------------- */
+
   const handlePrev = () => {
     const newDate = new Date(date);
-    newDate.setDate(date.getDate() - 1);
+
+    if (mode === "month") {
+      newDate.setMonth(date.getMonth() - 1);
+    } else {
+      newDate.setDate(date.getDate() - 1);
+    }
+
     onChange(newDate);
   };
 
   const handleNext = () => {
     const newDate = new Date(date);
-    newDate.setDate(date.getDate() + 1);
+
+    if (mode === "month") {
+      newDate.setMonth(date.getMonth() + 1);
+    } else {
+      newDate.setDate(date.getDate() + 1);
+    }
+
     onChange(newDate);
   };
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  FORMAT TEXT                               */
+  /* -------------------------------------------------------------------------- */
+
+  const formattedDate =
+    mode === "month"
+      ? format(date, "MMMM yyyy")
+      : format(date, "EEE, dd MMM yyyy");
 
   return (
     <View style={[styles.container, {backgroundColor: colors.surface}]}>
@@ -42,7 +72,7 @@ export default function DateStepper({date, onChange}: DateStepperProps) {
           variant="titleSmall"
           style={{color: colors.onSurface, fontWeight: "600"}}
         >
-          {format(date, "EEE, dd MMM yyyy")}
+          {formattedDate}
         </Text>
       </TouchableOpacity>
 
@@ -63,6 +93,15 @@ export default function DateStepper({date, onChange}: DateStepperProps) {
           setOpen(false);
           if (params.date) onChange(params.date);
         }}
+        // 👇 ini penting untuk month picker
+        validRange={
+          mode === "month"
+            ? {
+                startDate: new Date(2000, 0, 1),
+                endDate: new Date(2100, 11, 31),
+              }
+            : undefined
+        }
       />
     </View>
   );

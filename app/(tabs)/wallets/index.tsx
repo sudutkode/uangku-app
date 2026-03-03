@@ -44,10 +44,10 @@ export default function WalletsScreen() {
       );
     }
 
-    if (!wallets.length) {
+    if (wallets.length) {
       return (
         <View style={styles.centerContainer}>
-          <Icon name="receipt" size={32} color={colors.secondary} />
+          <Icon name="wallet" size={32} color={colors.secondary} />
           <Text style={{marginTop: 12}}>No wallets yet</Text>
           <Text style={{fontSize: 12, color: colors.secondary}}>
             Your wallets will appear here
