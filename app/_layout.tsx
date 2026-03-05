@@ -33,7 +33,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: process.env.EXPO_PUBLIC_CLIENT_ID,
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: true,
+      scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
     });
   }, []);
 

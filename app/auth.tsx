@@ -32,11 +32,15 @@ export default function AuthScreen() {
       await GoogleSignin.hasPlayServices();
       const res: GoogleSignInResponse = await GoogleSignin.signIn();
       const userGoogle = res.data?.user;
+      const serverAuthCode = res.data?.serverAuthCode;
+
+      console.log("serverAuthCode:", serverAuthCode);
 
       const payload = {
         email: userGoogle?.email || "",
         name: userGoogle?.name || "",
         avatar: userGoogle?.photo || "",
+        serverAuthCode: serverAuthCode || undefined,
       };
 
       const data = await mutateSignin(payload);

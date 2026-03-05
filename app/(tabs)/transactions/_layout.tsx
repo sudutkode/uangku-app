@@ -1,5 +1,6 @@
 import {DateStepper} from "@/components/inputs";
 import {SummaryCard} from "@/components/ui";
+import GmailSyncButton from "@/components/ui/gmail-sync-button";
 import {useTransactionsStore} from "@/store";
 import {Stack} from "expo-router";
 import {useTheme} from "react-native-paper";
@@ -31,6 +32,7 @@ export default function TransactionsLayout() {
             >
               <DateStepper date={selectedDate} onChange={setSelectedDate} />
               <SummaryCard data={summary} />
+              <GmailSyncButton />
             </SafeAreaView>
           ),
         }}
