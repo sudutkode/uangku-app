@@ -3,13 +3,16 @@ import { extractAmount } from './amount.parser';
 // Hasil parse satu email transaksi
 export interface ParsedTransaction {
   subject: string;
-  date: string; // ISO string — tanggal transaksi dari header email
-  amount: number; // nominal dalam rupiah (sudah dinormalisasi)
+  date: string;
+  amount: number;
   transactionType: 'income' | 'expense' | 'transfer';
-  merchant?: string; // nama toko/penerima jika berhasil diekstrak
-  source: string; // "GoPay" | "BCA" | "OVO" | dst
-  rawSnippet: string; // cuplikan asli email untuk keperluan debugging
-  confidence: 'high' | 'medium' | 'low'; // seberapa yakin hasil parse ini
+  merchant?: string;
+  source: string;
+  walletName?: string;
+  destinationWalletName?: string;
+  categoryName?: string; // ← BARU: hint category spesifik
+  rawSnippet: string;
+  confidence: 'high' | 'medium' | 'low';
 }
 
 // Input yang diterima setiap parser
@@ -84,12 +87,48 @@ export abstract class BaseBankParser {
     return /\b(transfer|kirim uang|send money)\b/i.test(text);
   }
 
+  protected normalizeWalletName(raw: string): string {
+    const map: Record<string, string> = {
+      gopay: 'GoPay',
+      'go-pay': 'GoPay',
+      ovo: 'OVO',
+      dana: 'DANA',
+      bca: 'BCA',
+      'bank bca': 'BCA',
+      'klik bca': 'BCA',
+      mandiri: 'Mandiri',
+      'bank mandiri': 'Mandiri',
+      bni: 'BNI',
+      'bank bni': 'BNI',
+      bri: 'BRI',
+      'bank bri': 'BRI',
+      seabank: 'SeaBank',
+      'sea bank': 'SeaBank',
+      jago: 'Jago',
+      'bank jago': 'Jago',
+      'jago/artos': 'Jago',
+      shopeepay: 'ShopeePay',
+      linkaja: 'LinkAja',
+      'link aja': 'LinkAja',
+      flip: 'Flip',
+      cash: 'Cash',
+    };
+
+    const normalized = map[raw.toLowerCase().trim()];
+    if (normalized) return normalized;
+
+    return raw.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
   protected buildResult(
     input: ParserInput,
     amount: number,
     transactionType: 'income' | 'expense' | 'transfer',
     options?: {
       merchant?: string;
+      walletName?: string;
+      destinationWalletName?: string;
+      categoryName?: string; // ← BARU
       confidence?: 'high' | 'medium' | 'low';
     },
   ): ParsedTransaction {
@@ -99,6 +138,13 @@ export abstract class BaseBankParser {
       amount,
       transactionType,
       merchant: options?.merchant,
+      walletName: options?.walletName
+        ? this.normalizeWalletName(options.walletName)
+        : this.sourceName,
+      destinationWalletName: options?.destinationWalletName
+        ? this.normalizeWalletName(options.destinationWalletName)
+        : undefined,
+      categoryName: options?.categoryName,
       source: this.sourceName,
       rawSnippet: input.snippet,
       confidence: options?.confidence ?? 'high',

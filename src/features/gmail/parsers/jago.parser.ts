@@ -10,9 +10,10 @@ export class JagoParser extends BaseBankParser {
   readonly sourceName = 'Jago';
   readonly senderPatterns = [
     /noreply@jago\.com/,
+    /no-reply@jago\.com/,
     /hello@jago\.com/,
     /notification@jago\.com/,
-    /noreply@jagoterus\.com/,
+    /tanya@jago\.com/,
   ];
 
   parse(input: ParserInput): ParsedTransaction | null {
@@ -20,17 +21,58 @@ export class JagoParser extends BaseBankParser {
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    const transactionType = this.isIncome(text)
+    const isTransferOut =
+      /melakukan transfer|transfer uang|kamu.*transfer/i.test(text);
+    const isReceived = this.isIncome(text);
+
+    const transactionType = isReceived
       ? 'income'
-      : this.isTransfer(text)
+      : isTransferOut || this.isTransfer(text)
         ? 'transfer'
         : 'expense';
 
     const merchant = this.extractMerchant(text, [
+      /\bKe\b\s*\n\s*([^\n]+)/i,
       /kepada\s+(.+?)(?:\s+Rp|\s+senilai|\n|$)/i,
-      /pembayaran\s+(?:ke|di)\s+(.+?)(?:\s+Rp|\n|$)/i,
     ]);
 
-    return this.buildResult(input, amount, transactionType, { merchant });
+    let destinationWalletName: string | undefined;
+    if (transactionType === 'transfer') {
+      destinationWalletName = this.extractDestinationWallet(text);
+    }
+
+    return this.buildResult(input, amount, transactionType, {
+      merchant,
+      walletName: 'Jago',
+      destinationWalletName,
+    });
+  }
+
+  private extractDestinationWallet(text: string): string | undefined {
+    /**
+     * Format email Jago:
+     * "Ke
+     *  TONDIKI ANDIKA GURNING
+     *  GoPay • 081511791947"
+     *
+     * Kita cari baris yang berisi nama bank/ewallet diikuti "•" dan nomor
+     * Ini lebih reliable daripada cari setelah "Ke"
+     */
+    const walletLineMatch =
+      /\b(GoPay|OVO|DANA|BCA|Mandiri|BNI|BRI|SeaBank|Jago|ShopeePay|LinkAja|Flip)\b\s*[•·]\s*\d+/i.exec(
+        text,
+      );
+    if (walletLineMatch?.[1]) {
+      return this.normalizeWalletName(walletLineMatch[1]);
+    }
+
+    // Fallback: "Bank Tujuan: BCA" atau "Bank Penerima: BCA"
+    const bankMatch =
+      /(?:bank tujuan|bank penerima)\s*[:\n]\s*([^\n•\d]+)/i.exec(text);
+    if (bankMatch?.[1]) {
+      return this.normalizeWalletName(bankMatch[1].trim());
+    }
+
+    return undefined;
   }
 }

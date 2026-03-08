@@ -7,6 +7,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
+  Headers,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { GmailSyncService } from './gmail-sync.service';
@@ -50,5 +52,16 @@ export class GmailController {
       `Imported ${result.imported} new transactions`,
       HttpStatus.OK,
     );
+  }
+
+  @Post('cron-sync')
+  @HttpCode(HttpStatus.OK)
+  async cronSync(@Headers('authorization') auth: string) {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || auth !== `Bearer ${secret}`) {
+      throw new UnauthorizedException('Invalid cron secret');
+    }
+    await this.gmailSyncService.syncAllUsers();
+    return { success: true };
   }
 }

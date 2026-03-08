@@ -11,6 +11,8 @@ export class OvoParser extends BaseBankParser {
   readonly senderPatterns = [
     /no-reply@ovo\.id/,
     /noreply@ovo\.id/,
+    /noreply@ovo\.co\.id/,
+    /no-reply@ovo\.co\.id/,
     /notification@ovo\.id/,
   ];
 
@@ -19,18 +21,47 @@ export class OvoParser extends BaseBankParser {
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    const transactionType = this.isIncome(text)
+    const isIncoming = /masuk|diterima|top.?up|isi saldo|refund|cashback/i.test(
+      text,
+    );
+    const isTransfer = /transfer|kirim/i.test(text);
+
+    const transactionType = isIncoming
       ? 'income'
-      : this.isTransfer(text)
+      : isTransfer
         ? 'transfer'
         : 'expense';
 
+    // Dari email kamu: OVO QR Payment → merchant dari baris pertama body
     const merchant = this.extractMerchant(text, [
-      /transaksi\s+(?:ke|di|to)\s+(.+?)(?:\s+senilai|\s+Rp|\.|$)/i,
-      /pembayaran\s+ke\s+(.+?)(?:\s+Rp|\n|$)/i,
-      /kepada\s*:\s*(.+?)[\n\r]/i,
+      // "Cinto Minang, Kebon Sirih\nPembayaran Berhasil"
+      /^([^\n]+)\nPembayaran Berhasil/im,
+      /nama toko\s*([^\n]+)/i,
+      /pembayaran ke\s+(.+?)(?:\s+Rp|\n|$)/i,
     ]);
 
-    return this.buildResult(input, amount, transactionType, { merchant });
+    // Coba detect category dari merchant name
+    const categoryName = this.suggestCategory(merchant ?? '', transactionType);
+
+    return this.buildResult(input, amount, transactionType, {
+      merchant,
+      walletName: 'OVO',
+      categoryName,
+    });
+  }
+
+  private suggestCategory(merchant: string, type: string): string | undefined {
+    if (type !== 'expense') return undefined;
+    if (
+      /resto|makan|food|warung|cafe|kafe|minang|sate|bakso|mie|nasi|ayam|pizza|burger/i.test(
+        merchant,
+      )
+    )
+      return 'Food';
+    if (/grab|gojek|taxi|transport|ojek/i.test(merchant))
+      return 'Transportation';
+    if (/apotek|pharmacy|klinik|rumah sakit|dokter/i.test(merchant))
+      return 'Health';
+    return undefined;
   }
 }

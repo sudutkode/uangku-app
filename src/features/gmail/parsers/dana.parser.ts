@@ -12,7 +12,6 @@ export class DanaParser extends BaseBankParser {
     /noreply@dana\.id/,
     /no-reply@dana\.id/,
     /notification@dana\.id/,
-    /help@dana\.id/,
   ];
 
   parse(input: ParserInput): ParsedTransaction | null {
@@ -20,18 +19,35 @@ export class DanaParser extends BaseBankParser {
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    const transactionType = this.isIncome(text)
+    const isIncoming = /masuk|diterima|top.?up|isi saldo|refund|cashback/i.test(
+      text,
+    );
+    const isTransfer = /transfer|kirim/i.test(text);
+
+    const transactionType = isIncoming
       ? 'income'
-      : this.isTransfer(text)
+      : isTransfer
         ? 'transfer'
         : 'expense';
 
     const merchant = this.extractMerchant(text, [
-      /kepada\s+(.+?)(?:\s+Rp|\s+senilai|\n|$)/i,
-      /pembayaran\s+ke\s+(.+?)(?:\s+Rp|\n|$)/i,
-      /bayar\s+ke\s+(.+?)(?:\s+Rp|\n|$)/i,
+      /pembayaran ke\s+(.+?)(?:\s+Rp|\n|$)/i,
+      /transaksi di\s+(.+?)(?:\s+Rp|\n|$)/i,
+      /nama merchant\s*[:\n]\s*([^\n]+)/i,
     ]);
 
-    return this.buildResult(input, amount, transactionType, { merchant });
+    let destinationWalletName: string | undefined;
+    if (transactionType === 'transfer') {
+      const destMatch =
+        /ke\s+(GoPay|OVO|DANA|BCA|Mandiri|BNI|BRI|SeaBank|Jago)\b/i.exec(text);
+      if (destMatch?.[1])
+        destinationWalletName = this.normalizeWalletName(destMatch[1]);
+    }
+
+    return this.buildResult(input, amount, transactionType, {
+      merchant,
+      walletName: 'DANA',
+      destinationWalletName,
+    });
   }
 }

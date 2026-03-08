@@ -22,6 +22,8 @@ import {
   SeabankParser,
   JagoParser,
   GenericBankParser,
+  FlipParser,
+  GrabParser,
 } from './parsers';
 
 export interface SyncResult {
@@ -38,27 +40,6 @@ const TRANSACTION_TYPE_ID: Record<string, number> = {
   expense: 2,
   transfer: 3,
 };
-
-// Query Gmail untuk mencari email dari bank/ewallet yang didukung
-const GMAIL_SENDER_QUERY = [
-  'from:noreply@gopay.co.id',
-  'from:no-reply@ovo.id',
-  'from:noreply@dana.id',
-  'from:notifikasi@klikbca.com',
-  'from:noreply@mybca.com',
-  'from:notif@bankmandiri.co.id',
-  'from:livin@bankmandiri.co.id',
-  'from:bni@bni.co.id',
-  'from:noreply@bni.co.id',
-  'from:noreply@bri.co.id',
-  'from:noreply@seabank.co.id',
-  'from:noreply@jago.com',
-  'from:hello@jago.com',
-  // Keyword fallback untuk bank lain yang tidak ada parser spesifiknya
-  'subject:transaksi',
-  'subject:pembayaran berhasil',
-  'subject:transfer berhasil',
-].join(' OR ');
 
 @Injectable()
 export class GmailSyncService {
@@ -91,6 +72,8 @@ export class GmailSyncService {
     briParser: BriParser,
     seabankParser: SeabankParser,
     jagoParser: JagoParser,
+    flipParser: FlipParser,
+    grabParser: GrabParser,
     private readonly genericParser: GenericBankParser,
   ) {
     // Urutan: spesifik dulu, generic terakhir
@@ -104,6 +87,8 @@ export class GmailSyncService {
       briParser,
       seabankParser,
       jagoParser,
+      flipParser,
+      grabParser,
     ];
   }
 
@@ -207,14 +192,16 @@ export class GmailSyncService {
      *   → Ini yang bikin "sync jam 12:00, klik lagi jam 13:00
      *      → hanya ambil email 12:00–13:00"
      */
+    const beforeDate = new Date(syncStart.getTime() + 60 * 1000);
+
     const fromDate = user.gmailLastSyncAt ?? this.getStartOfToday();
 
     this.logger.log(
-      `[Sync] User ${user.id} | from: ${fromDate.toISOString()} | to: ${syncStart.toISOString()} | source: ${importSource}`,
+      `[Sync] User ${user.id} | from: ${fromDate.toISOString()} | to: ${beforeDate.toISOString()} | source: ${importSource}`,
     );
 
     const gmail = this.buildGmailClient(accessToken);
-    const messageIds = await this.fetchMessageIds(gmail, fromDate, syncStart);
+    const messageIds = await this.fetchMessageIds(gmail, fromDate, beforeDate); // ← pakai beforeDate
 
     this.logger.log(
       `[Sync] User ${user.id} found ${messageIds.length} candidate emails`,
@@ -318,6 +305,34 @@ export class GmailSyncService {
     return this.genericParser.tryParseFallback(input);
   }
 
+  private async findOrCreateWallet(
+    userId: number,
+    walletName: string,
+  ): Promise<Wallet> {
+    const normalized = walletName.trim();
+
+    // Case-insensitive search supaya "gopay" match "GoPay" di DB
+    const existing = await this.walletRepo
+      .createQueryBuilder('wallet')
+      .where('wallet.userId = :userId', { userId })
+      .andWhere('LOWER(wallet.name) = LOWER(:name)', { name: normalized })
+      .getOne();
+
+    if (existing) return existing;
+
+    // Belum ada → buat baru dengan balance 0
+    this.logger.log(
+      `[Sync] Wallet "${normalized}" not found for user ${userId} — auto-creating`,
+    );
+    return this.walletRepo.save(
+      this.walletRepo.create({
+        name: normalized,
+        balance: 0,
+        user: { id: userId },
+      }),
+    );
+  }
+
   // ─── PRIVATE: Simpan transaksi ke DB ─────────────────────────────────
   private async saveTransaction(
     parsed: ParsedTransaction,
@@ -327,41 +342,63 @@ export class GmailSyncService {
   ): Promise<void> {
     const typeId = TRANSACTION_TYPE_ID[parsed.transactionType];
 
-    // Cari default category untuk tipe transaksi ini milik user
-    // Ambil category pertama yang ditemukan untuk tipe tersebut
-    const category = await this.categoryRepo.findOne({
-      where: {
-        user: { id: user.id },
-        transactionType: { id: typeId },
-      },
-    });
+    // Cari category by name jika parser kasih hint,
+    // fallback ke category pertama untuk tipe tersebut
+    let category: TransactionCategory | null = null;
 
-    // Ambil wallet pertama user (yang dibuat saat signup = "Cash")
-    const wallet = await this.walletRepo.findOne({
-      where: { user: { id: user.id } },
-      order: { createdAt: 'ASC' },
-    });
+    if (parsed.categoryName) {
+      category = await this.categoryRepo.findOne({
+        where: {
+          user: { id: user.id },
+          transactionType: { id: typeId },
+          name: parsed.categoryName,
+        },
+      });
+    }
 
-    if (!category || !wallet) {
-      throw new Error(
-        `Default category or wallet not found for user ${user.id}`,
+    // Fallback: ambil category pertama untuk tipe ini
+    if (!category) {
+      category = await this.categoryRepo.findOne({
+        where: {
+          user: { id: user.id },
+          transactionType: { id: typeId },
+        },
+      });
+    }
+
+    if (!category) {
+      throw new Error(`No category found for user ${user.id} typeId ${typeId}`);
+    }
+
+    // Cari atau buat wallet sumber
+    const sourceWallet = await this.findOrCreateWallet(
+      user.id,
+      parsed.walletName,
+    );
+
+    // Untuk transfer: cari atau buat wallet tujuan juga
+    let destinationWallet: Wallet | null = null;
+    if (parsed.transactionType === 'transfer' && parsed.destinationWalletName) {
+      destinationWallet = await this.findOrCreateWallet(
+        user.id,
+        parsed.destinationWalletName,
       );
     }
 
-    // Pakai QueryRunner untuk atomicity — kalau salah satu gagal, semua rollback
+    this.logger.log(
+      `[Sync] Wallets — source: "${sourceWallet.name}"${destinationWallet ? ` → dest: "${destinationWallet.name}"` : ''}`,
+    );
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // 1. Simpan transaksi utama
       const transaction = queryRunner.manager.create(Transaction, {
         amount: parsed.amount,
         adminFee: 0,
         externalRef,
         importSource,
-        // createdAt di-set ke tanggal email, bukan tanggal import
-        // Supaya transaksi muncul di tanggal yang benar di timeline
         createdAt: new Date(parsed.date),
         user: { id: user.id },
         transactionType: { id: typeId },
@@ -369,31 +406,66 @@ export class GmailSyncService {
       });
       const savedTx = await queryRunner.manager.save(Transaction, transaction);
 
-      // 2. Simpan transaction wallet (relasi transaksi ↔ wallet)
-      const isIncoming = parsed.transactionType === 'income';
-      const tw = queryRunner.manager.create(TransactionWallet, {
-        transaction: savedTx,
-        wallet: { id: wallet.id },
-        isIncoming,
+      // TransactionWallet untuk wallet sumber (selalu ada)
+      const sourceTw = queryRunner.manager.create(TransactionWallet, {
+        transaction: { id: savedTx.id },
+        wallet: { id: sourceWallet.id },
+        isIncoming: parsed.transactionType === 'income',
         amount: parsed.amount,
       });
-      await queryRunner.manager.save(TransactionWallet, tw);
+      await queryRunner.manager.save(TransactionWallet, sourceTw);
 
-      // 3. Update balance wallet
-      // Income (+) → balance bertambah
-      // Expense (-) → balance berkurang
-      // Transfer → kita tidak update karena tidak tahu target wallet
-      if (parsed.transactionType !== 'transfer') {
-        const delta = isIncoming ? parsed.amount : -parsed.amount;
+      // TransactionWallet untuk wallet tujuan (khusus transfer)
+      if (destinationWallet) {
+        const destTw = queryRunner.manager.create(TransactionWallet, {
+          transaction: { id: savedTx.id },
+          wallet: { id: destinationWallet.id },
+          isIncoming: true, // tujuan = menerima
+          amount: parsed.amount,
+        });
+        await queryRunner.manager.save(TransactionWallet, destTw);
+      }
+
+      // Update balance
+      if (parsed.transactionType === 'income') {
+        // Tambah balance wallet sumber
         await queryRunner.manager
           .createQueryBuilder()
           .update(Wallet)
-          .set({ balance: () => `balance + ${delta}` })
-          .where('id = :id', { id: wallet.id })
+          .set({ balance: () => `"balance" + :delta` })
+          .where('id = :id', { id: sourceWallet.id, delta: parsed.amount })
+          .execute();
+      } else if (parsed.transactionType === 'expense') {
+        // Kurangi balance wallet sumber
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(Wallet)
+          .set({ balance: () => `"balance" - :delta` })
+          .where('id = :id', { id: sourceWallet.id, delta: parsed.amount })
+          .execute();
+      } else if (parsed.transactionType === 'transfer' && destinationWallet) {
+        // Transfer: kurangi sumber, tambah tujuan
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(Wallet)
+          .set({ balance: () => `"balance" - :delta` })
+          .where('id = :id', { id: sourceWallet.id, delta: parsed.amount })
+          .execute();
+
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(Wallet)
+          .set({ balance: () => `"balance" + :delta` })
+          .where('id = :id', { id: destinationWallet.id, delta: parsed.amount })
           .execute();
       }
+      // Transfer tanpa destinationWallet → tidak update balance (wallet tujuan tidak diketahui)
 
       await queryRunner.commitTransaction();
+
+      this.logger.log(
+        `[Sync] ✓ ${parsed.source} ${parsed.transactionType} Rp${parsed.amount} | ${sourceWallet.name}${destinationWallet ? ` → ${destinationWallet.name}` : ''}`,
+      );
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
@@ -424,10 +496,58 @@ export class GmailSyncService {
     from: Date,
     to: Date,
   ): Promise<string[]> {
-    // Gmail pakai Unix timestamp dalam detik (bukan milidetik seperti JS)
     const afterSec = Math.floor(from.getTime() / 1000);
     const beforeSec = Math.floor(to.getTime() / 1000);
-    const query = `after:${afterSec} before:${beforeSec} (${GMAIL_SENDER_QUERY})`;
+    const timeFilter = `after:${afterSec} before:${beforeSec}`;
+
+    // Pisah jadi dua query — sender spesifik dan keyword fallback
+    // Gmail API tidak reliable kalau query terlalu panjang
+    const SENDER_QUERY = [
+      'from:noreply@gopay.co.id',
+      'from:no-reply@ovo.id',
+      'from:noreply@ovo.co.id',
+      'from:noreply@dana.id',
+      'from:notifikasi@klikbca.com',
+      'from:noreply@mybca.com',
+      'from:notif@bankmandiri.co.id',
+      'from:livin@bankmandiri.co.id',
+      'from:bni@bni.co.id',
+      'from:noreply@bni.co.id',
+      'from:noreply@bri.co.id',
+      'from:noreply@seabank.co.id',
+      'from:noreply@jago.com',
+      'from:hello@jago.com',
+      'from:no-reply@flip.id',
+      'from:no-reply@grab.com',
+    ].join(' OR ');
+
+    const KEYWORD_QUERY = [
+      'subject:transaksi',
+      'subject:"pembayaran berhasil"',
+      'subject:"transfer berhasil"',
+    ].join(' OR ');
+
+    // Jalankan dua query terpisah lalu gabungkan hasilnya
+    const [senderIds, keywordIds] = await Promise.all([
+      this.fetchPagedIds(gmail, `${timeFilter} (${SENDER_QUERY})`),
+      this.fetchPagedIds(gmail, `${timeFilter} (${KEYWORD_QUERY})`),
+    ]);
+
+    // Deduplikasi — satu email bisa match keduanya
+    const allIds = [...new Set([...senderIds, ...keywordIds])];
+
+    this.logger.log(
+      `[Sync] Query results — sender: ${senderIds.length}, keyword: ${keywordIds.length}, total unique: ${allIds.length}`,
+    );
+
+    return allIds;
+  }
+
+  private async fetchPagedIds(
+    gmail: gmail_v1.Gmail,
+    query: string,
+  ): Promise<string[]> {
+    this.logger.log(`[Sync] Fetching: ${query}`);
 
     const ids: string[] = [];
     let pageToken: string | undefined;
@@ -443,8 +563,6 @@ export class GmailSyncService {
       const messages = res.data.messages ?? [];
       ids.push(...messages.map((m) => m.id!).filter(Boolean));
       pageToken = res.data.nextPageToken ?? undefined;
-
-      // Batasi maksimal 200 email per sync cycle untuk keamanan
     } while (pageToken && ids.length < 200);
 
     return ids;

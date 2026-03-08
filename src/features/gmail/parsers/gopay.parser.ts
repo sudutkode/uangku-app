@@ -10,9 +10,9 @@ export class GopayParser extends BaseBankParser {
   readonly sourceName = 'GoPay';
   readonly senderPatterns = [
     /noreply@gopay\.co\.id/,
-    /no-reply@gojek\.com/,
-    /notification@gojek\.com/,
+    /no-reply@gopay\.co\.id/,
     /noreply@gojek\.com/,
+    /no-reply@gojek\.com/,
   ];
 
   parse(input: ParserInput): ParsedTransaction | null {
@@ -20,16 +20,41 @@ export class GopayParser extends BaseBankParser {
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    const isTopUp = /top.?up|isi saldo/i.test(text);
-    const isRefund = /refund|kembali|cashback/i.test(text);
-    const transactionType = isTopUp || isRefund ? 'income' : 'expense';
+    const isIncoming =
+      /masuk|diterima|menerima|kredit|top.?up|isi saldo|refund|cashback|kamu menerima/i.test(
+        text,
+      );
+    const isTransferOut =
+      /transfer|kirim uang|kamu mengirim|pembayaran ke/i.test(text);
+
+    const transactionType = isIncoming
+      ? 'income'
+      : isTransferOut
+        ? 'transfer'
+        : 'expense';
+
+    // GoPay expense = pembayaran merchant
+    const categoryName = transactionType === 'expense' ? 'Food' : undefined;
 
     const merchant = this.extractMerchant(text, [
-      /pembayaran\s+(?:ke|di|to)\s+(.+?)(?:\s+senilai|\s+sebesar|\s+Rp|\.|$)/i,
-      /di\s+(.+?)(?:\s+senilai|\s+sebesar|\s+berhasil|\s+Rp|\.|$)/i,
-      /kepada\s*:\s*(.+?)[\n\r]/i,
+      /pembayaran ke\s+(.+?)(?:\s+Rp|\n|$)/i,
+      /transaksi di\s+(.+?)(?:\s+Rp|\n|$)/i,
+      /kamu membayar\s+(.+?)(?:\s+Rp|\n|$)/i,
     ]);
 
-    return this.buildResult(input, amount, transactionType, { merchant });
+    let destinationWalletName: string | undefined;
+    if (transactionType === 'transfer') {
+      const destMatch =
+        /ke\s+(GoPay|OVO|DANA|BCA|Mandiri|BNI|BRI|SeaBank|Jago)\b/i.exec(text);
+      if (destMatch?.[1])
+        destinationWalletName = this.normalizeWalletName(destMatch[1]);
+    }
+
+    return this.buildResult(input, amount, transactionType, {
+      merchant,
+      walletName: 'GoPay',
+      destinationWalletName,
+      categoryName,
+    });
   }
 }

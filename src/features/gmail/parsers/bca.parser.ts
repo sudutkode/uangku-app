@@ -10,9 +10,9 @@ export class BcaParser extends BaseBankParser {
   readonly sourceName = 'BCA';
   readonly senderPatterns = [
     /notifikasi@klikbca\.com/,
-    /info@klikbca\.com/,
     /noreply@mybca\.com/,
-    /notif@bca\.co\.id/,
+    /no-reply@mybca\.com/,
+    /notification@klikbca\.com/,
   ];
 
   parse(input: ParserInput): ParsedTransaction | null {
@@ -20,19 +20,39 @@ export class BcaParser extends BaseBankParser {
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    // BCA pakai notasi DB (Debit/keluar) dan CR (Credit/masuk)
-    const isCr = /\bCR\b|kredit|credited/i.test(text);
-    const transactionType = isCr
+    const isIncoming = /kredit|credit|masuk|diterima|menerima/i.test(text);
+    const isTransfer = /transfer|debit|pemindahbukuan|pindah buku/i.test(text);
+
+    const transactionType = isIncoming
       ? 'income'
-      : this.isTransfer(text)
+      : isTransfer
         ? 'transfer'
         : 'expense';
 
     const merchant = this.extractMerchant(text, [
-      /(?:toko|merchant|kepada|tujuan)\s*:\s*(.+?)[\n\r]/i,
-      /transfer\s+(?:ke|to)\s+(.+?)(?:\s+Rp|\n|$)/i,
+      /(?:kepada|ke|tujuan)\s*[:\n]?\s*([^\n]+)/i,
+      /nama\s+(?:tujuan|penerima)\s*[:\n]\s*([^\n]+)/i,
     ]);
 
-    return this.buildResult(input, amount, transactionType, { merchant });
+    let destinationWalletName: string | undefined;
+    if (transactionType === 'transfer') {
+      // BCA transfer: cari bank tujuan
+      const destMatch = /(?:bank tujuan|ke bank)\s*[:\n]?\s*([^\n•\d]+)/i.exec(
+        text,
+      );
+      if (destMatch?.[1]) {
+        destinationWalletName = this.normalizeWalletName(destMatch[1].trim());
+      }
+    }
+
+    const categoryName =
+      transactionType === 'transfer' ? 'Bank Transfer' : undefined;
+
+    return this.buildResult(input, amount, transactionType, {
+      merchant,
+      walletName: 'BCA',
+      destinationWalletName,
+      categoryName,
+    });
   }
 }

@@ -9,4 +9,6 @@ export * from './bni.parser';
 export * from './bri.parser';
 export * from './seabank.parser';
 export * from './jago.parser';
+export * from './flip.parser';
+export * from './grab.parser';
 export * from './generic.parser';

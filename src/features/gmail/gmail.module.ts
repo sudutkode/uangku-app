@@ -21,6 +21,8 @@ import {
   SeabankParser,
   JagoParser,
   GenericBankParser,
+  FlipParser,
+  GrabParser,
 } from './parsers';
 
 const PARSERS = [
@@ -33,6 +35,8 @@ const PARSERS = [
   BriParser,
   SeabankParser,
   JagoParser,
+  FlipParser,
+  GrabParser,
   GenericBankParser,
 ];
 

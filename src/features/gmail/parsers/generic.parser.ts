@@ -5,45 +5,44 @@ import {
   ParsedTransaction,
 } from './base-bank.parser';
 
-/**
- * Parser fallback untuk bank/ewallet yang tidak ada parser spesifiknya.
- * Tidak pernah cocok via canParse() — harus dipanggil manual
- * via tryParseFallback() sebagai last resort.
- */
 @Injectable()
 export class GenericBankParser extends BaseBankParser {
-  readonly sourceName = 'Other';
+  readonly sourceName = 'Bank';
   readonly senderPatterns = [];
 
+  // Generic tidak punya canParse — dipanggil manual sebagai fallback
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   canParse(_from: string): boolean {
     return false;
   }
 
-  parse(input: ParserInput): ParsedTransaction | null {
-    return this.tryParseFallback(input);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  parse(_input: ParserInput): ParsedTransaction | null {
+    return null;
   }
 
   tryParseFallback(input: ParserInput): ParsedTransaction | null {
-    // Hanya proses kalau subject email mengandung kata kunci transaksi
-    // Ini filter supaya tidak salah parse email non-transaksi
-    const isTransactionEmail =
-      /\b(transaksi|pembayaran|transfer|debit|kredit|mutasi|notifikasi|receipt|payment)\b/i.test(
+    const text = `${input.subject} ${input.body} ${input.snippet}`;
+
+    // Hanya proses kalau subject mengandung keyword transaksi
+    const isTransaction =
+      /transaksi|pembayaran berhasil|transfer berhasil|payment success/i.test(
         input.subject,
       );
-    if (!isTransactionEmail) return null;
+    if (!isTransaction) return null;
 
-    const text = `${input.subject} ${input.body} ${input.snippet}`;
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    const transactionType = this.isIncome(text)
+    const isIncoming = /masuk|diterima|kredit|credit|received/i.test(text);
+    const isTransfer = /transfer|kirim/i.test(text);
+
+    const transactionType = isIncoming
       ? 'income'
-      : this.isTransfer(text)
+      : isTransfer
         ? 'transfer'
         : 'expense';
 
-    // confidence 'low' karena kita tidak yakin 100% hasilnya benar
     return this.buildResult(input, amount, transactionType, {
       confidence: 'low',
     });

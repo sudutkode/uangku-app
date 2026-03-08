@@ -11,8 +11,8 @@ export class BniParser extends BaseBankParser {
   readonly senderPatterns = [
     /bni@bni\.co\.id/,
     /noreply@bni\.co\.id/,
+    /no-reply@bni\.co\.id/,
     /notifikasi@bni\.co\.id/,
-    /info@bni\.co\.id/,
   ];
 
   parse(input: ParserInput): ParsedTransaction | null {
@@ -20,17 +20,35 @@ export class BniParser extends BaseBankParser {
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    const transactionType = /kredit|\bCR\b|masuk/i.test(text)
+    const isIncoming = /kredit|credit|masuk|diterima/i.test(text);
+    const isTransfer = /transfer|debit|pemindahbukuan/i.test(text);
+
+    const transactionType = isIncoming
       ? 'income'
-      : this.isTransfer(text)
+      : isTransfer
         ? 'transfer'
         : 'expense';
 
     const merchant = this.extractMerchant(text, [
-      /(?:kepada|beneficiary|tujuan transfer)\s*:\s*(.+?)[\n\r]/i,
-      /transfer\s+ke\s+(.+?)(?:\s+Rp|\n|$)/i,
+      /(?:kepada|ke|tujuan)\s*[:\n]?\s*([^\n]+)/i,
+      /nama\s+(?:tujuan|penerima)\s*[:\n]\s*([^\n]+)/i,
     ]);
 
-    return this.buildResult(input, amount, transactionType, { merchant });
+    let destinationWalletName: string | undefined;
+    if (transactionType === 'transfer') {
+      const destMatch = /(?:bank tujuan|ke bank)\s*[:\n]?\s*([^\n•\d]+)/i.exec(
+        text,
+      );
+      if (destMatch?.[1])
+        destinationWalletName = this.normalizeWalletName(destMatch[1].trim());
+    }
+
+    return this.buildResult(input, amount, transactionType, {
+      merchant,
+      walletName: 'BNI',
+      destinationWalletName,
+      categoryName:
+        transactionType === 'transfer' ? 'Bank Transfer' : undefined,
+    });
   }
 }
