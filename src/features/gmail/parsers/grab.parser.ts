@@ -83,12 +83,15 @@ export class GrabParser extends BaseBankParser {
   }
 
   private extractWalletFromGrab(text: string): string {
-    // Format email Grab: "Paid by\nOVO\n14.500"
-    // Ambil baris setelah "Paid by", stop sebelum angka atau newline kedua
-    const match = /paid by\s*\n?\s*([A-Za-z\s]+?)(?:\n|[\d]|$)/i.exec(text);
+    // English: "Paid by\nOVO\n14.500"
+    // Indonesia: "Dibayar dengan\nOVO\n5000"
+    const match =
+      /(?:paid by|dibayar dengan)\s*\n?\s*([A-Za-z\s]+?)(?:\n|[\d]|$)/i.exec(
+        text,
+      );
     if (match?.[1]) {
       return this.normalizeWalletName(match[1].trim());
     }
-    return 'Cash'; // fallback
+    return 'Cash';
   }
 }

@@ -21,21 +21,53 @@ export class JagoParser extends BaseBankParser {
     const amount = this.extractAmount(text);
     if (!amount) return null;
 
-    const isTransferOut =
-      /melakukan transfer|transfer uang|kamu.*transfer/i.test(text);
-    const isReceived = this.isIncome(text);
+    const isIncoming = /menerima|masuk|kredit|top.?up/i.test(text);
 
-    const transactionType = isReceived
-      ? 'income'
-      : isTransferOut || this.isTransfer(text)
-        ? 'transfer'
-        : 'expense';
+    // Transfer ke bank/ewallet lain: ada pola "GoPay • nomor" atau "BCA • nomor"
+    const isTransferToWallet =
+      /\b(GoPay|OVO|DANA|BCA|Mandiri|BNI|BRI|SeaBank|Jago|ShopeePay|LinkAja)\b\s*[•·]\s*\d+/i.test(
+        text,
+      );
 
-    const merchant = this.extractMerchant(text, [
-      /\bKe\b\s*\n\s*([^\n]+)/i,
-      /kepada\s+(.+?)(?:\s+Rp|\s+senilai|\n|$)/i,
+    // Payment ke merchant: "Kamu telah membayar ke [nama merchant]"
+    // Nomor tujuannya adalah nomor terminal/merchant (bukan rekening bank)
+    const isMerchantPayment = /membayar ke|mengirimkan uang/i.test(text);
+
+    // Transfer biasa antar bank (ada kata transfer eksplisit)
+    const isExplicitTransfer = /melakukan transfer|transfer uang/i.test(text);
+
+    let transactionType: 'income' | 'expense' | 'transfer';
+    if (isIncoming) {
+      transactionType = 'income';
+    } else if (isTransferToWallet || isExplicitTransfer) {
+      transactionType = 'transfer';
+    } else if (isMerchantPayment) {
+      transactionType = 'expense'; // bayar merchant = pengeluaran
+    } else {
+      transactionType = 'expense';
+    }
+
+    // Extract nama merchant/tujuan dari subject
+    // "Kamu telah membayar ke Dadar Beredar, Cimahi"
+    const merchantFromSubject = this.extractMerchant(input.subject, [
+      /membayar ke\s+(.+)/i,
     ]);
 
+    const merchantFromBody = this.extractMerchant(text, [
+      /\bKe\b\s*\n\s*([^\n•\d]+)/i,
+    ]);
+
+    const merchant = merchantFromSubject ?? merchantFromBody;
+
+    // Suggest category berdasarkan nama merchant
+    let categoryName: string | undefined;
+    if (transactionType === 'expense') {
+      categoryName = this.suggestCategoryFromMerchant(merchant ?? '');
+    } else if (transactionType === 'transfer') {
+      categoryName = 'Bank Transfer';
+    }
+
+    // Destination wallet hanya untuk transfer ke bank/ewallet
     let destinationWalletName: string | undefined;
     if (transactionType === 'transfer') {
       destinationWalletName = this.extractDestinationWallet(text);
@@ -45,19 +77,12 @@ export class JagoParser extends BaseBankParser {
       merchant,
       walletName: 'Jago',
       destinationWalletName,
+      categoryName,
     });
   }
 
   private extractDestinationWallet(text: string): string | undefined {
-    /**
-     * Format email Jago:
-     * "Ke
-     *  TONDIKI ANDIKA GURNING
-     *  GoPay • 081511791947"
-     *
-     * Kita cari baris yang berisi nama bank/ewallet diikuti "•" dan nomor
-     * Ini lebih reliable daripada cari setelah "Ke"
-     */
+    // "GoPay • 081511791947"
     const walletLineMatch =
       /\b(GoPay|OVO|DANA|BCA|Mandiri|BNI|BRI|SeaBank|Jago|ShopeePay|LinkAja|Flip)\b\s*[•·]\s*\d+/i.exec(
         text,
@@ -66,7 +91,6 @@ export class JagoParser extends BaseBankParser {
       return this.normalizeWalletName(walletLineMatch[1]);
     }
 
-    // Fallback: "Bank Tujuan: BCA" atau "Bank Penerima: BCA"
     const bankMatch =
       /(?:bank tujuan|bank penerima)\s*[:\n]\s*([^\n•\d]+)/i.exec(text);
     if (bankMatch?.[1]) {
@@ -74,5 +98,25 @@ export class JagoParser extends BaseBankParser {
     }
 
     return undefined;
+  }
+
+  private suggestCategoryFromMerchant(merchant: string): string {
+    if (
+      /resto|makan|food|warung|cafe|kafe|kopi|coffee|dadar|sate|bakso|mie|nasi|ayam|pizza|burger|runchise|dahankopi/i.test(
+        merchant,
+      )
+    ) {
+      return 'Food';
+    }
+    if (/grab|gojek|taxi|ojek|transport/i.test(merchant)) {
+      return 'Transportation';
+    }
+    if (/apotek|pharmacy|klinik|rumah sakit|dokter/i.test(merchant)) {
+      return 'Health';
+    }
+    if (/alfamart|indomaret|supermarket|minimarket/i.test(merchant)) {
+      return 'Shopping';
+    }
+    return 'Food'; // default expense Jago = bayar makan
   }
 }
