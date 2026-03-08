@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, Not } from 'typeorm';
+import { Repository, ILike, Not, And } from 'typeorm';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 import { CreateTransactionCategoryDto } from './dto/create-transaction-category.dto';
 import { UpdateTransactionCategoryDto } from './dto/update-transaction-category.dto';
@@ -56,7 +56,7 @@ export class TransactionCategoriesService {
 
     const where: any = {
       user: { id: user.id },
-      name: Not('Balance Correction'),
+      name: And(Not('Balance Correction'), Not('Unknown')),
     };
 
     if (transactionTypeId) {
