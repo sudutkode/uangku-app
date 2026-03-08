@@ -6,7 +6,11 @@ import React, {useState} from "react";
 import {Alert, StyleSheet, View} from "react-native";
 import {Button, Snackbar, Text, useTheme} from "react-native-paper";
 
-export default function GmailSyncButton() {
+interface GmailSyncButtonProps {
+  callback: () => void;
+}
+
+export default function GmailSyncButton({callback}: GmailSyncButtonProps) {
   const {colors} = useTheme();
   const {syncing, status, lastResult, error, triggerSync} = useGmailSync();
   const [snackVisible, setSnackVisible] = useState(false);
@@ -22,6 +26,7 @@ export default function GmailSyncButton() {
     try {
       await triggerSync();
       setSnackVisible(true);
+      callback();
     } catch {
       // error sudah di-set di hook
     }

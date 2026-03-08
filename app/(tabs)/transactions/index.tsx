@@ -2,10 +2,19 @@ import React, {useEffect} from "react";
 import {StyleSheet, View} from "react-native";
 import {ActivityIndicator, Button, Text, useTheme} from "react-native-paper";
 
-import {AddButton, Icon, TransactionsFlatList} from "@/components/ui";
+import {DateStepper} from "@/components/inputs";
+import {
+  AddButton,
+  Icon,
+  SummaryCard,
+  TransactionsFlatList,
+} from "@/components/ui";
+import GmailSyncButton from "@/components/ui/gmail-sync-button";
 import {useFetch} from "@/hooks/axios/use-fetch";
 import {useTransactionsStore} from "@/store";
 import {TransactionsResponse} from "@/types";
+import {Stack} from "expo-router";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 export default function TransactionScreen() {
   const {colors} = useTheme();
@@ -16,6 +25,8 @@ export default function TransactionScreen() {
     transactions,
     needsRefetch,
     setNeedsRefetch,
+    summary,
+    setSelectedDate,
   } = useTransactionsStore();
 
   const {
@@ -43,9 +54,7 @@ export default function TransactionScreen() {
       return (
         <View style={styles.centerContainer}>
           <Icon name="triangle-exclamation" size={32} color={colors.error} />
-          <Text style={{marginTop: 12, marginBottom: 8}}>
-            Something went wrong
-          </Text>
+          <Text style={{marginTop: 12, marginBottom: 8}}>{error}</Text>
           <Button mode="contained" onPress={refetch}>
             Retry
           </Button>
@@ -88,10 +97,28 @@ export default function TransactionScreen() {
   }, [needsRefetch, refetch, setNeedsRefetch]);
 
   return (
-    <View style={styles.container}>
-      {renderContent()}
-      <AddButton screenName="transactions" />
-    </View>
+    <>
+      <Stack.Screen
+        options={{
+          header: () => (
+            <SafeAreaView
+              edges={["top"]}
+              style={{
+                backgroundColor: colors.surface,
+              }}
+            >
+              <DateStepper date={selectedDate} onChange={setSelectedDate} />
+              <SummaryCard data={summary} />
+              <GmailSyncButton callback={refetch} />
+            </SafeAreaView>
+          ),
+        }}
+      />
+      <View style={styles.container}>
+        {renderContent()}
+        <AddButton screenName="transactions" />
+      </View>
+    </>
   );
 }
 

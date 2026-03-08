@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
   wrapper: {
     flexDirection: "row",
     margin: 16,
+    marginBottom: 0,
     marginTop: 0,
     paddingVertical: 16,
     paddingHorizontal: 8,

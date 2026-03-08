@@ -34,8 +34,6 @@ export default function AuthScreen() {
       const userGoogle = res.data?.user;
       const serverAuthCode = res.data?.serverAuthCode;
 
-      console.log("serverAuthCode:", serverAuthCode);
-
       const payload = {
         email: userGoogle?.email || "",
         name: userGoogle?.name || "",

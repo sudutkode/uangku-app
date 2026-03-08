@@ -11,9 +11,15 @@ export default function ProfileScreen() {
   const {colors} = useTheme();
   const {signout, user} = useAuthStore();
 
-  const handleSignOut = () => {
-    GoogleSignin.signOut();
-    signout();
+  const handleSignOut = async () => {
+    try {
+      await GoogleSignin.revokeAccess();
+      await GoogleSignin.signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      signout();
+    }
   };
 
   return (

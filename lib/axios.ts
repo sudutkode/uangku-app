@@ -9,7 +9,7 @@ import axios, {
 import {router} from "expo-router";
 
 const api: AxiosInstance = axios.create({
-  baseURL: "http://10.120.16.6:3000", // process.env.EXPO_PUBLIC_BASE_URL,
+  baseURL: process.env.EXPO_PUBLIC_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
