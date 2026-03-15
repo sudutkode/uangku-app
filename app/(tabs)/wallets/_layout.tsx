@@ -32,11 +32,7 @@ export default function WalletsLayout() {
                 backgroundColor: colors.surface,
                 padding: 16,
                 paddingBottom: 0,
-                elevation: 4, // For Android
-                shadowColor: colors.shadow, // For iOS
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
+                elevation: 4,
                 borderBottomWidth: Platform.OS === "ios" ? 0.5 : 0, // For iOS
                 borderBottomColor: colors.outlineVariant,
               }}

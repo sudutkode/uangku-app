@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import {AppRegistry} from "react-native";
+import {AppRegistry, Platform} from "react-native";
 
 const headlessNotificationListener = async ({notification}: any) => {
   if (!notification) return;
@@ -66,8 +66,10 @@ const headlessNotificationListener = async ({notification}: any) => {
   }
 };
 
-// Daftarkan Headless Task
-AppRegistry.registerHeadlessTask(
-  "RNAndroidNotificationListenerHeadlessJs",
-  () => headlessNotificationListener,
-);
+// Daftarkan Headless Task HANYA jika perangkatnya adalah Android
+if (Platform.OS === "android") {
+  AppRegistry.registerHeadlessTask(
+    "RNAndroidNotificationListenerHeadlessJs",
+    () => headlessNotificationListener,
+  );
+}

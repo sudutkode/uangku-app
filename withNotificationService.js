@@ -4,49 +4,23 @@ module.exports = function withNotificationService(config) {
   return withAndroidManifest(config, async (config) => {
     const androidManifest = config.modResults.manifest;
 
-    // Pastikan node 'application' ada
+    // 1. Tetap pertahankan namespace tools
+    androidManifest.$["xmlns:tools"] = "http://schemas.android.com/tools";
+
     if (!androidManifest.application) return config;
     const app = androidManifest.application[0];
 
-    // Ini adalah blok <service> yang diwajibkan oleh library-nya
-    const notificationService = {
-      $: {
-        "android:name":
-          "com.reactnativenotificationlistener.RNAndroidNotificationListener",
-        "android:label": "@string/app_name",
-        "android:permission":
-          "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
-        "android:exported": "true",
-      },
-      "intent-filter": [
-        {
-          action: [
-            {
-              $: {
-                "android:name":
-                  "android.service.notification.NotificationListenerService",
-              },
-            },
-          ],
-        },
-      ],
-    };
-
-    // Jika belum ada array service, buat baru
-    if (!app.service) {
-      app.service = [];
+    // 2. Tetap pertahankan perbaikan allowBackup agar build tidak gagal
+    if (app.$["tools:replace"]) {
+      if (!app.$["tools:replace"].includes("android:allowBackup")) {
+        app.$["tools:replace"] += ",android:allowBackup";
+      }
+    } else {
+      app.$["tools:replace"] = "android:allowBackup";
     }
 
-    // Cek agar tidak terjadi duplikasi saat re-build
-    const serviceExists = app.service.some(
-      (s) =>
-        s.$["android:name"] ===
-        "com.reactnativenotificationlistener.RNAndroidNotificationListener",
-    );
-
-    if (!serviceExists) {
-      app.service.push(notificationService);
-    }
+    // KITA HAPUS KODE INJEKSI <service> MANUAL DI SINI.
+    // Library sudah mengurusnya secara otomatis!
 
     return config;
   });

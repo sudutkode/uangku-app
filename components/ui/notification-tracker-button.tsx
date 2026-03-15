@@ -1,8 +1,8 @@
-import {Icon} from "@/components/ui";
 import React, {useEffect, useState} from "react";
 import {AppState, StyleSheet, View} from "react-native";
 import RNAndroidNotificationListener from "react-native-android-notification-listener";
 import {Button, Text, useTheme} from "react-native-paper";
+import Icon from "./icon-fa6";
 
 export default function NotificationTrackerButton() {
   const {colors} = useTheme();
