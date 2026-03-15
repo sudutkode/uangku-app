@@ -51,7 +51,7 @@
           "iosUrlScheme": "com.googleusercontent.apps.270912914730-f0lhbp0v45gr5nv5dbpupjlvbg5rffjr"
         }
       ],
-      "react-native-android-notification-listener"
+      "./withNotificationService.js"
     ],
     "experiments": {
       "typedRoutes": true,
