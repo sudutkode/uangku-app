@@ -9,12 +9,10 @@
  */
 export function extractAmount(text: string): number | null {
   const patterns = [
-    // Pola paling umum: "Rp1.500.000" atau "Rp 1.500.000,00" atau "IDR 1500000"
-    /(?:Rp\.?|IDR)\s*([\d.,]+)/gi,
-    // Pola kontekstual: "sebesar Rp...", "senilai Rp...", "jumlah Rp..."
-    /(?:sebesar|senilai|jumlah|nominal|total)\s*:?\s*(?:Rp\.?|IDR)?\s*([\d.,]+)/gi,
-    // Pola label: "Total: 1.500.000" atau "Amount: 1500000"
-    /(?:total|amount|nilai transaksi)\s*[:\s]+(?:Rp\.?|IDR)?\s*([\d.,]+)/gi,
+    // Fix: tambah "RP" uppercase untuk Grab, dan handle spasi lebih fleksibel
+    /(?:Rp\.?|IDR|RP)\s*([\d.,]+)/gi,
+    /(?:sebesar|senilai|jumlah|nominal|total paid|total)\s*[:\s]*(?:Rp\.?|IDR|RP)?\s*([\d.,]+)/gi,
+    /(?:amount|nilai transaksi)\s*[:\s]+(?:Rp\.?|IDR|RP)?\s*([\d.,]+)/gi,
   ];
 
   for (const pattern of patterns) {
@@ -23,8 +21,6 @@ export function extractAmount(text: string): number | null {
     while ((match = pattern.exec(text)) !== null) {
       const raw = match[1].trim();
       const amount = normalizeIndonesianNumber(raw);
-      // Sanity check: minimal Rp100, maksimal Rp1 miliar
-      // Ini untuk filter false positive seperti nomor versi "1.0.2"
       if (amount !== null && amount >= 100 && amount <= 1_000_000_000) {
         return amount;
       }

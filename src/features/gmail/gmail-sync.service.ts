@@ -179,29 +179,15 @@ export class GmailSyncService {
     importSource: 'gmail_scheduler' | 'gmail_manual',
   ): Promise<SyncResult> {
     const syncStart = new Date();
-
-    /**
-     * Tentukan window waktu untuk fetch email:
-     *
-     * Kasus 1: Belum pernah sync (gmailLastSyncAt = null)
-     *   → Ambil dari awal hari ini (00:00)
-     *   → Tidak mau import email lama yang tidak relevan
-     *
-     * Kasus 2: Sudah pernah sync
-     *   → Ambil dari lastSyncAt sampai sekarang
-     *   → Ini yang bikin "sync jam 12:00, klik lagi jam 13:00
-     *      → hanya ambil email 12:00–13:00"
-     */
     const beforeDate = new Date(syncStart.getTime() + 60 * 1000);
-
-    const fromDate = user.gmailLastSyncAt ?? this.getStartOfToday();
+    const fromDate = user.gmailLastSyncAt ?? this.getStartOfTodayWIB();
 
     this.logger.log(
       `[Sync] User ${user.id} | from: ${fromDate.toISOString()} | to: ${beforeDate.toISOString()} | source: ${importSource}`,
     );
 
     const gmail = this.buildGmailClient(accessToken);
-    const messageIds = await this.fetchMessageIds(gmail, fromDate, beforeDate); // ← pakai beforeDate
+    const messageIds = await this.fetchMessageIds(gmail, fromDate, beforeDate);
 
     this.logger.log(
       `[Sync] User ${user.id} found ${messageIds.length} candidate emails`,
@@ -211,41 +197,23 @@ export class GmailSyncService {
     let skipped = 0;
     let failed = 0;
 
-    // Proses per batch 10 — tidak mau overload memory atau Gmail API rate limit
-    const BATCH_SIZE = 10;
-    for (let i = 0; i < messageIds.length; i += BATCH_SIZE) {
-      const batch = messageIds.slice(i, i + BATCH_SIZE);
-
-      /**
-       * Promise.allSettled vs Promise.all:
-       * - Promise.all → berhenti dan throw kalau ada SATU yang error
-       * - Promise.allSettled → proses semua, kumpulkan hasil (sukses/gagal)
-       * Kita pakai allSettled supaya satu email yang error tidak menghentikan
-       * proses email lainnya dalam batch yang sama.
-       */
-      const results = await Promise.allSettled(
-        batch.map((id) =>
-          this.processOneMessage(gmail, id, user, importSource),
-        ),
-      );
-
-      for (const result of results) {
-        if (result.status === 'rejected') {
-          failed++;
-          this.logger.warn(`[Sync] Message failed: ${result.reason}`);
-        } else if (result.value === 'imported') {
-          imported++;
-        } else if (result.value === 'duplicate') {
-          skipped++;
-        }
-        // 'unparseable' = bukan email transaksi, tidak dihitung sebagai error
+    // Sequential untuk hindari race condition di findOrCreateWallet
+    for (const messageId of messageIds) {
+      try {
+        const result = await this.processOneMessage(
+          gmail,
+          messageId,
+          user,
+          importSource,
+        );
+        if (result === 'imported') imported++;
+        else if (result === 'duplicate') skipped++;
+      } catch (err) {
+        failed++;
+        this.logger.warn(`[Sync] Message ${messageId} failed: ${err.message}`);
       }
     }
 
-    // Update lastSyncAt ke waktu MULAI sync (bukan selesai)
-    // Kenapa syncStart bukan Date.now()?
-    // Supaya kalau ada email yang masuk tepat saat sync berjalan,
-    // email itu tidak terlewat di sync berikutnya
     await this.userRepo.update(user.id, { gmailLastSyncAt: syncStart });
 
     return {
@@ -355,7 +323,7 @@ export class GmailSyncService {
       });
     }
 
-    // Fallback ke "Unknown" jika category tidak ditemukan
+    // Fallback ke "Unknown"
     if (!category) {
       category = await this.categoryRepo.findOne({
         where: {
@@ -370,13 +338,13 @@ export class GmailSyncService {
       throw new Error(`No category found for user ${user.id} typeId ${typeId}`);
     }
 
-    // Cari atau buat wallet sumber
+    // Fix: fallback ke sourceName kalau walletName undefined
+    const sourceWalletName = parsed.walletName ?? parsed.source;
     const sourceWallet = await this.findOrCreateWallet(
       user.id,
-      parsed.walletName,
+      sourceWalletName,
     );
 
-    // Untuk transfer: cari atau buat wallet tujuan juga
     let destinationWallet: Wallet | null = null;
     if (parsed.transactionType === 'transfer' && parsed.destinationWalletName) {
       destinationWallet = await this.findOrCreateWallet(
@@ -406,7 +374,6 @@ export class GmailSyncService {
       });
       const savedTx = await queryRunner.manager.save(Transaction, transaction);
 
-      // TransactionWallet untuk wallet sumber (selalu ada)
       const sourceTw = queryRunner.manager.create(TransactionWallet, {
         transaction: { id: savedTx.id },
         wallet: { id: sourceWallet.id },
@@ -415,51 +382,50 @@ export class GmailSyncService {
       });
       await queryRunner.manager.save(TransactionWallet, sourceTw);
 
-      // TransactionWallet untuk wallet tujuan (khusus transfer)
       if (destinationWallet) {
         const destTw = queryRunner.manager.create(TransactionWallet, {
           transaction: { id: savedTx.id },
           wallet: { id: destinationWallet.id },
-          isIncoming: true, // tujuan = menerima
+          isIncoming: true,
           amount: parsed.amount,
         });
         await queryRunner.manager.save(TransactionWallet, destTw);
       }
 
-      // Update balance
+      // Fix: pakai setParameter untuk balance update
       if (parsed.transactionType === 'income') {
-        // Tambah balance wallet sumber
         await queryRunner.manager
           .createQueryBuilder()
           .update(Wallet)
-          .set({ balance: () => `"balance" + :delta` })
-          .where('id = :id', { id: sourceWallet.id, delta: parsed.amount })
+          .set({ balance: () => '"balance" + :delta' })
+          .setParameter('delta', parsed.amount)
+          .where('id = :id', { id: sourceWallet.id })
           .execute();
       } else if (parsed.transactionType === 'expense') {
-        // Kurangi balance wallet sumber
         await queryRunner.manager
           .createQueryBuilder()
           .update(Wallet)
-          .set({ balance: () => `"balance" - :delta` })
-          .where('id = :id', { id: sourceWallet.id, delta: parsed.amount })
+          .set({ balance: () => '"balance" - :delta' })
+          .setParameter('delta', parsed.amount)
+          .where('id = :id', { id: sourceWallet.id })
           .execute();
       } else if (parsed.transactionType === 'transfer' && destinationWallet) {
-        // Transfer: kurangi sumber, tambah tujuan
         await queryRunner.manager
           .createQueryBuilder()
           .update(Wallet)
-          .set({ balance: () => `"balance" - :delta` })
-          .where('id = :id', { id: sourceWallet.id, delta: parsed.amount })
+          .set({ balance: () => '"balance" - :delta' })
+          .setParameter('delta', parsed.amount)
+          .where('id = :id', { id: sourceWallet.id })
           .execute();
 
         await queryRunner.manager
           .createQueryBuilder()
           .update(Wallet)
-          .set({ balance: () => `"balance" + :delta` })
-          .where('id = :id', { id: destinationWallet.id, delta: parsed.amount })
+          .set({ balance: () => '"balance" + :delta' })
+          .setParameter('delta', parsed.amount)
+          .where('id = :id', { id: destinationWallet.id })
           .execute();
       }
-      // Transfer tanpa destinationWallet → tidak update balance (wallet tujuan tidak diketahui)
 
       await queryRunner.commitTransaction();
 
@@ -485,10 +451,13 @@ export class GmailSyncService {
     return google.gmail({ version: 'v1', auth });
   }
 
-  private getStartOfToday(): Date {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
+  private getStartOfTodayWIB(): Date {
+    const now = new Date();
+    // UTC+7
+    const wibOffset = 7 * 60 * 60 * 1000;
+    const wibNow = new Date(now.getTime() + wibOffset);
+    wibNow.setUTCHours(0, 0, 0, 0);
+    return new Date(wibNow.getTime() - wibOffset);
   }
 
   private async fetchMessageIds(
@@ -588,41 +557,53 @@ export class GmailSyncService {
   ): string {
     if (!payload) return '';
 
-    // Body langsung (email simple, bukan multipart)
     if (payload.body?.data) {
       return Buffer.from(payload.body.data, 'base64url').toString('utf-8');
     }
 
     if (payload.parts) {
-      // Prioritas 1: Plain text — lebih mudah di-parse daripada HTML
-      for (const part of payload.parts) {
-        if (part.mimeType === 'text/plain' && part.body?.data) {
-          return Buffer.from(part.body.data, 'base64url').toString('utf-8');
-        }
+      // Rekursif flatten semua parts dulu
+      const allParts = this.flattenParts(payload.parts);
+
+      // Prioritas 1: plain text
+      const plainPart = allParts.find(
+        (p) => p.mimeType === 'text/plain' && p.body?.data,
+      );
+      if (plainPart?.body?.data) {
+        return Buffer.from(plainPart.body.data, 'base64url').toString('utf-8');
       }
-      // Prioritas 2: HTML — strip semua tag, ambil teksnya
-      for (const part of payload.parts) {
-        if (part.mimeType === 'text/html' && part.body?.data) {
-          const html = Buffer.from(part.body.data, 'base64url').toString(
-            'utf-8',
-          );
-          return html
-            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-            .replace(/<[^>]+>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-        }
-      }
-      // Prioritas 3: Nested multipart (rekursif)
-      for (const part of payload.parts) {
-        if (part.mimeType?.startsWith('multipart/')) {
-          const nested = this.extractBody(part);
-          if (nested) return nested;
-        }
+
+      // Prioritas 2: HTML
+      const htmlPart = allParts.find(
+        (p) => p.mimeType === 'text/html' && p.body?.data,
+      );
+      if (htmlPart?.body?.data) {
+        const html = Buffer.from(htmlPart.body.data, 'base64url').toString(
+          'utf-8',
+        );
+        return html
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
       }
     }
 
     return '';
+  }
+
+  // Flatten semua nested parts rekursif
+  private flattenParts(
+    parts: gmail_v1.Schema$MessagePart[],
+  ): gmail_v1.Schema$MessagePart[] {
+    const result: gmail_v1.Schema$MessagePart[] = [];
+    for (const part of parts) {
+      result.push(part);
+      if (part.parts?.length) {
+        result.push(...this.flattenParts(part.parts));
+      }
+    }
+    return result;
   }
 }
