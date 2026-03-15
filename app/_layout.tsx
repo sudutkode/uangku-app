@@ -17,6 +17,9 @@ import {darkTheme, lightTheme} from "@/constants/theme";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import "react-native-reanimated";
 
+// 👇 1. IMPORT SERVICE DI SINI (Paling atas setelah library)
+import "@/services/NotificationService";
+
 import {useAuthStore} from "@/store";
 import {en, registerTranslation} from "react-native-paper-dates";
 registerTranslation("en", en);
@@ -35,9 +38,12 @@ export default function RootLayout() {
     GoogleSignin.configure({
       webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
       offlineAccess: true,
-      scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
+      // 👇 2. GANTI SCOPE (Hapus gmail.readonly)
+      scopes: ["profile", "email"],
     });
   }, []);
+
+  // ... sisa kode ke bawah tetap sama persis
 
   // theme based on color scheme
   const isDark = colorScheme === "dark";

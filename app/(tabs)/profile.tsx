@@ -1,3 +1,4 @@
+import {NotificationTrackerButton} from "@/components/ui";
 import {useAuthStore} from "@/store";
 import {screenHeight} from "@/utils/common-utils";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
@@ -45,6 +46,7 @@ export default function ProfileScreen() {
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
+          marginBottom: 24,
         }}
       >
         <Text variant="labelLarge">Joined Since</Text>
@@ -52,6 +54,8 @@ export default function ProfileScreen() {
           {user?.createdAt ? format(user.createdAt, "dd MMM yyyy") : "-"}
         </Text>
       </View>
+
+      <NotificationTrackerButton />
 
       <View style={styles.footer}>
         <Button
