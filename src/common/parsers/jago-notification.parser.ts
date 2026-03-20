@@ -47,24 +47,8 @@ export class JagoNotificationParser extends BaseNotificationParser {
       ? `Jago - ${kantongMatch[1].trim()}`
       : 'Jago';
 
-    // Check if this is a transfer to another Kantong (internal)
-    const destKantongMatch = text.match(
-      /ke\s+Kantong\s+([A-Za-z\s]+?)(?:\s+berhasil|\.|,|$)/i,
-    );
-
-    let transactionType = this.detectType(title, text);
+    const transactionType = this.detectType(title, text);
     let destinationWalletName: string | undefined;
-
-    if (transactionType === 'transfer') {
-      if (destKantongMatch) {
-        // Transfer to another internal Kantong — keep as transfer
-        destinationWalletName = `Jago - ${destKantongMatch[1].trim()}`;
-      } else {
-        // Transfer to external person/bank (e.g. "ke TONDIKI ANDIKA GURNING")
-        // We don't know the destination wallet → downgrade to expense
-        transactionType = 'expense';
-      }
-    }
 
     return {
       transactionType,

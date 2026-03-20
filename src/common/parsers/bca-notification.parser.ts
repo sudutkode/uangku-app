@@ -26,15 +26,6 @@ export class BcaNotificationParser extends BaseNotificationParser {
     const combined = `${title} ${text}`;
     const amount = this.extractAmount(combined);
     if (!amount) return null;
-    if (this.detectType(title, text) === 'transfer') {
-      return {
-        transactionType: 'transfer',
-        amount,
-        walletName: 'BCA',
-        note: this.buildNote(title, text),
-        fingerprint: this.buildFingerprint(app, 'transfer', amount),
-      };
-    }
     const isCR = /\bCR\b/.test(combined);
     const isDB = /\bDB\b/.test(combined);
     const type: 'income' | 'expense' = isCR

@@ -52,6 +52,7 @@ export class TransactionCategoriesController {
     @Req() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit: number,
+    @Query('withNotification') withNotification?: string,
     @Query('transactionTypeId', new DefaultValuePipe(0), ParseIntPipe)
     transactionTypeId?: number,
   ) {
@@ -61,6 +62,7 @@ export class TransactionCategoriesController {
       page,
       limit,
       transactionTypeId: transactionTypeId || undefined,
+      withNotification: Boolean(withNotification),
     });
 
     return successResponse(

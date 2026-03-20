@@ -60,6 +60,7 @@ export class TransactionCategoriesService {
 
     // Start with the base exclusion
     const nameConditions: any[] = [Not('Balance Correction')];
+    console.log({ withNotification });
 
     // Only add the Notification exclusion if withNotification is false/undefined
     if (!withNotification) {

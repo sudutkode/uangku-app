@@ -187,14 +187,6 @@ export class NotificationsService {
       parsed.walletName,
     );
 
-    let destinationWallet: Wallet | null = null;
-    if (parsed.transactionType === 'transfer' && parsed.destinationWalletName) {
-      destinationWallet = await this.findOrCreateWallet(
-        user.id,
-        parsed.destinationWalletName,
-      );
-    }
-
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -220,16 +212,6 @@ export class NotificationsService {
       });
       await queryRunner.manager.save(TransactionWallet, sourceTw);
 
-      if (destinationWallet) {
-        const destTw = queryRunner.manager.create(TransactionWallet, {
-          transaction: { id: savedTx.id },
-          wallet: { id: destinationWallet.id },
-          isIncoming: true,
-          amount: parsed.amount,
-        });
-        await queryRunner.manager.save(TransactionWallet, destTw);
-      }
-
       if (parsed.transactionType === 'income') {
         await queryRunner.manager
           .createQueryBuilder()
@@ -254,15 +236,6 @@ export class NotificationsService {
           .setParameter('delta', parsed.amount)
           .where('id = :id', { id: sourceWallet.id })
           .execute();
-        if (destinationWallet) {
-          await queryRunner.manager
-            .createQueryBuilder()
-            .update(Wallet)
-            .set({ balance: () => '"balance" + :delta' })
-            .setParameter('delta', parsed.amount)
-            .where('id = :id', { id: destinationWallet.id })
-            .execute();
-        }
       }
 
       await queryRunner.commitTransaction();

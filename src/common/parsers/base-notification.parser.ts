@@ -1,7 +1,7 @@
 import { SyncNotificationDto } from '../../features/notifications/dto/sync-notification.dto';
 
 export interface ParsedNotification {
-  transactionType: 'income' | 'expense' | 'transfer';
+  transactionType: 'income' | 'expense';
   amount: number;
   walletName: string;
   destinationWalletName?: string;
@@ -63,27 +63,8 @@ export abstract class BaseNotificationParser {
 
   // ─── Transaction type detection ────────────────────────────────────────────
 
-  protected detectType(
-    title: string,
-    text: string,
-  ): 'income' | 'expense' | 'transfer' {
+  protected detectType(title: string, text: string): 'income' | 'expense' {
     const combined = `${title} ${text}`.toLowerCase();
-
-    const outgoingTransferKw = [
-      'telah melakukan transfer',
-      'transfer ke',
-      'kirim ke',
-      'ke rekening',
-      'ke rek ',
-      'pemindahbukuan',
-      'send to',
-      'sent to',
-      'transfer to',
-      'you have transferred',
-      'you transferred',
-    ];
-    if (outgoingTransferKw.some((kw) => combined.includes(kw)))
-      return 'transfer';
 
     const incomePatterns = [
       /uang masuk/,
