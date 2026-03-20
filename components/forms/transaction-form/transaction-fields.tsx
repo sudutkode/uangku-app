@@ -1,7 +1,7 @@
 import {DatePicker, Dropdown} from "@/components/inputs";
 import React, {memo, useCallback} from "react";
 import {StyleSheet, View} from "react-native";
-import {HelperText, TextInput, useTheme} from "react-native-paper";
+import {TextInput, useTheme} from "react-native-paper";
 import {FormState, TRANSFER_TYPE_ID} from "./constants";
 
 interface TransactionFieldsProps {
@@ -9,7 +9,7 @@ interface TransactionFieldsProps {
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
   walletOptions: {label: string; value: string}[];
   targetWalletOptions: {label: string; value: string}[];
-  isAutoImported?: boolean;
+  isNotification?: boolean;
 }
 
 const TransactionFields = memo(
@@ -18,7 +18,7 @@ const TransactionFields = memo(
     setForm,
     walletOptions,
     targetWalletOptions,
-    isAutoImported = false,
+    isNotification = false,
   }: TransactionFieldsProps) => {
     const {colors} = useTheme();
 
@@ -75,7 +75,7 @@ const TransactionFields = memo(
 
         {/* Note field — editable for manual transactions, read-only for auto-imports */}
         <View style={styles.spacing}>
-          {isAutoImported ? (
+          {isNotification ? (
             // Auto-imported: read-only, shows the raw notification text
             <>
               <TextInput
@@ -86,12 +86,9 @@ const TransactionFields = memo(
                 multiline
                 activeOutlineColor={colors.outline}
                 outlineColor={colors.outlineVariant}
-                style={{backgroundColor: colors.surfaceVariant}}
+                style={{backgroundColor: colors.surface}}
                 textColor={colors.onSurfaceVariant}
               />
-              <HelperText type="info" visible>
-                Recorded from notification — not editable
-              </HelperText>
             </>
           ) : (
             // Manual transaction: optional free-text note

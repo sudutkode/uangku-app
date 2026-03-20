@@ -23,6 +23,7 @@ interface TransactionCategoryPickerProps {
   transactionCategoryId: number;
   onTypeChange: (typeId: number) => void;
   onCategoryChange: (catId: number) => void;
+  isNotification: boolean;
 }
 
 // ─── CategoryItem ─────────────────────────────────────────────────────────────
@@ -124,6 +125,7 @@ const TransactionCategoryPicker = ({
   transactionCategoryId,
   onTypeChange,
   onCategoryChange,
+  isNotification,
 }: TransactionCategoryPickerProps) => {
   const {colors} = useTheme();
 
@@ -135,7 +137,9 @@ const TransactionCategoryPicker = ({
     useState<TransactionCategoryFormData | null>(null);
 
   const {data, loading, error, refetch} =
-    useFetch<TransactionCategoriesResponse>("/transaction-categories");
+    useFetch<TransactionCategoriesResponse>("/transaction-categories", {
+      params: {withNotification: isNotification},
+    });
 
   const {
     mutate: deleteCategory,

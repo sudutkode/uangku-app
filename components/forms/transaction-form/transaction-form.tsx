@@ -8,7 +8,13 @@ import {
 } from "@/types";
 import {Stack, useRouter} from "expo-router";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {ScrollView, StyleSheet, View} from "react-native";
+import {
+  Animated,
+  PanResponder,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import {
   Button,
   Dialog,
@@ -18,7 +24,11 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
-import {FormState, TRANSFER_TYPE_ID} from "./constants";
+import {
+  FormState,
+  NOTIFICATION_CATEGORY_NAME,
+  TRANSFER_TYPE_ID,
+} from "./constants";
 import TransactionCategoryPicker from "./transaction-category-picker";
 import TransactionDisplay, {ActiveField} from "./transaction-display";
 import TransactionFields from "./transaction-fields";
@@ -56,6 +66,36 @@ export default function TransactionForm({id}: {id?: string}) {
   const [activeFieldDisplay, setActiveFieldDisplay] =
     useState<ActiveField>("amount");
 
+  // ─── Swipe to dismiss ──────────────────────────────────────────────────────
+
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, {dy}) => dy > 5,
+      onPanResponderMove: (_, {dy}) => {
+        if (dy > 0) translateY.setValue(dy);
+      },
+      onPanResponderRelease: (_, {dy, vy}) => {
+        if (dy > 80 || vy > 0.8) {
+          Animated.timing(translateY, {
+            toValue: 600,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => {
+            translateY.setValue(0);
+            setModalVisible(false);
+          });
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    }),
+  ).current;
   // ─── Data fetching ──────────────────────────────────────────────────────────
 
   const {data: existingData, loading: loadingExisting} =
@@ -115,11 +155,11 @@ export default function TransactionForm({id}: {id?: string}) {
 
   const isTransfer = form.transactionTypeId === TRANSFER_TYPE_ID;
   const isEdit = !!id;
-  const isAutoImported = existingData?.data?.importSource === "notification";
+  const isNotification =
+    existingData?.data.transactionCategory.name === NOTIFICATION_CATEGORY_NAME;
   const saveDisabled =
     !form.amount || !form.walletId || (isTransfer && !form.targetWalletId);
 
-  // Active error — save error shown inside modal, delete error shown outside
   const activeError = saveError || deleteError;
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
@@ -156,11 +196,16 @@ export default function TransactionForm({id}: {id?: string}) {
   }, [form, mutateTransaction, router, refetchData]);
 
   const handleTypeChange = useCallback((typeId: number) => {
-    setForm({
-      ...INITIAL_FORM,
+    // FIX: only reset category and transfer-specific fields when switching type.
+    // wallet, date, amount, note are preserved — user shouldn't lose those
+    // just because they switched between Income/Expense/Transfer.
+    setForm((prev) => ({
+      ...prev,
       transactionTypeId: typeId,
-      createdAt: new Date(),
-    });
+      transactionCategoryId: 0,
+      targetWalletId: 0,
+      adminFee: 0,
+    }));
   }, []);
 
   const handleCategoryChange = useCallback(
@@ -212,6 +257,7 @@ export default function TransactionForm({id}: {id?: string}) {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <TransactionCategoryPicker
+          isNotification={isNotification}
           transactionTypeId={form.transactionTypeId}
           transactionCategoryId={form.transactionCategoryId}
           onTypeChange={handleTypeChange}
@@ -225,19 +271,29 @@ export default function TransactionForm({id}: {id?: string}) {
           onDismiss={handleDismiss}
           contentContainerStyle={[
             styles.modalContent,
-            {backgroundColor: colors.surface},
+            {backgroundColor: colors.surface, transform: [{translateY}]},
           ]}
         >
-          <View style={styles.dragHandle} />
+          <View {...panResponder.panHandlers} style={styles.dragHandleArea}>
+            <View style={styles.dragHandle} />
+          </View>
 
-          <View style={styles.formContainer}>
+          <ScrollView
+            style={styles.fieldsScroll}
+            contentContainerStyle={styles.fieldsScrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <TransactionFields
               form={form}
               setForm={setForm}
               walletOptions={walletOptions}
               targetWalletOptions={targetWalletOptions}
-              isAutoImported={isAutoImported}
+              isNotification={isNotification}
             />
+          </ScrollView>
+
+          <View style={styles.displayContainer}>
             <TransactionDisplay
               amount={form.amount}
               adminFee={form.adminFee}
@@ -302,15 +358,28 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 32,
     paddingTop: 8,
     overflow: "hidden",
+    maxHeight: "85%",
+  },
+  dragHandleArea: {
+    paddingVertical: 10,
+    alignItems: "center",
   },
   dragHandle: {
     width: 40,
     height: 5,
     backgroundColor: "#D1D1D1",
     borderRadius: 10,
-    alignSelf: "center",
-    marginVertical: 10,
   },
-  formContainer: {paddingHorizontal: 20, marginBottom: 15},
+  fieldsScroll: {
+    flexShrink: 1,
+  },
+  fieldsScrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  displayContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
   dialogTitle: {textAlign: "center"},
 });

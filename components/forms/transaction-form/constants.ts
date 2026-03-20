@@ -10,3 +10,5 @@ export interface FormState {
   createdAt: Date;
   note?: string | null;
 }
+
+export const NOTIFICATION_CATEGORY_NAME: string = "Notification";
