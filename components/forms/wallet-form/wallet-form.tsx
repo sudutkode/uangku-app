@@ -1,14 +1,17 @@
-import {useFetch} from "@/hooks/axios/use-fetch";
-import {useMutation} from "@/hooks/axios/use-mutation";
-import {useWalletsStore} from "@/store";
+import {LoadingState} from "@/components/ui";
+import {useFetch, useMutation} from "@/hooks/axios";
+import {useTransactionsStore, useWalletsStore} from "@/store";
 import {Wallet} from "@/types";
-import {formatIdr} from "@/utils/common-utils";
 import {Stack, useRouter} from "expo-router";
 import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 import {StyleSheet, View} from "react-native";
 import {
-  ActivityIndicator,
   Button,
+  Dialog,
+  HelperText,
+  Portal,
+  Snackbar,
+  Text,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -19,125 +22,214 @@ interface WalletFormProps {
 
 interface FormState {
   name: string;
-  balance: number;
+  balance: string;
 }
 
-const INITIAL_FORM: FormState = {
-  name: "",
-  balance: 0,
+const INITIAL_FORM: FormState = {name: "", balance: ""};
+
+const formatBalanceInput = (raw: string): string => {
+  const digits = raw.replace(/[^0-9]/g, "");
+  if (!digits) return "";
+  return Number(digits).toLocaleString("id-ID");
+};
+
+const parseBalance = (formatted: string): number => {
+  return Number(formatted.replace(/[^0-9]/g, "")) || 0;
 };
 
 const WalletForm: FC<WalletFormProps> = ({id}) => {
   const {colors} = useTheme();
   const router = useRouter();
-  const setNeedsRefetch = useWalletsStore((state) => state.setNeedsRefetch);
+  const setNeedsRefetchWallets = useWalletsStore((s) => s.setNeedsRefetch);
+  const setNeedsRefetchTransactions = useTransactionsStore(
+    (s) => s.setNeedsRefetch,
+  );
+
+  const refetchData = useCallback(() => {
+    setNeedsRefetchWallets(true);
+    setNeedsRefetchTransactions(true);
+  }, [setNeedsRefetchWallets, setNeedsRefetchTransactions]);
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
+  const [nameError, setNameError] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Memoize URL params to prevent unnecessary hook triggers
+  // ─── Data fetching ──────────────────────────────────────────────────────────
+
   const fetchConfig = useMemo(() => ({}), []);
-  const {data: existingData, loading: loadingOldData} = useFetch<{
+  const {data: existingData, loading: loadingExisting} = useFetch<{
     data: Wallet;
   }>(`/wallets/${id}`, fetchConfig, !id);
 
-  const {mutate: mutateWallet, loading: loadingSubmit} = useMutation<any, any>(
-    id ? `/wallets/${id}` : "/wallets",
-    {method: id ? "patch" : "post"},
-  );
+  const {
+    mutate: mutateWallet,
+    loading: loadingSubmit,
+    error: saveError,
+  } = useMutation<any, any>(id ? `/wallets/${id}` : "/wallets", {
+    method: id ? "patch" : "post",
+  });
 
-  const {mutate: deleteWallet, loading: loadingDelete} = useMutation(
-    `wallets/${id}`,
-    {method: "delete"},
-  );
+  const {
+    mutate: deleteWallet,
+    loading: loadingDelete,
+    error: deleteError,
+  } = useMutation(`/wallets/${id}`, {method: "delete"});
 
-  // Sync data from API
+  // ─── Sync existing data ─────────────────────────────────────────────────────
+
   useEffect(() => {
     if (existingData?.data) {
       setForm({
         name: existingData.data.name,
-        balance: existingData.data.balance,
+        balance: formatBalanceInput(String(existingData.data.balance)),
       });
     }
   }, [existingData]);
 
-  // Memoize handlers to prevent recreation on every keystroke
+  // ─── Handlers ───────────────────────────────────────────────────────────────
+
   const handleNameChange = useCallback((val: string) => {
     setForm((prev) => ({...prev, name: val}));
+    if (val.trim()) setNameError("");
   }, []);
 
   const handleBalanceChange = useCallback((val: string) => {
-    const numericValue = val.replace(/[^0-9]/g, "");
-    setForm((prev) => ({...prev, balance: Number(numericValue) || 0}));
+    setForm((prev) => ({...prev, balance: formatBalanceInput(val)}));
   }, []);
 
-  const handleDelete = useCallback(async () => {
-    await deleteWallet({});
-    setNeedsRefetch(true);
-    router.back();
-  }, [deleteWallet, router, setNeedsRefetch]);
-
   const handleSave = useCallback(async () => {
-    await mutateWallet(form);
-    setNeedsRefetch(true);
-    router.back();
-  }, [form, mutateWallet, router, setNeedsRefetch]);
+    if (!form.name.trim()) {
+      setNameError("Wallet name is required");
+      return;
+    }
+    try {
+      await mutateWallet({
+        name: form.name.trim(),
+        balance: parseBalance(form.balance),
+      });
+      refetchData();
+      router.back();
+    } catch {
+      // error string already set by useMutation, shown via Snackbar
+    }
+  }, [form, mutateWallet, router, refetchData]);
 
-  // Memoize Header Button to prevent header re-renders on typing
+  const handleDeleteConfirm = useCallback(async () => {
+    setShowDeleteDialog(false);
+    try {
+      await deleteWallet({});
+      refetchData();
+      router.back();
+    } catch {
+      // error string already set by useMutation, shown via Snackbar
+    }
+  }, [deleteWallet, router, refetchData]);
+
+  // ─── Header ─────────────────────────────────────────────────────────────────
+
   const headerRight = useCallback(
     () =>
       id ? (
         <Button
           textColor={colors.error}
-          onPress={handleDelete}
-          loading={loadingDelete}
+          onPress={() => setShowDeleteDialog(true)}
           disabled={!existingData || loadingDelete}
+          loading={loadingDelete}
         >
           Delete
         </Button>
       ) : null,
-    [id, colors.error, handleDelete, loadingDelete, existingData],
+    [id, colors.error, existingData, loadingDelete],
   );
 
-  if (loadingOldData) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
+  // ─── Render ──────────────────────────────────────────────────────────────────
+
+  if (loadingExisting) {
+    return <LoadingState message="Loading wallet..." />;
   }
+
+  const activeError = saveError || deleteError;
 
   return (
     <View style={[styles.container, {backgroundColor: colors.background}]}>
       <Stack.Screen options={{headerRight}} />
 
-      <View style={styles.inputsContainer}>
-        <TextInput
-          mode="outlined"
-          label="Name"
-          value={form.name}
-          onChangeText={handleNameChange}
-          activeOutlineColor={colors.primary}
-        />
+      <View style={styles.fields}>
+        <View>
+          <TextInput
+            mode="outlined"
+            label="Wallet name"
+            value={form.name}
+            onChangeText={handleNameChange}
+            activeOutlineColor={nameError ? colors.error : colors.primary}
+            error={!!nameError}
+            autoCapitalize="words"
+          />
+          <HelperText type="error" visible={!!nameError}>
+            {nameError}
+          </HelperText>
+        </View>
 
-        <TextInput
-          mode="outlined"
-          label="Balance"
-          value={formatIdr(form.balance)}
-          onChangeText={handleBalanceChange}
-          keyboardType="numeric"
-          activeOutlineColor={colors.primary}
-          placeholder="Rp 0"
-        />
+        <View>
+          <TextInput
+            mode="outlined"
+            label="Balance"
+            value={form.balance}
+            onChangeText={handleBalanceChange}
+            keyboardType="numeric"
+            activeOutlineColor={colors.primary}
+            placeholder="0"
+            left={<TextInput.Affix text="Rp" />}
+          />
+          <HelperText type="info" visible>
+            Enter current balance of this wallet
+          </HelperText>
+        </View>
       </View>
 
       <Button
         mode="contained"
         onPress={handleSave}
         loading={loadingSubmit}
-        disabled={loadingSubmit || !form.name}
+        disabled={loadingSubmit}
+        contentStyle={styles.submitButton}
       >
-        {id ? "Update" : "Save"}
+        {id ? "Update Wallet" : "Save Wallet"}
       </Button>
+
+      <Portal>
+        <Dialog
+          visible={showDeleteDialog}
+          onDismiss={() => setShowDeleteDialog(false)}
+        >
+          <Dialog.Icon icon="alert" color={colors.error} />
+          <Dialog.Title style={styles.dialogTitle}>Delete wallet?</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              This will permanently delete{" "}
+              <Text style={{fontWeight: "bold"}}>{form.name}</Text> and all its
+              transaction history. This cannot be undone.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowDeleteDialog(false)}>Cancel</Button>
+            <Button textColor={colors.error} onPress={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      <Snackbar
+        visible={!!activeError}
+        onDismiss={() => {}}
+        duration={3000}
+        style={{backgroundColor: colors.errorContainer}}
+      >
+        <Text variant="bodySmall" style={{color: colors.onErrorContainer}}>
+          {activeError}
+        </Text>
+      </Snackbar>
     </View>
   );
 };
@@ -146,6 +238,7 @@ export default WalletForm;
 
 const styles = StyleSheet.create({
   container: {flex: 1, padding: 16, justifyContent: "space-between"},
-  center: {flex: 1, justifyContent: "center", alignItems: "center"},
-  inputsContainer: {gap: 16, marginTop: 10},
+  fields: {gap: 4, marginTop: 8},
+  submitButton: {paddingVertical: 4},
+  dialogTitle: {textAlign: "center"},
 });

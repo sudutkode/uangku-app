@@ -1,7 +1,7 @@
 import {formatIdr} from "@/utils/common-utils";
-import React, {useMemo} from "react";
-import {StyleSheet, Text, TouchableOpacity} from "react-native";
-import {Surface, useTheme} from "react-native-paper";
+import React, {memo, useMemo} from "react";
+import {StyleSheet, TouchableOpacity, View} from "react-native";
+import {Surface, Text, useTheme} from "react-native-paper";
 
 export type ActiveField = "amount" | "adminFee";
 
@@ -13,7 +13,7 @@ interface TransactionDisplayProps {
   onFieldPress: (field: ActiveField) => void;
 }
 
-const TransactionDisplay = React.memo(
+const TransactionDisplay = memo(
   ({
     amount,
     adminFee,
@@ -23,42 +23,44 @@ const TransactionDisplay = React.memo(
   }: TransactionDisplayProps) => {
     const {colors} = useTheme();
 
-    const dividerColor = colors.onPrimaryContainer + "33";
+    const amountActive = activeField === "amount";
+    const adminFeeActive = activeField === "adminFee";
 
     const amountBoxStyle = useMemo(
       () => [
         styles.box,
-        activeField === "amount" && {
+        amountActive && {
           borderBottomWidth: 2,
           borderBottomColor: colors.primary,
         },
       ],
-      [activeField, colors.primary],
+      [amountActive, colors.primary],
     );
 
     const adminFeeBoxStyle = useMemo(
       () => [
         styles.box,
-        styles.rightBox,
-        {borderLeftColor: dividerColor},
-        activeField === "adminFee" && {
+        adminFeeActive && {
           borderBottomWidth: 2,
           borderBottomColor: colors.primary,
         },
       ],
-      [activeField, colors.primary, dividerColor],
+      [adminFeeActive, colors.primary],
     );
 
     return (
       <Surface
         elevation={0}
+        // ← Changed from surfaceVariant to surface to match outlined TextInput background
         style={[styles.container, {backgroundColor: colors.surface}]}
       >
         <TouchableOpacity
           onPress={() => onFieldPress("amount")}
           style={amountBoxStyle}
         >
-          <Text style={[styles.label, {color: colors.onSurface}]}>Amount</Text>
+          <Text style={[styles.label, {color: colors.onSurfaceVariant}]}>
+            Amount
+          </Text>
           <Text
             style={[styles.valueLarge, {color: colors.onSurface}]}
             numberOfLines={1}
@@ -69,21 +71,26 @@ const TransactionDisplay = React.memo(
         </TouchableOpacity>
 
         {isTransfer && (
-          <TouchableOpacity
-            onPress={() => onFieldPress("adminFee")}
-            style={adminFeeBoxStyle}
-          >
-            <Text style={[styles.label, {color: colors.onSurface}]}>
-              Admin Fee
-            </Text>
-            <Text
-              style={[styles.valueSmall, {color: colors.onSurface}]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
+          <>
+            <View
+              style={[styles.divider, {backgroundColor: colors.outlineVariant}]}
+            />
+            <TouchableOpacity
+              onPress={() => onFieldPress("adminFee")}
+              style={adminFeeBoxStyle}
             >
-              {formatIdr(adminFee)}
-            </Text>
-          </TouchableOpacity>
+              <Text style={[styles.label, {color: colors.onSurfaceVariant}]}>
+                Admin Fee
+              </Text>
+              <Text
+                style={[styles.valueSmall, {color: colors.onSurface}]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {formatIdr(adminFee)}
+              </Text>
+            </TouchableOpacity>
+          </>
         )}
       </Surface>
     );
@@ -91,7 +98,6 @@ const TransactionDisplay = React.memo(
 );
 
 TransactionDisplay.displayName = "TransactionDisplay";
-
 export default TransactionDisplay;
 
 const styles = StyleSheet.create({
@@ -107,8 +113,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     justifyContent: "center",
   },
-  rightBox: {
-    borderLeftWidth: 1,
+  divider: {
+    width: 1,
+    marginVertical: 10,
   },
   label: {
     fontSize: 11,

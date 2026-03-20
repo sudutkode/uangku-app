@@ -10,8 +10,8 @@ interface UseFetchReturn<T> {
 }
 
 export const useFetch = <T>(
-  url: string, // Ganti service jadi url
-  config?: AxiosRequestConfig, // Tambahkan opsi config axios (opsional)
+  url: string,
+  config?: AxiosRequestConfig,
   prevent?: boolean,
 ): UseFetchReturn<T> => {
   const [data, setData] = useState<T | null>(null);
@@ -48,7 +48,7 @@ export const useFetch = <T>(
       abortControllerRef.current = null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, JSON.stringify(config)]); // Stringify config agar tidak trigger re-render terus menerus
+  }, [url, JSON.stringify(config)]); // Stringify to prevent infinite re-render
 
   useEffect(() => {
     if (prevent) return;

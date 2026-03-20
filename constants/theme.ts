@@ -92,7 +92,7 @@ export const lightTheme = {
   colors: {
     ...MD3LightTheme.colors,
     ...customColors,
-    surface: "#F1FAF3", // Background hijau pucat untuk Light Mode
+    surface: "#F1FAF3", // Background dark green for Light Mode
   },
 };
 
@@ -101,12 +101,12 @@ export const darkTheme = {
   colors: {
     ...MD3DarkTheme.colors,
     ...customColors,
-    // Di Dark Mode, surface sebaiknya tetap gelap agar tidak menyilaukan
-    surface: MD3DarkTheme.colors.surface, // Gunakan surface default yang gelap,
-    primaryContainer: "#2D4F39", // Versi lebih gelap untuk Dark Mode,
+    // For Dark Mode, better use surface
+    surface: MD3DarkTheme.colors.surface,
+    primaryContainer: "#2D4F39",
 
-    secondaryContainer: "#2B343A", // dark neutral gray
-    infoContainer: "#1F3F4D", // dark blue
+    secondaryContainer: "#2B343A",
+    infoContainer: "#1F3F4D",
     tertiaryContainer: "#4A3415",
     errorContainer: "#4B1E1E",
 

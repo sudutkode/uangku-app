@@ -1,6 +1,5 @@
 import {Wallet} from "./wallet-types";
 
-// 1. Reusable Sub-Interfaces
 export interface TransactionType {
   id: number;
   name: "Income" | "Expense" | "Transfer" | string;
@@ -29,6 +28,8 @@ export interface Transaction {
   transactionType: TransactionType;
   transactionCategory: TransactionCategory;
   transactionWallets: TransactionWallet[];
+  note?: string;
+  importSource?: string;
 }
 
 export interface TransactionSummary {

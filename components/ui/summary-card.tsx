@@ -56,7 +56,7 @@ const SummaryCard = ({data}: SummaryCardProps) => {
 const styles = StyleSheet.create({
   wrapper: {
     flexDirection: "row",
-    margin: 16,
+    marginHorizontal: 16,
     marginBottom: 0,
     marginTop: 0,
     paddingVertical: 16,

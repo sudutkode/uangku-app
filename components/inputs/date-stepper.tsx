@@ -93,7 +93,6 @@ export default function DateStepper({
           setOpen(false);
           if (params.date) onChange(params.date);
         }}
-        // 👇 ini penting untuk month picker
         validRange={
           mode === "month"
             ? {

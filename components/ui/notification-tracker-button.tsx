@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import {AppState, StyleSheet, View} from "react-native";
+import React, {useEffect, useRef, useState} from "react";
+import {AppState, AppStateStatus, StyleSheet, View} from "react-native";
 import RNAndroidNotificationListener from "react-native-android-notification-listener";
 import {Button, Text, useTheme} from "react-native-paper";
 import Icon from "./icon-fa6";
@@ -7,6 +7,7 @@ import Icon from "./icon-fa6";
 export default function NotificationTrackerButton() {
   const {colors} = useTheme();
   const [hasPermission, setHasPermission] = useState(false);
+  const appState = useRef(AppState.currentState);
 
   const checkPermission = async () => {
     const status = await RNAndroidNotificationListener.getPermissionStatus();
@@ -16,12 +17,15 @@ export default function NotificationTrackerButton() {
   useEffect(() => {
     checkPermission();
 
-    // Auto-refresh status jika user kembali dari layar Settings Android
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
-        checkPermission();
-      }
-    });
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextAppState: AppStateStatus) => {
+        if (appState.current !== "active" && nextAppState === "active") {
+          checkPermission();
+        }
+        appState.current = nextAppState;
+      },
+    );
 
     return () => subscription.remove();
   }, []);
@@ -36,21 +40,21 @@ export default function NotificationTrackerButton() {
     >
       <View style={{flex: 1, marginRight: 16}}>
         <Text variant="titleMedium" style={{fontWeight: "bold"}}>
-          Auto-Track Notifikasi
+          Auto-Track Notifications
         </Text>
         <Text
           variant="bodySmall"
           style={{color: colors.onSurfaceVariant, marginTop: 4}}
         >
           {hasPermission
-            ? "Aktif. Aplikasi akan mencatat pengeluaran otomatis dari notifikasi E-Wallet/Bank."
-            : "Berikan izin akses notifikasi untuk mencatat transaksi secara otomatis."}
+            ? "Active. The app will automatically record transactions from your E-Wallet / Bank notifications."
+            : "Grant notification access to automatically record transactions."}
         </Text>
       </View>
 
       {!hasPermission ? (
         <Button mode="contained" onPress={handleRequestPermission} compact>
-          Aktifkan
+          Activate
         </Button>
       ) : (
         <View style={{alignItems: "center"}}>
@@ -59,7 +63,7 @@ export default function NotificationTrackerButton() {
             variant="labelSmall"
             style={{color: colors.primary, marginTop: 4}}
           >
-            Aktif
+            Active
           </Text>
         </View>
       )}

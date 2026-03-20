@@ -7,17 +7,13 @@ import {FlatList, RefreshControl, StyleSheet, View} from "react-native";
 import {Divider, List, Text, useTheme} from "react-native-paper";
 import Icon from "./icon-fa6";
 
-interface WalletsFlatListProps {
+interface WalletsListProps {
   data: Wallet[];
   loading: boolean;
   refetch: () => void;
 }
 
-const WalletsFlatList: FC<WalletsFlatListProps> = ({
-  data,
-  loading,
-  refetch,
-}) => {
+const WalletsList: FC<WalletsListProps> = ({data, loading, refetch}) => {
   const {colors} = useTheme();
   const router = useRouter();
 
@@ -68,7 +64,7 @@ const WalletsFlatList: FC<WalletsFlatListProps> = ({
   );
 };
 
-export default WalletsFlatList;
+export default WalletsList;
 
 const styles = StyleSheet.create({
   item: {

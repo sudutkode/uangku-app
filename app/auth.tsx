@@ -1,6 +1,7 @@
 import {FinanceAppIllustration} from "@/components/illustrations";
 import {Icon} from "@/components/ui";
-import {useMutation} from "@/hooks/axios/use-mutation";
+import {useMutation} from "@/hooks/axios";
+import {cacheTokenForHeadless} from "@/services/NotificationService";
 import {useAuthStore} from "@/store";
 import {SignInResponse} from "@/types";
 import {screenWidth} from "@/utils/common-utils";
@@ -8,43 +9,37 @@ import {
   GoogleSignin,
   SignInResponse as GoogleSignInResponse,
 } from "@react-native-google-signin/google-signin";
+import {useState} from "react";
 import {StyleSheet, View} from "react-native";
 import {Button, Text, useTheme} from "react-native-paper";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 interface SigninPayload {
-  email: string;
-  name: string;
-  avatar: string;
+  idToken: string;
 }
 
 export default function AuthScreen() {
   const {colors} = useTheme();
   const {signin} = useAuthStore();
+  const [loading, setLoading] = useState(false);
 
-  const {mutate: mutateSignin, loading: loadingSignin} = useMutation<
+  const {mutate: mutateSignin, error} = useMutation<
     SignInResponse,
     SigninPayload
   >("/auth/google-sign-in");
 
   const handleSignIn = async () => {
     try {
+      setLoading(true);
       await GoogleSignin.hasPlayServices();
       const res: GoogleSignInResponse = await GoogleSignin.signIn();
-      const userGoogle = res.data?.user;
-      const serverAuthCode = res.data?.serverAuthCode;
 
-      const payload = {
-        email: userGoogle?.email || "",
-        name: userGoogle?.name || "",
-        avatar: userGoogle?.photo || "",
-        serverAuthCode: serverAuthCode || undefined,
-      };
-
+      const payload = {idToken: res.data?.idToken || ""};
       const data = await mutateSignin(payload);
+      await cacheTokenForHeadless(data?.data?.accessToken || "");
       signin(data);
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,8 +76,8 @@ export default function AuthScreen() {
           <Button
             mode="contained"
             onPress={handleSignIn}
-            loading={loadingSignin}
-            disabled={loadingSignin}
+            loading={loading}
+            disabled={loading}
             style={styles.googleButton}
             contentStyle={styles.googleButtonContent}
             labelStyle={styles.googleLabel}
@@ -94,6 +89,15 @@ export default function AuthScreen() {
           >
             Sign in with Google
           </Button>
+
+          {!!error && (
+            <Text
+              variant="labelSmall"
+              style={[styles.errorText, {color: colors.error}]}
+            >
+              {error}
+            </Text>
+          )}
 
           <Text
             variant="labelSmall"
@@ -138,6 +142,7 @@ const styles = StyleSheet.create({
   actionSection: {
     width: "100%",
     alignItems: "center",
+    gap: 8,
   },
   googleButton: {
     width: "100%",
@@ -153,8 +158,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.3,
   },
+  errorText: {
+    textAlign: "center",
+  },
   footerText: {
-    marginTop: 16,
     opacity: 0.5,
     fontSize: 10,
   },

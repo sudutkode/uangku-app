@@ -37,13 +37,9 @@ export default function RootLayout() {
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      offlineAccess: true,
-      // 👇 2. GANTI SCOPE (Hapus gmail.readonly)
       scopes: ["profile", "email"],
     });
   }, []);
-
-  // ... sisa kode ke bawah tetap sama persis
 
   // theme based on color scheme
   const isDark = colorScheme === "dark";

@@ -8,4 +8,5 @@ export interface FormState {
   amount: number;
   adminFee: number;
   createdAt: Date;
+  note?: string | null;
 }

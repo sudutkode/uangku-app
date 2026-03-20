@@ -1,20 +1,21 @@
-import React, {useEffect} from "react";
+import {Stack} from "expo-router";
+import React, {useCallback, useEffect} from "react";
 import {StyleSheet, View} from "react-native";
-import {ActivityIndicator, Button, Text, useTheme} from "react-native-paper";
+import {useTheme} from "react-native-paper";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 import {DateStepper} from "@/components/inputs";
 import {
   AddButton,
-  Icon,
+  EmptyState,
+  ErrorState,
+  LoadingState,
   SummaryCard,
-  TransactionsFlatList,
+  TransactionsList,
 } from "@/components/ui";
-import GmailSyncButton from "@/components/ui/gmail-sync-button";
-import {useFetch} from "@/hooks/axios/use-fetch";
+import {useFetch} from "@/hooks/axios";
 import {useTransactionsStore} from "@/store";
 import {TransactionsResponse} from "@/types";
-import {Stack} from "expo-router";
-import {SafeAreaView} from "react-native-safe-area-context";
 
 export default function TransactionScreen() {
   const {colors} = useTheme();
@@ -35,66 +36,40 @@ export default function TransactionScreen() {
     error,
     refetch,
   } = useFetch<TransactionsResponse>("/transactions", {
-    params: {
-      date: selectedDate.toLocaleDateString("sv-SE"),
-    },
+    params: {date: selectedDate.toLocaleDateString("sv-SE")},
   });
 
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{marginTop: 12}}>Loading transactions...</Text>
-        </View>
-      );
-    }
+  useEffect(() => {
+    if (fetchedData?.data) setTransactionsData(fetchedData.data);
+  }, [fetchedData, setTransactionsData]);
 
-    if (error) {
-      return (
-        <View style={styles.centerContainer}>
-          <Icon name="triangle-exclamation" size={32} color={colors.error} />
-          <Text style={{marginTop: 12, marginBottom: 8}}>{error}</Text>
-          <Button mode="contained" onPress={refetch}>
-            Retry
-          </Button>
-        </View>
-      );
+  useEffect(() => {
+    if (needsRefetch && fetchedData) {
+      refetch();
+      setNeedsRefetch(false);
     }
+  }, [needsRefetch, refetch, setNeedsRefetch, fetchedData]);
 
-    if (!transactions.length) {
+  const renderContent = useCallback(() => {
+    if (loading) return <LoadingState message="Loading transactions..." />;
+    if (error) return <ErrorState message={error} onRetry={refetch} />;
+    if (!transactions.length)
       return (
-        <View style={styles.centerContainer}>
-          <Icon name="receipt" size={32} color={colors.secondary} />
-          <Text style={{marginTop: 12}}>No transactions yet</Text>
-          <Text style={{fontSize: 12, color: colors.secondary}}>
-            Your transactions will appear here
-          </Text>
-        </View>
+        <EmptyState
+          icon="receipt"
+          title="No transactions yet"
+          subtitle="Your transactions will appear here"
+          onRefetch={refetch}
+        />
       );
-    }
-
     return (
-      <TransactionsFlatList
+      <TransactionsList
         data={transactions}
         loading={loading}
         refetch={refetch}
       />
     );
-  };
-
-  useEffect(() => {
-    if (fetchedData?.data) {
-      setTransactionsData(fetchedData.data);
-    }
-  }, [fetchedData, setTransactionsData]);
-
-  useEffect(() => {
-    if (needsRefetch) {
-      refetch();
-      setNeedsRefetch(false);
-    }
-  }, [needsRefetch, refetch, setNeedsRefetch]);
+  }, [loading, error, transactions, refetch]);
 
   return (
     <>
@@ -103,13 +78,10 @@ export default function TransactionScreen() {
           header: () => (
             <SafeAreaView
               edges={["top"]}
-              style={{
-                backgroundColor: colors.surface,
-              }}
+              style={{backgroundColor: colors.surface, paddingBottom: 8}}
             >
               <DateStepper date={selectedDate} onChange={setSelectedDate} />
               <SummaryCard data={summary} />
-              <GmailSyncButton callback={refetch} />
             </SafeAreaView>
           ),
         }}
@@ -125,12 +97,5 @@ export default function TransactionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
   },
 });
