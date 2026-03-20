@@ -28,9 +28,8 @@ export class BniNotificationParser extends BaseNotificationParser {
       transactionType: type,
       amount,
       walletName: 'BNI',
-      categoryName: this.guessCategory(type, title, text),
       isMirrorEvent: this.detectMirrorEvent(title, text),
-      fingerprint: this.buildFingerprint(app, type, amount, title, text),
+      fingerprint: this.buildFingerprint(app, type, amount),
     };
   }
 }

@@ -31,15 +31,8 @@ export class BcaNotificationParser extends BaseNotificationParser {
         transactionType: 'transfer',
         amount,
         walletName: 'BCA',
-        categoryName: 'Auto-Import',
         note: this.buildNote(title, text),
-        fingerprint: this.buildFingerprint(
-          app,
-          'transfer',
-          amount,
-          title,
-          text,
-        ),
+        fingerprint: this.buildFingerprint(app, 'transfer', amount),
       };
     }
     const isCR = /\bCR\b/.test(combined);
@@ -55,10 +48,9 @@ export class BcaNotificationParser extends BaseNotificationParser {
       transactionType: type,
       amount,
       walletName: 'BCA',
-      categoryName: this.guessCategory(type, title, text),
       note: this.buildNote(title, text),
       isMirrorEvent: this.detectMirrorEvent(title, text),
-      fingerprint: this.buildFingerprint(app, type, amount, title, text),
+      fingerprint: this.buildFingerprint(app, type, amount),
     };
   }
 }

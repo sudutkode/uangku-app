@@ -28,10 +28,9 @@ export class OvoNotificationParser extends BaseNotificationParser {
       transactionType: type,
       amount,
       walletName: 'OVO',
-      categoryName: this.guessCategory(type, title, text),
       note: this.buildNote(title, text),
       isMirrorEvent: this.detectMirrorEvent(title, text),
-      fingerprint: this.buildFingerprint(app, type, amount, title, text),
+      fingerprint: this.buildFingerprint(app, type, amount),
     };
   }
 }

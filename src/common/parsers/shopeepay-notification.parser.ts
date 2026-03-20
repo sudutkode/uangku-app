@@ -31,7 +31,7 @@ export class ShopeepayNotificationParser extends BaseNotificationParser {
         walletName: 'ShopeePay',
         categoryName: 'Top Up',
         note: this.buildNote(title, text),
-        fingerprint: this.buildFingerprint(app, 'income', amount, title, text),
+        fingerprint: this.buildFingerprint(app, 'income', amount),
       };
     }
     const type = this.detectType(title, text);
@@ -39,10 +39,9 @@ export class ShopeepayNotificationParser extends BaseNotificationParser {
       transactionType: type,
       amount,
       walletName: 'ShopeePay',
-      categoryName: this.guessCategory(type, title, text),
       note: this.buildNote(title, text),
       isMirrorEvent: this.detectMirrorEvent(title, text),
-      fingerprint: this.buildFingerprint(app, type, amount, title, text),
+      fingerprint: this.buildFingerprint(app, type, amount),
     };
   }
 }

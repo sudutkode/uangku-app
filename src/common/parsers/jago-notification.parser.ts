@@ -71,16 +71,9 @@ export class JagoNotificationParser extends BaseNotificationParser {
       amount,
       walletName,
       destinationWalletName,
-      categoryName: this.guessCategory(transactionType, title, text),
       note: this.buildNote(title, text),
       isMirrorEvent: isMirror,
-      fingerprint: this.buildFingerprint(
-        app,
-        transactionType,
-        amount,
-        title,
-        text,
-      ),
+      fingerprint: this.buildFingerprint(app, transactionType, amount),
     };
   }
 }

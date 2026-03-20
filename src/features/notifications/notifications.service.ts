@@ -23,12 +23,10 @@ import { MandiriNotificationParser } from '../../common/parsers/mandiri-notifica
 import { BriNotificationParser } from '../../common/parsers/bri-notification.parser';
 import { BniNotificationParser } from '../../common/parsers/bni-notification.parser';
 import { LinkAjaNotificationParser } from '../../common/parsers/linkaja-notification.parser';
-
-const TRANSACTION_TYPE_ID: Record<string, number> = {
-  income: 1,
-  expense: 2,
-  transfer: 3,
-};
+import {
+  NOTIFICATION_CATEGORY_NAME,
+  TRANSACTION_TYPE_ID,
+} from '../../common/constants';
 
 @Injectable()
 export class NotificationsService {
@@ -150,49 +148,29 @@ export class NotificationsService {
    *
    * Priority:
    *   1. Exact match by name + typeId (e.g. "Food & Drink" expense)
-   *   2. "Auto-Import" for the same typeId — dedicated fallback category
+   *   2. "Notification" for the same typeId — dedicated fallback category
    *   3. Any category for this user + typeId (last resort)
    *
-   * Transfer transactions (typeId=3) always go to "Auto-Import" transfer,
+   * Transfer transactions (typeId=3) always go to "Notification" transfer,
    * since we model external transfers as expenses in the Jago parser but
    * internal Kantong-to-Kantong transfers still use typeId=3.
    */
   private async resolveCategory(
     userId: number,
     typeId: number,
-    categoryName: string | undefined,
   ): Promise<TransactionCategory> {
-    // 1. Exact category name match
-    if (categoryName && categoryName !== 'Auto-Import') {
-      const specific = await this.categoryRepo.findOne({
-        where: {
-          user: { id: userId },
-          transactionType: { id: typeId },
-          name: categoryName,
-        },
-      });
-      if (specific) return specific;
-    }
-
-    // 2. Auto-Import fallback for this type
-    const autoImport = await this.categoryRepo.findOne({
+    const notification = await this.categoryRepo.findOne({
       where: {
         user: { id: userId },
         transactionType: { id: typeId },
-        name: 'Auto-Import',
+        name: NOTIFICATION_CATEGORY_NAME,
       },
     });
-    if (autoImport) return autoImport;
-
-    // 3. Absolute last resort — any category for this type
-    const any = await this.categoryRepo.findOne({
-      where: { user: { id: userId }, transactionType: { id: typeId } },
-    });
-    if (any) return any;
+    if (notification) return notification;
 
     throw new BadRequestException(
       `No category found for user ${userId} typeId ${typeId}. ` +
-        `Run migrations to seed Auto-Import categories.`,
+        `Run migrations to seed Notification categories.`,
     );
   }
 
@@ -203,11 +181,7 @@ export class NotificationsService {
     dateStr: string,
   ) {
     const typeId = TRANSACTION_TYPE_ID[parsed.transactionType];
-    const category = await this.resolveCategory(
-      user.id,
-      typeId,
-      parsed.categoryName,
-    );
+    const category = await this.resolveCategory(user.id, typeId);
     const sourceWallet = await this.findOrCreateWallet(
       user.id,
       parsed.walletName,

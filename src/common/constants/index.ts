@@ -1,3 +1,11 @@
+export const TRANSACTION_TYPE_ID: Record<string, number> = {
+  income: 1,
+  expense: 2,
+  transfer: 3,
+};
+
+export const NOTIFICATION_CATEGORY_NAME: string = 'Notification';
+
 export const TRANSACTION_CATEGORIES = [
   // --- LEAST FREQUENT / CORRECTIONS ---
   {
@@ -95,17 +103,17 @@ export const TRANSACTION_CATEGORIES = [
   { name: 'Salary', transactionType: { id: 1 }, iconName: 'money-bill-wave' },
 
   {
-    name: 'Notification',
+    name: NOTIFICATION_CATEGORY_NAME,
     transactionType: { id: 1 },
     iconName: 'money-bill-transfer',
   },
   {
-    name: 'Notification',
+    name: NOTIFICATION_CATEGORY_NAME,
     transactionType: { id: 2 },
     iconName: 'money-bill-transfer',
   },
   {
-    name: 'Notification',
+    name: NOTIFICATION_CATEGORY_NAME,
     transactionType: { id: 3 },
     iconName: 'money-bill-transfer',
   },

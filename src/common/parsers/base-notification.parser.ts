@@ -128,103 +128,6 @@ export abstract class BaseNotificationParser {
     );
   }
 
-  // ─── Category guessing ────────────────────────────────────────────────────
-
-  /**
-   * Tries to map the notification to a known category.
-   * Returns 'Auto-Import' as the fallback — a dedicated category
-   * seeded for all three transaction types specifically for this use case.
-   */
-  protected guessCategory(
-    type: 'income' | 'expense' | 'transfer',
-    title: string,
-    text: string,
-  ): string {
-    if (type === 'transfer') return 'Auto-Import';
-
-    const combined = `${title} ${text}`.toLowerCase();
-
-    if (type === 'income') {
-      if (/cashback|reward|hadiah|bonus|coin/.test(combined))
-        return 'Cashback & Rewards';
-      if (
-        /gaji|salary|payroll|allowance|tunjangan|freelance|honorarium/.test(
-          combined,
-        )
-      )
-        return 'Salary';
-      if (/refund|pengembalian|kembali|reversal/.test(combined))
-        return 'Refund';
-      if (/top.?up|isi saldo|reload/.test(combined)) return 'Top Up';
-      return 'Auto-Import';
-    }
-
-    // Expense
-    if (
-      /makan|minum|nasi|bakso|warteg|pecel|mie |ayam|sate|gado|bubur|soto|rendang|martabak/.test(
-        combined,
-      )
-    )
-      return 'Food & Drink';
-    if (
-      /food|drink|resto|restoran|rumah makan|cafe|kafe|coffee|restaurant|eatery/.test(
-        combined,
-      )
-    )
-      return 'Food & Drink';
-    if (
-      /kfc|mcdonald|pizza|burger|starbucks|chatime|hokben|yoshinoya|solaria/.test(
-        combined,
-      )
-    )
-      return 'Food & Drink';
-    if (/grab.?food|gofood|shopee.?food/.test(combined)) return 'Food & Drink';
-    if (/qris/.test(combined)) return 'Food & Drink';
-    if (/token|listrik|pln|electricity/.test(combined))
-      return 'Bills & Utilities';
-    if (/air pdam|pdam|water bill/.test(combined)) return 'Bills & Utilities';
-    if (
-      /telkom|internet|wifi|indihome|first media|myrepublic|biznet/.test(
-        combined,
-      )
-    )
-      return 'Bills & Utilities';
-    if (/bpjs|insurance|asuransi/.test(combined)) return 'Bills & Utilities';
-    if (/ gas |pgn|subscription/.test(combined)) return 'Bills & Utilities';
-    if (
-      /grab|gojek|ojek|gocar|taxi|blue.?bird|transjakarta|busway/.test(combined)
-    )
-      return 'Transport';
-    if (/commuter|mrt|lrt|kereta|krl|kai/.test(combined)) return 'Transport';
-    if (/ toll|parkir|parking|bensin|bbm|pertamina|shell|fuel/.test(combined))
-      return 'Transport';
-    if (
-      /shopee|tokopedia|lazada|bukalapak|blibli|tiktok.?shop|zalora/.test(
-        combined,
-      )
-    )
-      return 'Shopping';
-    if (
-      /indomaret|alfamart|alfamidi|circle.?k|lawson|minimarket/.test(combined)
-    )
-      return 'Shopping';
-    if (/supermarket|hypermart|carrefour|giant|hero|grocery/.test(combined))
-      return 'Shopping';
-    if (/dokter|doctor|apotek|pharmacy|obat|medicine/.test(combined))
-      return 'Health';
-    if (/klinik|clinic|hospital|rumah sakit|puskesmas/.test(combined))
-      return 'Health';
-    if (
-      /netflix|spotify|youtube|disney|vidio|steam|game|bioskop|cinema/.test(
-        combined,
-      )
-    )
-      return 'Entertainment';
-    if (/tarik tunai|withdraw|atm/.test(combined)) return 'Withdrawal';
-
-    return 'Auto-Import';
-  }
-
   // ─── Note builder ─────────────────────────────────────────────────────────
 
   /**
@@ -243,14 +146,9 @@ export abstract class BaseNotificationParser {
     app: string,
     type: string,
     amount: number,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    title: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    text: string,
   ): string {
     // Intentionally minimal — only app + type + amount.
     // Dedup is handled by the 2-minute time window in the service.
-    // Including text/title caused false duplicates when the same
     // transaction amount recurred with identical notification text.
     return `${app}|${type}|${amount}`;
   }

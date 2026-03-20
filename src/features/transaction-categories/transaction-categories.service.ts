@@ -56,7 +56,7 @@ export class TransactionCategoriesService {
 
     const where: any = {
       user: { id: user.id },
-      name: And(Not('Balance Correction'), Not('Unknown'), Not('Notification')),
+      name: And(Not('Balance Correction'), Not('Notification')),
     };
 
     if (transactionTypeId) {
