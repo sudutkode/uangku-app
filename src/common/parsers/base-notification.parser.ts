@@ -113,6 +113,7 @@ export abstract class BaseNotificationParser {
       /transfer in/,
       /added to (your )?account/,
       /top.?up (successful|berhasil)/,
+      /menerima/,
     ];
     if (incomePatterns.some((rx) => rx.test(combined))) return 'income';
 

@@ -50,21 +50,36 @@ export class TransactionCategoriesService {
   /**
    * Get paginated list of categories with optional filtering
    */
-  async findAll(user: User, options: FindAllOptions & { search?: string }) {
-    const { page, limit, transactionTypeId, search } = options;
+  async findAll(
+    user: User,
+    options: FindAllOptions & { search?: string; withNotification?: boolean },
+  ) {
+    const { page, limit, transactionTypeId, search, withNotification } =
+      options;
     const skip = (page - 1) * limit;
 
+    // Start with the base exclusion
+    const nameConditions: any[] = [Not('Balance Correction')];
+
+    // Only add the Notification exclusion if withNotification is false/undefined
+    if (!withNotification) {
+      nameConditions.push(Not('Notification'));
+    }
+
+    // Initialize the where object
     const where: any = {
       user: { id: user.id },
-      name: And(Not('Balance Correction'), Not('Notification')),
+      name: And(...nameConditions),
     };
 
     if (transactionTypeId) {
-      Object.assign(where, { transactionType: { id: transactionTypeId } });
+      where.transactionType = { id: transactionTypeId };
     }
 
+    // If there is a search query, it overrides the specific name exclusions
+    // in many TypeORM setups, so we append it to the And array if needed
     if (search) {
-      Object.assign(where, { name: ILike(`%${search}%`) });
+      where.name = And(...nameConditions, ILike(`%${search}%`));
     }
 
     const [data, total] = await this.transactionCategoryRepo.findAndCount({
