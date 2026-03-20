@@ -6,83 +6,35 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import { User } from '../../database/entities/user.entity';
 import { Wallet } from '../../database/entities/wallet.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 import { hashPassword } from '../../common/utils/bcrypt.util';
 import { JwtPayload } from './types/jwt-payload.type';
 import { JwtService } from '@nestjs/jwt';
-import TRANSACTION_CATEGORIES from '../../common/constants/transaction-categories.constant';
+import { TRANSACTION_CATEGORIES } from '../../common/constants';
 import { GoogleSignInDto } from './dto/google-sign-in.dto';
 import { randomBytes } from 'crypto';
+
+// 👇 1. IMPORT OAUTH2CLIENT
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
+  // 👇 2. INISIALISASI GOOGLE CLIENT (Pakai Web Client ID yang sama dengan di Mobile)
+  private readonly googleClient = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+  );
+
   constructor(
     private readonly dataSource: DataSource,
-
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-
     private readonly jwtService: JwtService,
-    private readonly httpService: HttpService, // ← BARU
   ) {}
 
-  // ─── PRIVATE HELPER ───────────────────────────────────────────────────────
-  /**
-   * Menukar serverAuthCode dari Google Sign In SDK menjadi refreshToken.
-   *
-   * Kenapa ini dilakukan di BE bukan FE?
-   * Karena proses penukaran butuh GOOGLE_CLIENT_SECRET yang tidak boleh
-   * ada di dalam app bundle mobile (bisa diekstrak oleh attacker).
-   *
-   * serverAuthCode = kode satu kali dari Google, hanya bisa dipakai sekali.
-   * refreshToken   = token jangka panjang, bisa dipakai berulang kali.
-   *
-   * Catatan penting: Google hanya mengembalikan refresh_token pada
-   * OTORISASI PERTAMA. Kalau user sudah pernah login sebelumnya,
-   * Google tidak kirim refresh_token lagi kecuali user revoke dulu aksesnya
-   * di https://myaccount.google.com/permissions
-   */
-  private async exchangeCodeForRefreshToken(
-    serverAuthCode: string,
-  ): Promise<string | null> {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.post('https://oauth2.googleapis.com/token', {
-          code: serverAuthCode,
-          client_id: process.env.GOOGLE_CLIENT_ID,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET,
-          redirect_uri: 'https://auth.expo.io/@tondikiandika/uangku',
-          grant_type: 'authorization_code',
-        }),
-      );
-
-      if (!data.refresh_token) {
-        this.logger.warn(
-          `No refresh_token in Google response for exchange. ` +
-            `User may have authorized before. ` +
-            `They need to revoke at myaccount.google.com/permissions to get new token.`,
-        );
-        return null;
-      }
-
-      return data.refresh_token as string;
-    } catch (err) {
-      // Non-fatal: user tetap bisa login, hanya fitur Gmail sync tidak aktif
-      this.logger.error(
-        'Failed to exchange serverAuthCode → refreshToken',
-        err?.response?.data ?? err?.message,
-      );
-      return null;
-    }
-  }
-
-  // ─── GOOGLE SIGN IN (diupdate) ────────────────────────────────────────────
   async googleSignIn(
     dto: GoogleSignInDto,
   ): Promise<{ user: User; accessToken: string }> {
@@ -91,39 +43,40 @@ export class AuthService {
     await queryRunner.startTransaction();
 
     try {
-      let user = await queryRunner.manager.findOne(User, {
-        where: { email: dto.email },
+      // 👇 3. VERIFIKASI TOKEN KE SERVER GOOGLE
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: dto.idToken,
+        audience: process.env.GOOGLE_CLIENT_ID, // Wajib Web Client ID
       });
 
-      // Coba tukar serverAuthCode → refreshToken jika FE mengirimkannya
-      // Ini akan null kalau:
-      // 1. FE tidak kirim serverAuthCode
-      // 2. Penukaran gagal (network error, dll)
-      // 3. Google tidak kembalikan refresh_token (sudah pernah otorisasi)
-      let refreshToken: string | null = null;
-      if (dto.serverAuthCode) {
-        refreshToken = await this.exchangeCodeForRefreshToken(
-          dto.serverAuthCode,
-        );
+      // 👇 4. AMBIL DATA ASLI DARI GOOGLE (Hacker tidak bisa memalsukan ini)
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        throw new BadRequestException('Invalid Google Token');
       }
 
+      const verifiedEmail = payload.email;
+      const verifiedName = payload.name;
+      const verifiedAvatar = payload.picture;
+
+      // Sisanya sama persis seperti kodemu sebelumnya, tapi pakai variabel verified!
+      let user = await queryRunner.manager.findOne(User, {
+        where: { email: verifiedEmail },
+      });
+
       if (!user) {
-        // ── User baru: buat akun lengkap ──────────────────────────────
-        if (!dto.name) {
-          throw new BadRequestException(
-            'Name is required for new users signing in with Google',
-          );
+        if (!verifiedName) {
+          throw new BadRequestException('Name is required from Google Profile');
         }
 
         const randomPassword = randomBytes(32).toString('hex');
         const hashed = await hashPassword(randomPassword);
 
         const newUser = queryRunner.manager.create(User, {
-          email: dto.email,
+          email: verifiedEmail,
           password: hashed,
-          name: dto.name,
-          avatar: dto.avatar,
-          googleRefreshToken: refreshToken, // simpan jika berhasil dapat
+          name: verifiedName,
+          avatar: verifiedAvatar,
         });
         user = await queryRunner.manager.save(User, newUser);
 
@@ -138,32 +91,29 @@ export class AuthService {
         );
         await queryRunner.manager.save(TransactionCategory, categories);
       } else {
-        // ── User lama: update refreshToken jika dapat yang baru ───────
-        // Ini handle kasus refresh token expired (testing mode = 7 hari)
-        // User re-login → dapat serverAuthCode baru → refreshToken baru
-        if (refreshToken) {
+        // Update avatar jika ada perubahan di Google
+        if (verifiedAvatar && user.avatar !== verifiedAvatar) {
           await queryRunner.manager.update(User, user.id, {
-            googleRefreshToken: refreshToken,
-            // Update avatar juga jika berubah
-            ...(dto.avatar && { avatar: dto.avatar }),
+            avatar: verifiedAvatar,
           });
-          this.logger.log(
-            `Updated googleRefreshToken for user ${user.id} (${user.email})`,
-          );
+          user.avatar = verifiedAvatar;
         }
       }
 
       await queryRunner.commitTransaction();
 
-      const payload: JwtPayload = { id: user.id, email: user.email };
-      const accessToken = await this.jwtService.signAsync(payload);
+      // Buatkan JWT lokal UangKu
+      const jwtPayload: JwtPayload = { id: user.id, email: user.email };
+      const accessToken = await this.jwtService.signAsync(jwtPayload);
       if (user.password) delete user.password;
 
       return { user, accessToken };
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      if (error instanceof BadRequestException) throw error;
-      throw new InternalServerErrorException('Google Sign-In failed');
+      this.logger.error('Google Sign-In failed', error);
+      throw new InternalServerErrorException(
+        'Google Sign-In validation failed',
+      );
     } finally {
       await queryRunner.release();
     }

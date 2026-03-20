@@ -1,4 +1,4 @@
-const TRANSACTION_CATEGORIES = [
+export const TRANSACTION_CATEGORIES = [
   // --- LEAST FREQUENT / CORRECTIONS ---
   {
     name: 'Balance Correction',
@@ -94,10 +94,19 @@ const TRANSACTION_CATEGORIES = [
   { name: 'Food', transactionType: { id: 2 }, iconName: 'utensils' },
   { name: 'Salary', transactionType: { id: 1 }, iconName: 'money-bill-wave' },
 
-  // --- UNKNOWN (fallback untuk transaksi yang tidak bisa diidentifikasi) ---
-  { name: 'Unknown', transactionType: { id: 1 }, iconName: 'question' }, // Income Unknown
-  { name: 'Unknown', transactionType: { id: 2 }, iconName: 'question' }, // Expense Unknown
-  { name: 'Unknown', transactionType: { id: 3 }, iconName: 'question' }, // Transfer Unknown
+  {
+    name: 'Notification',
+    transactionType: { id: 1 },
+    iconName: 'money-bill-transfer',
+  },
+  {
+    name: 'Notification',
+    transactionType: { id: 2 },
+    iconName: 'money-bill-transfer',
+  },
+  {
+    name: 'Notification',
+    transactionType: { id: 3 },
+    iconName: 'money-bill-transfer',
+  },
 ];
-
-export default TRANSACTION_CATEGORIES;

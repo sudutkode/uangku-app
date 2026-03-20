@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsString,
   Min,
 } from 'class-validator';
 
@@ -31,6 +32,10 @@ export class CreateTransactionDto {
   @IsOptional()
   @IsNumber()
   targetWalletId?: number;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
 
   @IsOptional()
   @IsDateString()

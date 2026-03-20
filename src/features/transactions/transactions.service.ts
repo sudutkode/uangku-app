@@ -42,6 +42,7 @@ export class TransactionsService {
         transactionType: { id: dto.transactionTypeId },
         transactionCategory: { id: dto.transactionCategoryId },
         user,
+        note: dto.note,
         ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
       });
 
@@ -56,6 +57,7 @@ export class TransactionsService {
       await queryRunner.commitTransaction();
       return transaction;
     } catch (error) {
+      console.log('error', error);
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
@@ -74,6 +76,7 @@ export class TransactionsService {
       transactionType: { id: dto.transactionTypeId },
       transactionCategory: { id: dto.transactionCategoryId },
       user,
+      note: dto.note,
       ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
     });
 
@@ -249,6 +252,7 @@ export class TransactionsService {
         transactionCategory: dto.transactionCategoryId
           ? { id: dto.transactionCategoryId }
           : transaction.transactionCategory,
+        note: dto.note ?? transaction.note,
       });
 
       await queryRunner.manager.save(transaction);

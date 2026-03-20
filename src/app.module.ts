@@ -10,12 +10,10 @@ import { TransactionTypesModule } from './features/transaction-types/transaction
 import { TransactionCategoriesModule } from './features/transaction-categories/transaction-categories.module';
 import { TransactionsModule } from './features/transactions/transactions.module';
 import { ReportsModule } from './features/reports/reports.module';
-import { ScheduleModule } from '@nestjs/schedule'; // ← BARU
-import { GmailModule } from './features/gmail/gmail.module'; // ← BARU
+import { NotificationsModule } from './features/notifications/notifications.module';
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(), // ← WAJIB agar @Cron aktif, taruh paling atas
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -30,7 +28,7 @@ import { GmailModule } from './features/gmail/gmail.module'; // ← BARU
     TransactionCategoriesModule,
     TransactionsModule,
     ReportsModule,
-    GmailModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
