@@ -2,7 +2,7 @@ import {useWalletsStore} from "@/store";
 import {Wallet} from "@/types";
 import {formatIdr} from "@/utils/common-utils";
 import {Stack} from "expo-router";
-import {Platform, View} from "react-native";
+import {View} from "react-native";
 import {Text, useTheme} from "react-native-paper";
 import {SafeAreaView} from "react-native-safe-area-context";
 
@@ -19,7 +19,7 @@ export default function WalletsLayout() {
           backgroundColor: colors.surface,
         },
         headerTintColor: colors.onSurface,
-        headerTitle: "Wallets",
+        headerTitle: "Wallet",
         headerShadowVisible: true,
       }}
     >
@@ -33,7 +33,6 @@ export default function WalletsLayout() {
                 padding: 16,
                 paddingBottom: 0,
                 elevation: 4,
-                borderBottomWidth: Platform.OS === "ios" ? 0.5 : 0, // For iOS
                 borderBottomColor: colors.outlineVariant,
               }}
             >
