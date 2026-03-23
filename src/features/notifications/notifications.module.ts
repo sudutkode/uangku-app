@@ -8,17 +8,16 @@ import { TransactionWallet } from '../../database/entities/transaction-wallet.en
 import { Wallet } from '../../database/entities/wallet.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 
-import { JagoNotificationParser } from '../../common/parsers/jago-notification.parser';
-import { GopayNotificationParser } from '../../common/parsers/gopay-notification.parser';
-import { SeabankNotificationParser } from '../../common/parsers/seabank-notification.parser';
-import { OvoNotificationParser } from '../../common/parsers/ovo-notification.parser';
-import { DanaNotificationParser } from '../../common/parsers/dana-notification.parser';
-import { ShopeepayNotificationParser } from '../../common/parsers/shopeepay-notification.parser';
-import { BcaNotificationParser } from '../../common/parsers/bca-notification.parser';
-import { MandiriNotificationParser } from '../../common/parsers/mandiri-notification.parser';
-import { BriNotificationParser } from '../../common/parsers/bri-notification.parser';
-import { BniNotificationParser } from '../../common/parsers/bni-notification.parser';
-import { LinkAjaNotificationParser } from '../../common/parsers/linkaja-notification.parser';
+import { JagoNotificationParser } from './parsers/jago-notification.parser';
+import { GopayNotificationParser } from './parsers/gopay-notification.parser';
+import { SeabankNotificationParser } from './parsers/seabank-notification.parser';
+import { OvoNotificationParser } from './parsers/ovo-notification.parser';
+import { DanaNotificationParser } from './parsers/dana-notification.parser';
+import { ShopeeNotificationParser } from './parsers/shopeepay-notification.parser';
+import { BcaNotificationParser } from './parsers/bca-notification.parser';
+import { LivinNotificationParser } from './parsers/livin-notification.parser';
+import { BrimoNotificationParser } from './parsers/brimo-notification.parser';
+import { WondrNotificationParser } from './parsers/wondr-notification.parser';
 
 const ALL_PARSERS = [
   JagoNotificationParser,
@@ -26,12 +25,11 @@ const ALL_PARSERS = [
   SeabankNotificationParser,
   OvoNotificationParser,
   DanaNotificationParser,
-  ShopeepayNotificationParser,
+  ShopeeNotificationParser,
   BcaNotificationParser,
-  MandiriNotificationParser,
-  BriNotificationParser,
-  BniNotificationParser,
-  LinkAjaNotificationParser,
+  LivinNotificationParser,
+  BrimoNotificationParser,
+  WondrNotificationParser,
 ];
 
 @Module({

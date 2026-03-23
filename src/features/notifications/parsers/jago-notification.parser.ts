@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SyncNotificationDto } from '../../features/notifications/dto/sync-notification.dto';
+import { SyncNotificationDto } from '../dto/sync-notification.dto';
 import {
   BaseNotificationParser,
   ParsedNotification,
@@ -27,7 +27,7 @@ import {
 @Injectable()
 export class JagoNotificationParser extends BaseNotificationParser {
   canParse(app: string): boolean {
-    return /jago/i.test(app);
+    return app === 'com.jago.digitalBanking';
   }
 
   parse(dto: SyncNotificationDto): ParsedNotification | null {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SyncNotificationDto } from '../../features/notifications/dto/sync-notification.dto';
+import { SyncNotificationDto } from '../dto/sync-notification.dto';
 import {
   BaseNotificationParser,
   ParsedNotification,
@@ -15,9 +15,9 @@ import {
  *   EXPENSE: "Kamu membayar Rp60.000 ke Indomaret dengan ShopeePay"
  */
 @Injectable()
-export class ShopeepayNotificationParser extends BaseNotificationParser {
+export class ShopeeNotificationParser extends BaseNotificationParser {
   canParse(app: string): boolean {
-    return /shopee/i.test(app);
+    return app === 'com.shopeepay.id';
   }
   parse(dto: SyncNotificationDto): ParsedNotification | null {
     const { title, text, app } = dto;

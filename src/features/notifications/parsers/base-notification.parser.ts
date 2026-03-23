@@ -1,4 +1,4 @@
-import { SyncNotificationDto } from '../../features/notifications/dto/sync-notification.dto';
+import { SyncNotificationDto } from '../dto/sync-notification.dto';
 
 export interface ParsedNotification {
   transactionType: 'income' | 'expense';

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SyncNotificationDto } from '../../features/notifications/dto/sync-notification.dto';
+import { SyncNotificationDto } from '../dto/sync-notification.dto';
 import {
   BaseNotificationParser,
   ParsedNotification,
@@ -18,7 +18,7 @@ import {
 @Injectable()
 export class DanaNotificationParser extends BaseNotificationParser {
   canParse(app: string): boolean {
-    return /id\.dana|dana/i.test(app);
+    return app === 'id.dana';
   }
   parse(dto: SyncNotificationDto): ParsedNotification | null {
     const { title, text, app } = dto;

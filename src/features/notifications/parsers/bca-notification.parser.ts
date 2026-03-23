@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { SyncNotificationDto } from '../../features/notifications/dto/sync-notification.dto';
+import { SyncNotificationDto } from '../dto/sync-notification.dto';
 import {
   BaseNotificationParser,
   ParsedNotification,
 } from './base-notification.parser';
 
 /**
- * Parser for BCA / myBCA (com.bca)
+ * Parser for BCA (com.bca)
  *
  * BCA uses explicit CR/DB markers — most reliable signal in Indonesian banking.
  *
@@ -19,7 +19,7 @@ import {
 @Injectable()
 export class BcaNotificationParser extends BaseNotificationParser {
   canParse(app: string): boolean {
-    return /com\.bca|mybca/i.test(app);
+    return app === 'com.bca';
   }
   parse(dto: SyncNotificationDto): ParsedNotification | null {
     const { title, text, app } = dto;
