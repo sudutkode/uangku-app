@@ -7,6 +7,7 @@ import {
 import {Stack} from "expo-router";
 import {StatusBar} from "expo-status-bar";
 import React, {useEffect} from "react";
+import {AppState as RNAppState} from "react-native";
 import {PaperProvider, adaptNavigationTheme} from "react-native-paper";
 import {
   SafeAreaProvider,
@@ -23,8 +24,10 @@ import * as Notifications from "expo-notifications";
 
 import "react-native-reanimated";
 
-// 👇 1. IMPORT SERVICE DI SINI (Paling atas setelah library)
+// 👇 1. IMPORT SERVICE (top level)
+import {useForegroundSync} from "@/services/ForegroundSyncService";
 import "@/services/NotificationService";
+
 registerTranslation("en", en);
 
 // Configure notification channel for Android
@@ -55,6 +58,7 @@ const {LightTheme, DarkTheme} = adaptNavigationTheme({
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const {user} = useAuthStore();
+  const {checkAndSyncPending} = useForegroundSync();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -62,6 +66,21 @@ export default function RootLayout() {
       scopes: ["profile", "email"],
     });
   }, []);
+
+  // Listen for app state changes
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: string) => {
+      if (nextAppState === "active" && user) {
+        await checkAndSyncPending();
+      }
+    };
+
+    const subscription = RNAppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
+    return () => subscription.remove();
+  }, [user, checkAndSyncPending]);
 
   // theme based on color scheme
   const isDark = colorScheme === "dark";
