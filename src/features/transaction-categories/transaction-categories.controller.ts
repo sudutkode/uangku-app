@@ -62,7 +62,7 @@ export class TransactionCategoriesController {
       page,
       limit,
       transactionTypeId: transactionTypeId || undefined,
-      withNotification: Boolean(withNotification),
+      withNotification: withNotification === 'true',
     });
 
     return successResponse(
