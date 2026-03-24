@@ -29,6 +29,9 @@ export class Wallet {
   })
   balance: number;
 
+  @Column({ nullable: true })
+  appName?: string;
+
   @ManyToOne(() => User, (user) => user.wallets, { onDelete: 'CASCADE' })
   user: User;
 

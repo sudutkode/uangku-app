@@ -8,26 +8,11 @@ import { TransactionWallet } from '../../database/entities/transaction-wallet.en
 import { Wallet } from '../../database/entities/wallet.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 import { SyncNotificationDto } from './dto/sync-notification.dto';
-import { JagoNotificationParser } from './parsers/jago-notification.parser';
-import { GopayNotificationParser } from './parsers/gopay-notification.parser';
-import { SeabankNotificationParser } from './parsers/seabank-notification.parser';
-import { OvoNotificationParser } from './parsers/ovo-notification.parser';
-import { DanaNotificationParser } from './parsers/dana-notification.parser';
-import { ShopeeNotificationParser } from './parsers/shopeepay-notification.parser';
-import { BcaNotificationParser } from './parsers/bca-notification.parser';
-import { LivinNotificationParser } from './parsers/livin-notification.parser';
-import { BrimoNotificationParser } from './parsers/brimo-notification.parser';
-import { WondrNotificationParser } from './parsers/wondr-notification.parser';
-import {
-  NOTIFICATION_CATEGORY_NAME,
-  TRANSACTION_TYPE_ID,
-} from '../../common/constants';
-import { BaseNotificationParser, ParsedNotification } from './parsers';
+import { NOTIFICATION_CATEGORY_NAME } from '../../common/constants';
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
-  private readonly parsers: BaseNotificationParser[];
 
   constructor(
     private readonly dataSource: DataSource,
@@ -37,206 +22,116 @@ export class NotificationsService {
     private readonly walletRepo: Repository<Wallet>,
     @InjectRepository(TransactionCategory)
     private readonly categoryRepo: Repository<TransactionCategory>,
-
-    jagoParser: JagoNotificationParser,
-    gopayParser: GopayNotificationParser,
-    seabankParser: SeabankNotificationParser,
-    ovoParser: OvoNotificationParser,
-    danaParser: DanaNotificationParser,
-    shopeepayParser: ShopeeNotificationParser,
-    bcaParser: BcaNotificationParser,
-    mandiriParser: LivinNotificationParser,
-    briParser: BrimoNotificationParser,
-    bniParser: WondrNotificationParser,
-  ) {
-    this.parsers = [
-      jagoParser,
-      gopayParser,
-      seabankParser,
-      ovoParser,
-      danaParser,
-      shopeepayParser,
-      bcaParser,
-      mandiriParser,
-      briParser,
-      bniParser,
-    ];
-  }
+  ) {}
 
   async processNotification(user: User, dto: SyncNotificationDto) {
-    this.logger.log(
-      `[Notif] ${dto.app} | "${dto.title}" | "${dto.text.substring(0, 60)}"`,
-    );
+    this.logger.log(`[Notif] Processing: ${dto.appName} | ${dto.title}`);
 
-    const parser = this.parsers.find((p) => p.canParse(dto.app));
-    if (!parser) return { status: 'ignored', reason: 'no_parser' };
+    // 2. Cari Wallet berdasarkan appName
+    const wallet = await this.walletRepo.findOne({
+      where: { appName: dto.appName, user: { id: user.id } },
+    });
 
-    const parsed = parser.parse(dto);
-    if (!parsed) return { status: 'ignored', reason: 'filtered' };
+    if (!wallet) {
+      this.logger.warn(`[Notif] No wallet linked to app: ${dto.appName}`);
+      // Kirim pesan simple dalam bahasa Inggris sebagai identifier
+      throw new BadRequestException('Wallet not found');
+    }
 
-    // Dedup window: round timestamp down to the nearest 2 minutes.
-    // - Same notification fired twice within 2 min (Android retry) → duplicate ✅
-    // - Same amount to same wallet twice in one day but different times → NOT duplicate ✅
-    // - Using date-only was too broad: transferring the same amount twice in a day
-    //   would be incorrectly deduplicated (confirmed bug with BCA Rp10.000 case).
+    const amount = dto.amount;
+
+    // 3. Deduplikasi (Fingerprint)
     const ts = new Date(dto.date);
-    const windowMinutes = Math.floor(ts.getMinutes() / 2) * 2;
-    const timeWindow = `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, '0')}-${String(ts.getDate()).padStart(2, '0')}T${String(ts.getHours()).padStart(2, '0')}:${String(windowMinutes).padStart(2, '0')}`;
-    const rawRef = `${parsed.fingerprint}|${timeWindow}`;
+    const timeWindow = `${ts.getFullYear()}-${ts.getMonth() + 1}-${ts.getDate()} ${ts.getHours()}:${ts.getMinutes()}`;
+    const rawRef = `${dto.appName}|${dto.transactionTypeId}|${amount}|${timeWindow}`;
     const externalRef = `notif_${Buffer.from(rawRef).toString('base64').substring(0, 80)}`;
 
     const exists = await this.transactionRepo.findOne({
       where: { externalRef, user: { id: user.id } },
     });
+
     if (exists) return { status: 'duplicate' };
 
+    // 4. Simpan ke Database
     try {
       const savedTx = await this.saveToDatabase(
         user,
-        parsed,
+        dto,
+        wallet,
+        amount,
         externalRef,
-        dto.date,
       );
-      this.logger.log(
-        `[Notif] ✓ ${parsed.transactionType} Rp${parsed.amount} → ${parsed.walletName}`,
-      );
+      this.logger.log(`[Notif] ✓ Recorded Rp${amount} for ${wallet.name}`);
       return { status: 'imported', transaction: savedTx };
     } catch (err) {
-      this.logger.error(
-        `[Notif] ✗ Failed to save ${parsed.transactionType} Rp${parsed.amount} from ${dto.app}`,
-        err instanceof Error ? err.message : err,
-      );
+      this.logger.error(`[Notif] Critical error: ${err.message}`);
       throw err;
     }
   }
 
-  // ─── Private helpers ──────────────────────────────────────────────────────
-
-  private async findOrCreateWallet(
-    userId: number,
-    walletName: string,
-  ): Promise<Wallet> {
-    const normalized = walletName.trim();
-    const existing = await this.walletRepo
-      .createQueryBuilder('wallet')
-      .where('wallet.userId = :userId', { userId })
-      .andWhere('LOWER(wallet.name) = LOWER(:name)', {
-        name: normalized.toLowerCase(),
-      })
-      .getOne();
-    if (existing) return existing;
-    this.logger.log(
-      `[Notif] Auto-creating wallet "${normalized}" for user ${userId}`,
-    );
-    return this.walletRepo.save(
-      this.walletRepo.create({
-        name: normalized,
-        balance: 0,
-        user: { id: userId },
-      }),
-    );
-  }
-
-  /**
-   * Resolves the category for a parsed notification.
-   *
-   * Priority:
-   *   1. Exact match by name + typeId (e.g. "Food & Drink" expense)
-   *   2. "Notification" for the same typeId — dedicated fallback category
-   *   3. Any category for this user + typeId (last resort)
-   *
-   * Transfer transactions (typeId=3) always go to "Notification" transfer,
-   * since we model external transfers as expenses in the Jago parser but
-   * internal Kantong-to-Kantong transfers still use typeId=3.
-   */
-  private async resolveCategory(
-    userId: number,
-    typeId: number,
-  ): Promise<TransactionCategory> {
-    const notification = await this.categoryRepo.findOne({
+  private async saveToDatabase(
+    user: User,
+    dto: SyncNotificationDto,
+    wallet: Wallet,
+    amount: number,
+    externalRef: string,
+  ) {
+    // Resolve kategori "Notification" otomatis berdasarkan typeId
+    const category = await this.categoryRepo.findOne({
       where: {
-        user: { id: userId },
-        transactionType: { id: typeId },
+        user: { id: user.id },
+        transactionType: { id: dto.transactionTypeId },
         name: NOTIFICATION_CATEGORY_NAME,
       },
     });
-    if (notification) return notification;
 
-    throw new BadRequestException(
-      `No category found for user ${userId} typeId ${typeId}. ` +
-        `Run migrations to seed Notification categories.`,
-    );
-  }
-
-  private async saveToDatabase(
-    user: User,
-    parsed: ParsedNotification,
-    externalRef: string,
-    dateStr: string,
-  ) {
-    const typeId = TRANSACTION_TYPE_ID[parsed.transactionType];
-    const category = await this.resolveCategory(user.id, typeId);
-    const sourceWallet = await this.findOrCreateWallet(
-      user.id,
-      parsed.walletName,
-    );
+    if (!category) {
+      throw new BadRequestException(
+        `Category "${NOTIFICATION_CATEGORY_NAME}" not found for type ${dto.transactionTypeId}`,
+      );
+    }
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+      // Di dalam processNotification atau saveToDatabase
+      const safeTitle = dto.title || '';
+      const safeText = dto.text || '';
+
       const transaction = queryRunner.manager.create(Transaction, {
-        amount: parsed.amount,
-        adminFee: 0,
-        note: parsed.note ?? null, // ← store notification text as note
+        amount,
+        note:
+          `${safeTitle} ${safeText}`.trim().substring(0, 255) ||
+          'Transaction from notification',
         externalRef,
-        createdAt: new Date(dateStr),
+        createdAt: new Date(dto.date),
         user: { id: user.id },
-        transactionType: { id: typeId },
+        transactionType: { id: dto.transactionTypeId },
         transactionCategory: { id: category.id },
       });
       const savedTx = await queryRunner.manager.save(Transaction, transaction);
 
-      const sourceTw = queryRunner.manager.create(TransactionWallet, {
+      // Simpan ke TransactionWallet (Pivot)
+      const isIncoming = dto.transactionTypeId === 1; // Asumsi 1 = Income, sesuaikan dengan ID di DB mu
+      await queryRunner.manager.save(TransactionWallet, {
         transaction: { id: savedTx.id },
-        wallet: { id: sourceWallet.id },
-        isIncoming: parsed.transactionType === 'income',
-        amount: parsed.amount,
+        wallet: { id: wallet.id },
+        isIncoming: isIncoming,
+        amount: amount,
       });
-      await queryRunner.manager.save(TransactionWallet, sourceTw);
 
-      if (parsed.transactionType === 'income') {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .update(Wallet)
-          .set({ balance: () => '"balance" + :delta' })
-          .setParameter('delta', parsed.amount)
-          .where('id = :id', { id: sourceWallet.id })
-          .execute();
-      } else if (parsed.transactionType === 'expense') {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .update(Wallet)
-          .set({ balance: () => '"balance" - :delta' })
-          .setParameter('delta', parsed.amount)
-          .where('id = :id', { id: sourceWallet.id })
-          .execute();
-      } else if (parsed.transactionType === 'transfer') {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .update(Wallet)
-          .set({ balance: () => '"balance" - :delta' })
-          .setParameter('delta', parsed.amount)
-          .where('id = :id', { id: sourceWallet.id })
-          .execute();
-      }
+      // Update Balance Wallet
+      const balanceChange = isIncoming ? amount : -amount;
+      await queryRunner.manager.update(Wallet, wallet.id, {
+        balance: () => `balance + ${balanceChange}`,
+      });
 
       await queryRunner.commitTransaction();
       return savedTx;
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      this.logger.error('[Notif] saveToDatabase failed', err);
       throw err;
     } finally {
       await queryRunner.release();

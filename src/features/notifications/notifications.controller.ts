@@ -26,11 +26,7 @@ export class NotificationsController {
     );
 
     if (result.status === 'ignored') {
-      return successResponse(
-        null,
-        'Notification ignored (not a valid transaction)',
-        HttpStatus.OK,
-      );
+      return successResponse(null, 'Notification ignored', HttpStatus.OK);
     }
 
     if (result.status === 'duplicate') {
@@ -43,7 +39,7 @@ export class NotificationsController {
 
     return successResponse(
       result.transaction,
-      'Transaction recorded from notification',
+      'Transaction recorded',
       HttpStatus.CREATED,
     );
   }

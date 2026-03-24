@@ -16,14 +16,12 @@ import { TRANSACTION_CATEGORIES } from '../../common/constants';
 import { GoogleSignInDto } from './dto/google-sign-in.dto';
 import { randomBytes } from 'crypto';
 
-// 👇 1. IMPORT OAUTH2CLIENT
 import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  // 👇 2. INISIALISASI GOOGLE CLIENT (Pakai Web Client ID yang sama dengan di Mobile)
   private readonly googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
   );
@@ -43,13 +41,11 @@ export class AuthService {
     await queryRunner.startTransaction();
 
     try {
-      // 👇 3. VERIFIKASI TOKEN KE SERVER GOOGLE
       const ticket = await this.googleClient.verifyIdToken({
         idToken: dto.idToken,
-        audience: process.env.GOOGLE_CLIENT_ID, // Wajib Web Client ID
+        audience: process.env.GOOGLE_CLIENT_ID,
       });
 
-      // 👇 4. AMBIL DATA ASLI DARI GOOGLE (Hacker tidak bisa memalsukan ini)
       const payload = ticket.getPayload();
       if (!payload || !payload.email) {
         throw new BadRequestException('Invalid Google Token');
@@ -59,7 +55,6 @@ export class AuthService {
       const verifiedName = payload.name;
       const verifiedAvatar = payload.picture;
 
-      // Sisanya sama persis seperti kodemu sebelumnya, tapi pakai variabel verified!
       let user = await queryRunner.manager.findOne(User, {
         where: { email: verifiedEmail },
       });
@@ -91,7 +86,6 @@ export class AuthService {
         );
         await queryRunner.manager.save(TransactionCategory, categories);
       } else {
-        // Update avatar jika ada perubahan di Google
         if (verifiedAvatar && user.avatar !== verifiedAvatar) {
           await queryRunner.manager.update(User, user.id, {
             avatar: verifiedAvatar,
@@ -102,7 +96,6 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
 
-      // Buatkan JWT lokal UangKu
       const jwtPayload: JwtPayload = { id: user.id, email: user.email };
       const accessToken = await this.jwtService.signAsync(jwtPayload);
       if (user.password) delete user.password;
@@ -111,9 +104,7 @@ export class AuthService {
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error('Google Sign-In failed', error);
-      throw new InternalServerErrorException(
-        'Google Sign-In validation failed',
-      );
+      throw new InternalServerErrorException('Google Sign-In failed');
     } finally {
       await queryRunner.release();
     }

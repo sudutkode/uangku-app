@@ -1,32 +1,32 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Init1761467672529 implements MigrationInterface {
-  name = 'Init1761467672529';
+export class Init1774364864525 implements MigrationInterface {
+  name = 'Init1774364864525';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `CREATE TABLE "transaction_types" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, CONSTRAINT "PK_2a49fe7879bf8a02812639cea61" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "transaction_categories" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "transactionTypeId" integer, "userId" integer, CONSTRAINT "PK_bbd38b9174546b0ed4fe04689c7" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "transaction_categories" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "iconName" character varying, "transactionTypeId" integer, "userId" integer, CONSTRAINT "PK_bbd38b9174546b0ed4fe04689c7" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "transactions" ("id" SERIAL NOT NULL, "amount" numeric(18,2) NOT NULL DEFAULT '0', "adminFee" numeric(18,2) NOT NULL DEFAULT '0', "transactionTypeId" integer, "transactionCategoryId" integer, "userId" integer, CONSTRAINT "PK_a219afd8dd77ed80f5a862f1db9" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "transactions" ("id" SERIAL NOT NULL, "amount" numeric(18,2) NOT NULL DEFAULT '0', "adminFee" numeric(18,2) NOT NULL DEFAULT '0', "externalRef" character varying(100), "note" text, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "transactionTypeId" integer, "transactionCategoryId" integer, "userId" integer, CONSTRAINT "PK_a219afd8dd77ed80f5a862f1db9" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "transaction_wallets" ("id" SERIAL NOT NULL, "isIncoming" boolean NOT NULL, "amount" numeric(18,2) NOT NULL DEFAULT '0', "transactionId" integer, "walletId" integer, CONSTRAINT "PK_cefc65e9f4de1aa5d151145304f" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "loans" ("id" SERIAL NOT NULL, "isGiven" boolean NOT NULL DEFAULT false, "isPaid" boolean NOT NULL DEFAULT false, "amount" numeric(18,2) NOT NULL DEFAULT '0', CONSTRAINT "PK_5c6942c1e13e4de135c5203ee61" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "loans" ("id" SERIAL NOT NULL, "isGiven" boolean NOT NULL DEFAULT false, "isPaid" boolean NOT NULL DEFAULT false, "amount" numeric(18,2) NOT NULL DEFAULT '0', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "givenDate" TIMESTAMP NOT NULL, "paidDate" TIMESTAMP, CONSTRAINT "PK_5c6942c1e13e4de135c5203ee61" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "loan_wallets" ("id" SERIAL NOT NULL, "isIncoming" boolean NOT NULL, "amount" numeric(18,2) NOT NULL DEFAULT '0', "loanId" integer, "walletId" integer, CONSTRAINT "PK_35a7fc127f73127a406a377d903" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "wallets" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "balance" numeric(18,2) NOT NULL DEFAULT '0', "userId" integer, CONSTRAINT "PK_8402e5df5a30a229380e83e4f7e" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "wallets" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "balance" numeric(18,2) NOT NULL DEFAULT '0', "appName" character varying, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer, CONSTRAINT "PK_8402e5df5a30a229380e83e4f7e" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "users" ("id" SERIAL NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, "name" character varying NOT NULL, "avatar" character varying, CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "users" ("id" SERIAL NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, "name" character varying NOT NULL, "avatar" character varying, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `ALTER TABLE "transaction_categories" ADD CONSTRAINT "FK_1fa925fe6cebf56686bd9a8a8e2" FOREIGN KEY ("transactionTypeId") REFERENCES "transaction_types"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,

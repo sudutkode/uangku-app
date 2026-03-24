@@ -1,18 +1,27 @@
-import { IsString, IsNotEmpty, IsDateString } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class SyncNotificationDto {
   @IsString()
   @IsNotEmpty()
-  app: string; // contoh: 'com.gojek.app'
+  appName: string;
+
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @IsString()
+  @IsOptional()
+  text?: string;
 
   @IsString()
   @IsNotEmpty()
-  title: string; // contoh: 'Pembayaran Berhasil'
+  date: string;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  text: string; // contoh: 'Kamu telah membayar Rp50.000 ke Tokopedia'
+  amount: number;
 
-  @IsDateString()
-  date: string; // ISO string dari HP saat notifikasi muncul
+  @IsNumber()
+  @IsNotEmpty()
+  transactionTypeId: number;
 }
