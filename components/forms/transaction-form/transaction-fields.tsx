@@ -1,5 +1,5 @@
-import {DatePicker, Dropdown} from "@/components/inputs";
-import React, {memo, useCallback} from "react";
+import {DatePicker, Dropdown, Switch} from "@/components/inputs";
+import React, {memo, useCallback, useEffect, useState} from "react";
 import {StyleSheet, View} from "react-native";
 import {TextInput, useTheme} from "react-native-paper";
 import {FormState, TRANSFER_TYPE_ID} from "./constants";
@@ -21,6 +21,21 @@ const TransactionFields = memo(
     isNotification = false,
   }: TransactionFieldsProps) => {
     const {colors} = useTheme();
+    const [isWithNote, setIsWithNote] = useState(false);
+
+    useEffect(() => {
+      if (!isWithNote && form.note) {
+        setIsWithNote(true);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.note]);
+
+    const handleSwitchWithNote = (val: boolean) => {
+      setIsWithNote(val);
+      if (!val) {
+        setForm((p) => ({...p, note: ""}));
+      }
+    };
 
     const handleWalletChange = useCallback(
       (val?: string) => setForm((p) => ({...p, walletId: Number(val)})),
@@ -73,35 +88,39 @@ const TransactionFields = memo(
           </View>
         )}
 
-        {/* Note field — editable for manual transactions, read-only for auto-imports */}
         <View style={styles.spacing}>
           {isNotification ? (
-            // Auto-imported: read-only, shows the raw notification text
-            <>
-              <TextInput
-                mode="outlined"
-                label="Note (auto-imported)"
-                value={form.note ?? ""}
-                editable={false}
-                multiline
-                activeOutlineColor={colors.outline}
-                outlineColor={colors.outlineVariant}
-                style={{backgroundColor: colors.surface}}
-                textColor={colors.onSurfaceVariant}
-              />
-            </>
-          ) : (
-            // Manual transaction: optional free-text note
             <TextInput
               mode="outlined"
-              label="Note (optional)"
+              label="Note (auto-imported)"
               value={form.note ?? ""}
-              onChangeText={handleNoteChange}
+              editable={false}
               multiline
-              numberOfLines={2}
-              activeOutlineColor={colors.primary}
-              placeholder="e.g. Lunch with team, Monthly rent..."
+              numberOfLines={3}
+              activeOutlineColor={colors.outline}
+              outlineColor={colors.outlineVariant}
+              style={{backgroundColor: colors.surface}}
+              textColor={colors.onSurfaceVariant}
             />
+          ) : (
+            <>
+              <Switch
+                label="With note"
+                value={isWithNote}
+                onValueChange={handleSwitchWithNote}
+              />
+              {isWithNote ? (
+                <TextInput
+                  mode="outlined"
+                  label="Note"
+                  value={form.note ?? ""}
+                  onChangeText={handleNoteChange}
+                  multiline
+                  numberOfLines={3}
+                  activeOutlineColor={colors.primary}
+                />
+              ) : null}
+            </>
           )}
         </View>
       </>

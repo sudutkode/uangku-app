@@ -1,4 +1,4 @@
-import {Dropdown} from "@/components/inputs";
+import {Dropdown, Switch} from "@/components/inputs";
 import {LoadingState, Snackbar} from "@/components/ui";
 import {SUPPORTED_APPS_CONFIG} from "@/constants/supported-apps";
 import {useFetch, useMutation} from "@/hooks/axios";
@@ -11,7 +11,7 @@ import {
   Button,
   Dialog,
   Portal,
-  Switch,
+  // Switch,
   Text,
   TextInput,
   useTheme,
@@ -89,7 +89,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
         balance: formatBalanceInput(String(balance)),
         appName: appName || "",
       });
-      if (appName) setIsSupported(true);
+      setIsSupported(Boolean(appName));
     }
   }, [existingData]);
 
@@ -160,6 +160,11 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
     [isEdit, colors.error, loadingDelete],
   );
 
+  const handleSwitchSupportApp = (val: boolean) => {
+    setIsSupported(val);
+    setForm((p) => ({...p, appName: "", name: ""}));
+  };
+
   if (loadingExisting) return <LoadingState />;
 
   const disabledSave = isSupported ? !form.appName : !form.name;
@@ -176,17 +181,11 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
 
       <View style={styles.fields}>
         {!isEdit && (
-          <View style={styles.row}>
-            <Text variant="labelLarge">Supported App</Text>
-            <Switch
-              value={isSupported}
-              onValueChange={(val) => {
-                setIsSupported(val);
-                setForm((p) => ({...p, appName: "", name: ""}));
-              }}
-              color={colors.primary}
-            />
-          </View>
+          <Switch
+            label="Supported App"
+            value={isSupported}
+            onValueChange={handleSwitchSupportApp}
+          />
         )}
 
         {isSupported ? (

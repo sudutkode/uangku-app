@@ -1,30 +1,30 @@
+import {darkTheme, lightTheme} from "@/constants/theme";
 import {useColorScheme} from "@/hooks/use-color-scheme";
+import {
+  processNotificationResponse,
+  setupNotificationCategories,
+  setupNotificationChannel,
+  syncPendingTransactions,
+} from "@/services/NotificationService";
+import {useAuthStore} from "@/store";
+import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import {
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import * as Notifications from "expo-notifications";
 import {Stack} from "expo-router";
 import {StatusBar} from "expo-status-bar";
 import React, {useEffect} from "react";
-import {PaperProvider, adaptNavigationTheme} from "react-native-paper";
-import {
-  SafeAreaProvider,
-  initialWindowMetrics,
-} from "react-native-safe-area-context";
-
-import {darkTheme, lightTheme} from "@/constants/theme";
-import {useAuthStore} from "@/store";
-import {GoogleSignin} from "@react-native-google-signin/google-signin";
-import * as Notifications from "expo-notifications";
+import {AppState, AppStateStatus} from "react-native";
+import {adaptNavigationTheme, PaperProvider} from "react-native-paper";
 import {en, registerTranslation} from "react-native-paper-dates";
 import "react-native-reanimated";
-
 import {
-  handleNotificationActionFromButton,
-  setupNotificationCategories,
-  setupNotificationChannel,
-} from "@/services/NotificationService";
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
 
 registerTranslation("en", en);
 
@@ -54,67 +54,35 @@ export default function RootLayout() {
     });
     setupNotificationChannel();
     setupNotificationCategories();
-  }, []);
 
-  // Request push notification permission once user is authenticated
-  useEffect(() => {
-    if (!user) return;
-
-    Notifications.requestPermissionsAsync();
-  }, [user]);
-
-  // Handle notification action button responses (Konfirmasi / Lewati)
-  useEffect(() => {
+    // Handle notification button actions (foreground & background)
+    // Killed state ditangani oleh Background Task di NotificationService
     const subscription = Notifications.addNotificationResponseReceivedListener(
-      async (response) => {
-        const {actionIdentifier, notification} = response;
-        const {data} = notification.request.content;
-        const identifier = notification.request.identifier;
-
-        // Ignore non-transaction notifications
-        if (data?.type !== "transaction_confirmation") return;
-
-        if (actionIdentifier === "confirm") {
-          try {
-            await handleNotificationActionFromButton(data, identifier);
-          } catch (error: any) {
-            const responseMessage = error?.response?.data?.message;
-            // NestJS message bisa berupa string atau array string
-            const errorCode = Array.isArray(responseMessage)
-              ? responseMessage[0]
-              : responseMessage;
-
-            let displayMessage = "Gagal memproses transaksi";
-
-            // Mapping Error Code ke Bahasa Indonesia yang User-Friendly
-            if (errorCode === "Wallet not found") {
-              const appLabel = data?.appLabel || data?.app || "terkait";
-              displayMessage = `Wallet untuk aplikasi ${appLabel} belum dibuat. Silakan buat wallet terkait untuk bisa membuat transaksi secara otomatis`;
-            } else if (error?.message) {
-              // Jika error dari network/auth, gunakan message aslinya
-              displayMessage = error.message;
-            }
-
-            // Tampilkan notifikasi error ke user
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: "Transaksi Gagal",
-                body: displayMessage,
-                // Kita tidak pakai subtitle/UangKu di sini agar fokus pada pesan error
-              },
-              trigger: null,
-            });
-          }
-        } else if (actionIdentifier === "skip") {
-          await Notifications.dismissNotificationAsync(identifier).catch(
-            () => {},
-          );
-        }
-      },
+      processNotificationResponse,
     );
 
     return () => subscription.remove();
   }, []);
+
+  // Permission, cold start sync, dan resume sync saat user terautentikasi
+  useEffect(() => {
+    if (!user) return;
+
+    Notifications.requestPermissionsAsync().catch(() => {});
+
+    // Sync pending queue yang tersimpan saat killed state
+    syncPendingTransactions();
+
+    // Sync ulang setiap kali app kembali ke foreground
+    const handleAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === "active") {
+        syncPendingTransactions();
+      }
+    };
+    const sub = AppState.addEventListener("change", handleAppStateChange);
+
+    return () => sub.remove();
+  }, [user]);
 
   const isDark = colorScheme === "dark";
   const paperTheme = isDark ? darkTheme : lightTheme;

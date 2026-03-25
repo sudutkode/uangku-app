@@ -105,7 +105,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderRadius: 16,
     overflow: "hidden",
-    marginTop: 8,
   },
   box: {
     flex: 1,
