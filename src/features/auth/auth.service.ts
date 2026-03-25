@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { Wallet } from '../../database/entities/wallet.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
@@ -15,7 +15,6 @@ import { JwtService } from '@nestjs/jwt';
 import { TRANSACTION_CATEGORIES } from '../../common/constants';
 import { GoogleSignInDto } from './dto/google-sign-in.dto';
 import { randomBytes } from 'crypto';
-
 import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
@@ -28,19 +27,24 @@ export class AuthService {
 
   constructor(
     private readonly dataSource: DataSource,
+
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+
     private readonly jwtService: JwtService,
   ) {}
 
   async googleSignIn(
     dto: GoogleSignInDto,
-  ): Promise<{ user: User; accessToken: string }> {
+  ): Promise<{ user: User; accessToken: string; isNewUser: boolean }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    await queryRunner.startTransaction();
+
+    let isNewUser = false;
 
     try {
+      await queryRunner.startTransaction(); // ✅ ensure start here
+
       const ticket = await this.googleClient.verifyIdToken({
         idToken: dto.idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -73,14 +77,18 @@ export class AuthService {
           name: verifiedName,
           avatar: verifiedAvatar,
         });
-        user = await queryRunner.manager.save(User, newUser);
 
+        user = await queryRunner.manager.save(User, newUser);
+        isNewUser = true;
+
+        // default wallet
         const wallet = queryRunner.manager.create(Wallet, {
           name: 'Cash',
           user,
         });
         await queryRunner.manager.save(Wallet, wallet);
 
+        // default categories
         const categories = TRANSACTION_CATEGORIES.map((c) =>
           queryRunner.manager.create(TransactionCategory, { ...c, user }),
         );
@@ -96,14 +104,23 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
 
-      const jwtPayload: JwtPayload = { id: user.id, email: user.email };
+      const jwtPayload: JwtPayload = {
+        id: user.id,
+        email: user.email,
+      };
+
       const accessToken = await this.jwtService.signAsync(jwtPayload);
+
       if (user.password) delete user.password;
 
-      return { user, accessToken };
+      return { user, accessToken, isNewUser };
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       this.logger.error('Google Sign-In failed', error);
+
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction(); // ✅ safe rollback
+      }
+
       throw new InternalServerErrorException('Google Sign-In failed');
     } finally {
       await queryRunner.release();
