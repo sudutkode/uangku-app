@@ -57,16 +57,16 @@ export class WalletsService {
   async update(user: User, id: number, dto: UpdateWalletDto) {
     const wallet = await this.findOne(id);
 
-    // Prevent setting negative balance directly
     if (dto.balance !== undefined && dto.balance < 0) {
       throw new BadRequestException('Balance cannot be negative');
     }
 
-    // Handle balance correction
-    if (dto.balance !== undefined && dto.balance !== wallet.balance) {
+    const isBalanceChanged =
+      dto.balance !== undefined && dto.balance !== wallet.balance;
+
+    if (isBalanceChanged) {
       const balanceDiff = dto.balance - wallet.balance;
-      const isIncreasing = balanceDiff > 0;
-      const transactionTypeId = isIncreasing ? 1 : 2;
+      const transactionTypeId = balanceDiff > 0 ? 1 : 2;
 
       const transactionCategory = await this.transactionCategoryRepo.findOne({
         where: {
@@ -78,27 +78,24 @@ export class WalletsService {
 
       if (!transactionCategory) {
         throw new NotFoundException(
-          `Transaction category 'Balance Correction' not found for type ${transactionTypeId}`,
+          `Kategori 'Balance Correction' tidak ditemukan.`,
         );
       }
 
-      // Use queryRunner for proper transaction handling
       const queryRunner = this.dataSource.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
       try {
-        // Update other fields (like name) FIRST if provided, but NOT balance
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { balance, ...otherFields } = dto;
-        Object.assign(wallet, otherFields);
+        // Hapus balance dari copy DTO agar tidak ikut terupdate manual
+        const updateData = { ...dto };
+        delete updateData.balance;
 
-        if (Object.keys(otherFields).length > 0) {
-          Object.assign(wallet, otherFields);
-          await queryRunner.manager.save(Wallet, wallet);
+        if (Object.keys(updateData).length > 0) {
+          await queryRunner.manager.update(Wallet, id, updateData);
         }
 
-        // Create the balance correction transaction using the same manager
+        // Biarkan TransactionsService yang mengurus update saldo via TransactionWallet
         await this.transactionsService.createWithManager(
           queryRunner.manager,
           user,
@@ -111,12 +108,7 @@ export class WalletsService {
         );
 
         await queryRunner.commitTransaction();
-
-        // Refresh wallet after transaction updates its balance
-        return await this.walletRepo.findOne({
-          where: { id: wallet.id },
-          relations: ['user'],
-        });
+        return await this.findOne(id);
       } catch (error) {
         await queryRunner.rollbackTransaction();
         throw error;
@@ -125,11 +117,16 @@ export class WalletsService {
       }
     }
 
-    // For non-balance updates (excluding balance)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { balance, ...otherFields } = dto;
-    Object.assign(wallet, otherFields);
-    return await this.walletRepo.save(wallet);
+    // Jika tidak ada perubahan saldo, hapus balance dari dto sebelum save
+    const updateData = { ...dto };
+    delete updateData.balance;
+
+    if (Object.keys(updateData).length > 0) {
+      Object.assign(wallet, updateData);
+      return await this.walletRepo.save(wallet);
+    }
+
+    return wallet;
   }
 
   async remove(id: number) {
