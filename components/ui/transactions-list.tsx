@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
+    fontWeight: 700,
     alignSelf: "flex-start",
   },
   description: {
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: 700,
   },
   fee: {
     fontSize: 11,

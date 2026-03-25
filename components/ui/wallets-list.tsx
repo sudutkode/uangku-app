@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     letterSpacing: 0.1,
+    fontWeight: 700,
   },
   description: {
     fontSize: 10,
@@ -88,6 +89,7 @@ const styles = StyleSheet.create({
   balance: {
     fontSize: 14,
     letterSpacing: -0.2,
+    fontWeight: 700,
   },
   chevron: {
     marginLeft: 12,
