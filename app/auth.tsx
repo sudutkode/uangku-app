@@ -33,8 +33,10 @@ export default function AuthScreen() {
       await GoogleSignin.hasPlayServices();
       const res: GoogleSignInResponse = await GoogleSignin.signIn();
 
-      const payload = {idToken: res.data?.idToken || ""};
-      const data = await mutateSignin(payload);
+      const idToken = res.data?.idToken;
+      if (!idToken) return;
+
+      const data = await mutateSignin({idToken});
       signin(data);
     } finally {
       setLoading(false);
@@ -45,28 +47,23 @@ export default function AuthScreen() {
     <SafeAreaView
       style={[styles.container, {backgroundColor: colors.background}]}
     >
-      <View style={{flex: 0.6}} />
-
       <View style={styles.illustrationContainer}>
         <FinanceAppIllustration
-          width={screenWidth * 0.6}
-          height={screenWidth * 0.6}
+          width={screenWidth * 0.55}
+          height={screenWidth * 0.55}
         />
       </View>
 
       <View style={styles.contentContainer}>
         <View style={styles.textSection}>
-          <Text
-            variant="titleLarge"
-            style={[styles.title, {color: colors.onSurface}]}
-          >
+          <Text variant="titleMedium" style={styles.title}>
             UangKu
           </Text>
           <Text
-            variant="labelMedium"
-            style={[styles.subtitle, {color: colors.secondary}]}
+            variant="bodySmall"
+            style={[styles.subtitle, {color: colors.onSurfaceVariant}]}
           >
-            Manage your finances effortlessly and track every penny with ease.
+            Catat semua transaksimu secara otomatis.
           </Text>
         </View>
 
@@ -85,7 +82,7 @@ export default function AuthScreen() {
               <Icon name="google" size={size} color={color} />
             )}
           >
-            Sign in with Google
+            Masuk dengan Google
           </Button>
 
           {!!error && (
@@ -101,7 +98,7 @@ export default function AuthScreen() {
             variant="labelSmall"
             style={[styles.footerText, {color: colors.outline}]}
           >
-            Secure login with Google OAuth 2.0
+            Login aman dengan Google OAuth 2.0
           </Text>
         </View>
       </View>
@@ -115,27 +112,28 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   illustrationContainer: {
-    flex: 2,
-    justifyContent: "center",
+    flex: 1,
+    justifyContent: "flex-end",
     alignItems: "center",
+    paddingBottom: 16,
   },
   contentContainer: {
-    flex: 2,
+    flex: 1,
     justifyContent: "space-between",
     paddingBottom: 20,
   },
   textSection: {
     alignItems: "center",
-    marginTop: 8,
+    gap: 8,
   },
   title: {
-    fontWeight: "700",
-    letterSpacing: 0.2,
-    marginBottom: 4,
+    fontWeight: "600",
+    textAlign: "center",
   },
   subtitle: {
     textAlign: "center",
-    paddingHorizontal: 30,
+    lineHeight: 20,
+    paddingHorizontal: 8,
   },
   actionSection: {
     width: "100%",

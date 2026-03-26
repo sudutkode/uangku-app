@@ -4,6 +4,9 @@ import {Platform} from "react-native";
 import {create} from "zustand";
 import {createJSONStorage, persist} from "zustand/middleware";
 
+import useTransactionsStore from "./use-transactions-store";
+import useWalletsStore from "./use-wallets-store";
+
 const isWeb = Platform.OS === "web";
 
 interface AuthState {
@@ -11,6 +14,8 @@ interface AuthState {
   accessToken: string | null;
   signin: (payload: SignInResponse) => void;
   signout: () => void;
+  isOnboarding: boolean;
+  completeOnboarding: () => void;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -18,13 +23,31 @@ const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
+      isOnboarding: false,
 
       signin: ({data}) => {
-        set({user: data?.user, accessToken: data?.accessToken});
+        set({
+          user: data?.user,
+          accessToken: data?.accessToken,
+          isOnboarding: data?.isNewUser,
+        });
       },
 
       signout: () => {
-        set({user: null, accessToken: null});
+        set({
+          user: null,
+          accessToken: null,
+          isOnboarding: false,
+        });
+
+        useTransactionsStore.getState().reset();
+        useWalletsStore.getState().reset();
+      },
+
+      completeOnboarding: () => {
+        set({
+          isOnboarding: false,
+        });
       },
     }),
     {

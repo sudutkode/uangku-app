@@ -45,7 +45,7 @@ export default function ReportScreen() {
       color: getCategoryColor(index),
     }));
 
-    if (activeTab === "expense" && breakdown.expense.adminFee) {
+    if (activeTab === "expense" && breakdown.expense.adminFee.total) {
       mapped.push({
         name: "Admin Fee",
         value: breakdown.expense.adminFee.total,

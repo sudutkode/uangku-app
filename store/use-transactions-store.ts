@@ -3,26 +3,37 @@ import {create} from "zustand";
 
 interface TransactionState {
   selectedDate: Date;
-  setSelectedDate: (date: Date) => void;
   transactions: Transaction[];
   summary: TransactionSummary | undefined;
-  setTransactionsData: (data: TransactionsResponse["data"]) => void;
   needsRefetch: boolean;
+
+  setSelectedDate: (date: Date) => void;
+  setTransactionsData: (data: TransactionsResponse["data"]) => void;
   setNeedsRefetch: (val: boolean) => void;
+  reset: () => void;
 }
 
-const useTransactionsStore = create<TransactionState>((set) => ({
+const initialState = {
   selectedDate: new Date(),
-  setSelectedDate: (date) => set({selectedDate: date}),
   transactions: [],
   summary: undefined,
+  needsRefetch: false,
+};
+
+const useTransactionsStore = create<TransactionState>((set) => ({
+  ...initialState,
+
+  setSelectedDate: (date) => set({selectedDate: date}),
+
   setTransactionsData: (data) =>
     set({
       transactions: data?.data || [],
       summary: data?.summary,
     }),
-  needsRefetch: false,
+
   setNeedsRefetch: (val) => set({needsRefetch: val}),
+
+  reset: () => set(initialState),
 }));
 
 export default useTransactionsStore;

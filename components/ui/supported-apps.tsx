@@ -1,15 +1,8 @@
 import {SUPPORTED_APPS_CATEGORIZED} from "@/constants/supported-apps";
 import React from "react";
-import {ScrollView, StyleSheet, View} from "react-native";
+import {StyleSheet, View} from "react-native";
 import {Divider, Text, useTheme} from "react-native-paper";
 
-/**
- * SupportedApps
- *
- * Section 3: Supported Apps
- * Displays all supported financial apps categorized by type (Mobile Banking & E-Wallets).
- * Uses SUPPORTED_APPS_CATEGORIZED from constants (single source of truth).
- */
 export default function SupportedApps() {
   const {colors} = useTheme();
 
@@ -17,56 +10,40 @@ export default function SupportedApps() {
     <View
       style={[styles.container, {backgroundColor: colors.elevation.level2}]}
     >
-      <Text
-        variant="titleMedium"
-        style={{fontWeight: "bold", marginBottom: 16}}
-      >
-        Supported Applications
+      <Text variant="titleSmall" style={styles.title}>
+        Aplikasi yang Didukung
       </Text>
 
-      <ScrollView
-        scrollEnabled={false}
-        showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
-      >
-        {SUPPORTED_APPS_CATEGORIZED.map((group, groupIndex) => (
-          <View key={groupIndex} style={styles.categoryContainer}>
-            <Text
-              variant="labelLarge"
-              style={{color: colors.primary, marginBottom: 8}}
-            >
-              {group.category}
-            </Text>
-            <View style={styles.appsList}>
-              <View style={styles.columnContainer}>
-                {group.apps.map((app, appIndex) => (
-                  <View key={appIndex} style={styles.appItem}>
-                    <Text
-                      variant="labelMedium"
-                      style={{paddingVertical: 6, paddingLeft: 8}}
-                    >
-                      • {app}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-            {groupIndex < SUPPORTED_APPS_CATEGORIZED.length - 1 && (
-              <Divider style={{marginVertical: 12}} />
-            )}
+      {SUPPORTED_APPS_CATEGORIZED.map((group, groupIndex) => (
+        <View key={groupIndex} style={styles.categoryContainer}>
+          <Text
+            variant="labelMedium"
+            style={{color: colors.primary, marginBottom: 8}}
+          >
+            {group.category}
+          </Text>
+          <View style={styles.columnContainer}>
+            {group.apps.map((app, appIndex) => (
+              <Text
+                key={appIndex}
+                variant="bodySmall"
+                style={[styles.appItem, {color: colors.onSurfaceVariant}]}
+              >
+                {app}
+              </Text>
+            ))}
           </View>
-        ))}
-      </ScrollView>
+          {groupIndex < SUPPORTED_APPS_CATEGORIZED.length - 1 && (
+            <Divider style={{marginTop: 12}} />
+          )}
+        </View>
+      ))}
 
       <Text
         variant="labelSmall"
-        style={{
-          color: colors.onSurfaceVariant,
-          marginTop: 16,
-          fontStyle: "italic",
-        }}
+        style={[styles.disclaimer, {color: colors.onSurfaceVariant}]}
       >
-        We never store your login credentials or payment info.
+        Kami tidak menyimpan kredensial atau informasi pembayaranmu.
       </Text>
     </View>
   );
@@ -78,18 +55,24 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginVertical: 8,
   },
-  categoryContainer: {
-    marginBottom: 8,
+  title: {
+    fontWeight: "600",
+    marginBottom: 16,
   },
-  appsList: {
-    marginHorizontal: -4,
+  categoryContainer: {
+    marginBottom: 12,
   },
   columnContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: 4,
   },
   appItem: {
     width: "33.333%",
-    paddingHorizontal: 4,
+    paddingVertical: 3,
+  },
+  disclaimer: {
+    marginTop: 12,
+    fontStyle: "italic",
   },
 });

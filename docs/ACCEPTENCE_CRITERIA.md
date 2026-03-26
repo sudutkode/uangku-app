@@ -517,9 +517,9 @@ Then:
 
 ---
 
-## 5. Profile & Settings
+## 5. Settings & Profile
 
-### AC 5.1: Profile Screen Display
+### AC 5.1: Settings Screen Display
 
 ```gherkin
 Given: User navigates to /profile

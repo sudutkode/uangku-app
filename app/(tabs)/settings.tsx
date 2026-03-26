@@ -1,8 +1,10 @@
 import {NotificationListenerToggle, SupportedApps} from "@/components/ui";
+import {useMutation} from "@/hooks/axios";
 import {useAuthStore} from "@/store";
 import {screenHeight} from "@/utils/common-utils";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import {format} from "date-fns";
+import {id} from "date-fns/locale";
 import React, {useState} from "react";
 import {ScrollView, StyleSheet, View} from "react-native";
 import {
@@ -16,11 +18,16 @@ import {
 } from "react-native-paper";
 import {SafeAreaView} from "react-native-safe-area-context";
 
-export default function ProfileScreen() {
+export default function SettingsScreen() {
   const {colors} = useTheme();
   const {signout, user} = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const {mutate: deleteAccount, loading: isDeleting} = useMutation<void, any>(
+    "/users/me",
+    {method: "delete"},
+  );
 
   const handleLogoutConfirm = async () => {
     try {
@@ -34,21 +41,28 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setShowDeleteDialog(false);
+    await deleteAccount({});
+    await handleLogoutConfirm();
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, {backgroundColor: colors.background}]}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* User Info */}
         <View style={styles.header}>
           <Avatar.Image
-            size={100}
+            size={80}
             source={{uri: user?.avatar}}
             style={styles.avatar}
           />
-          <Text variant="headlineSmall" style={styles.userName}>
+          <Text variant="titleMedium" style={styles.userName}>
             {user?.name}
           </Text>
-          <Text variant="bodyMedium" style={{color: colors.outline}}>
+          <Text variant="bodySmall" style={{color: colors.onSurfaceVariant}}>
             {user?.email}
           </Text>
         </View>
@@ -57,23 +71,29 @@ export default function ProfileScreen() {
           style={[styles.infoBox, {backgroundColor: colors.elevation.level1}]}
         >
           <View style={styles.infoRow}>
-            <Text variant="labelLarge">Joined Since</Text>
-            <Text variant="bodyMedium">
-              {user?.createdAt ? format(user.createdAt, "dd MMM yyyy") : "-"}
+            <Text variant="bodySmall" style={{color: colors.onSurfaceVariant}}>
+              Bergabung sejak
+            </Text>
+            <Text variant="bodySmall">
+              {user?.createdAt
+                ? format(user.createdAt, "dd MMM yyyy", {locale: id})
+                : "-"}
             </Text>
           </View>
         </View>
 
         <Divider style={styles.divider} />
 
-        <View style={{paddingHorizontal: 16}}>
+        {/* Settings */}
+        <View style={styles.section}>
           <NotificationListenerToggle />
           <SupportedApps />
         </View>
 
         <Divider style={styles.divider} />
 
-        <View style={styles.actionsSection}>
+        {/* Sign Out */}
+        <View style={styles.section}>
           <View
             style={[
               styles.actionCard,
@@ -81,14 +101,14 @@ export default function ProfileScreen() {
             ]}
           >
             <View style={{flex: 1}}>
-              <Text variant="titleMedium" style={{fontWeight: "600"}}>
-                Sign Out
+              <Text variant="titleSmall" style={styles.actionTitle}>
+                Keluar
               </Text>
               <Text
                 variant="bodySmall"
                 style={{color: colors.onSurfaceVariant, marginTop: 4}}
               >
-                Sign out from your UangKu account
+                Kamu bisa masuk kembali kapan saja dengan Google.
               </Text>
             </View>
             <Button
@@ -97,33 +117,75 @@ export default function ProfileScreen() {
               textColor={colors.error}
               disabled={loading}
               loading={loading}
+              compact
             >
-              Sign Out
+              Keluar
             </Button>
           </View>
         </View>
 
-        {/* Footer Version */}
+        <Divider style={styles.divider} />
+
+        {/* Danger Zone */}
+        <View style={styles.section}>
+          <View
+            style={[
+              styles.actionCard,
+              {backgroundColor: colors.errorContainer}, // Menggunakan warna kontainer error
+            ]}
+          >
+            <View style={{flex: 1}}>
+              <Text
+                variant="titleSmall"
+                style={[styles.actionTitle, {color: colors.onErrorContainer}]}
+              >
+                Hapus Akun
+              </Text>
+              <Text
+                variant="bodySmall"
+                style={{
+                  color: colors.onErrorContainer,
+                  marginTop: 4,
+                  opacity: 0.8,
+                }}
+              >
+                Seluruh data transaksi dan dompet akan dihapus permanen.
+              </Text>
+            </View>
+            <Button
+              mode="contained"
+              onPress={() => setShowDeleteDialog(true)}
+              buttonColor={colors.error}
+              textColor={colors.onError}
+              loading={isDeleting}
+              disabled={isDeleting}
+              compact
+            >
+              Hapus
+            </Button>
+          </View>
+        </View>
+
+        {/* Version */}
         <View style={styles.footer}>
           <Text
             variant="labelSmall"
-            style={{color: colors.outline, letterSpacing: 1}}
+            style={{color: colors.outlineVariant, letterSpacing: 1}}
           >
-            Versi 1.0.0
+            VERSI 1.0.0
           </Text>
         </View>
       </ScrollView>
 
-      {/* Logout Confirmation Dialog */}
       <Portal>
         <Dialog
           visible={showLogoutDialog}
           onDismiss={() => setShowLogoutDialog(false)}
         >
-          <Dialog.Title>Sign Out from UangKu?</Dialog.Title>
+          <Dialog.Title>Keluar dari UangKu?</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium">
-              You can always sign back in with your Google account.
+              Kamu bisa masuk kembali kapan saja dengan akun Google-mu.
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
@@ -131,7 +193,7 @@ export default function ProfileScreen() {
               onPress={() => setShowLogoutDialog(false)}
               disabled={loading}
             >
-              Cancel
+              Batal
             </Button>
             <Button
               onPress={handleLogoutConfirm}
@@ -139,7 +201,38 @@ export default function ProfileScreen() {
               loading={loading}
               disabled={loading}
             >
-              Sign Out
+              Keluar
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+        <Dialog
+          visible={showDeleteDialog}
+          onDismiss={() => setShowDeleteDialog(false)}
+        >
+          <Dialog.Icon icon="alert" color={colors.error} />
+          <Dialog.Title style={{textAlign: "center"}}>
+            Hapus Semua Data?
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={{textAlign: "center"}}>
+              Tindakan ini tidak dapat dibatalkan. Semua catatan keuanganmu akan
+              hilang selamanya.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button
+              onPress={() => setShowDeleteDialog(false)}
+              disabled={loading}
+            >
+              Batal
+            </Button>
+            <Button
+              onPress={handleDeleteAccount}
+              textColor={colors.error}
+              loading={loading}
+              disabled={loading}
+            >
+              Ya, Hapus Akun
             </Button>
           </Dialog.Actions>
         </Dialog>
@@ -155,9 +248,16 @@ const styles = StyleSheet.create({
     marginTop: screenHeight * 0.025,
     marginBottom: 24,
     paddingHorizontal: 24,
+    gap: 4,
   },
-  avatar: {marginBottom: 16, elevation: 4},
-  userName: {fontWeight: "700", textAlign: "center"},
+  avatar: {
+    marginBottom: 8,
+    elevation: 2,
+  },
+  userName: {
+    fontWeight: "600",
+    textAlign: "center",
+  },
   infoBox: {
     marginHorizontal: 16,
     paddingVertical: 12,
@@ -172,10 +272,9 @@ const styles = StyleSheet.create({
   divider: {
     marginVertical: 8,
   },
-  actionsSection: {
+  section: {
     paddingHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 24,
+    marginVertical: 4,
   },
   actionCard: {
     flexDirection: "row",
@@ -185,6 +284,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     gap: 12,
+    marginVertical: 8,
+  },
+  actionTitle: {
+    fontWeight: "600",
   },
   footer: {
     alignItems: "center",

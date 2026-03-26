@@ -231,7 +231,7 @@ To become the default financial dashboard for Indonesian users by automatically 
 
 ---
 
-#### 2.5 Profile & Settings
+#### 2.5 Settings & Profile
 
 **Feature 2.5.1: User Profile**
 

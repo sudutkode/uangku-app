@@ -13,7 +13,7 @@ const tabs = [
   },
   {name: "wallets", title: "Wallets", icon: "wallet"},
   {name: "report", title: "Report", icon: "chart-pie"},
-  {name: "profile", title: "Profile", icon: "user"},
+  {name: "settings", title: "Settings", icon: "user-gear"},
 ];
 
 export default function TabLayout() {

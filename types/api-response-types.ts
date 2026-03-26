@@ -28,6 +28,7 @@ export interface SignInResponse extends ApiResponse {
   data?: {
     user: User;
     accessToken: string;
+    isNewUser: boolean;
   };
 }
 

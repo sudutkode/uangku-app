@@ -49,7 +49,7 @@ uangku-mobile/
 │   └── (tabs)/                  # Tab-based navigation (main app)
 │       ├── index.tsx            # Transactions list
 │       ├── wallets/             # Wallet management
-│       ├── profile.tsx          # User profile & settings
+│       ├── settings.tsx          # User profile & settings
 │       └── report.tsx           # Monthly analytics & reports
 ├── components/
 │   ├── forms/
@@ -153,7 +153,7 @@ uangku-mobile/
 - **Filters**: Month/year selector to view historical data
 - **Insight Cards**: Total income, total expense, net balance for selected period
 
-#### 4. Profile (profile.tsx)
+#### 4. Settings (settings.tsx)
 
 - **User Info**: Display name + Google profile photo
 - **Notification Settings**: Toggle for Notification Listener permission
@@ -241,7 +241,7 @@ The app automatically listens to notifications from the apps defined in `SUPPORT
 
 Users can also add **Cash** as a manual wallet for non-digital funds.
 
-**Note**: To add or remove supported apps, update `SUPPORTED_APPS_LIST` and `SUPPORTED_APPS_CATEGORIZED` in `constants/supported-apps.ts`. Keep `ALLOWED_APPS_REGEX` in `services/NotificationService.ts` in sync with the correct app package names.
+**Note**: To add or remove supported apps, update `SUPPORTED_APPS_LIST` and `SUPPORTED_APPS_CATEGORIZED` in `constants/supported-apps.ts`. Keep `ALLOWED_APPS_REGEX` in `services/notification/notification-service.ts` in sync with the correct app package names.
 
 ### 🔌 Notification Listener Requirements
 

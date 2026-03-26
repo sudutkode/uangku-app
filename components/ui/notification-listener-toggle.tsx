@@ -3,17 +3,6 @@ import {AppState, AppStateStatus, StyleSheet, View} from "react-native";
 import RNAndroidNotificationListener from "react-native-android-notification-listener";
 import {Switch, Text, useTheme} from "react-native-paper";
 
-/**
- * NotificationListenerToggle
- *
- * Section 2: Notification Settings
- * Allows users to enable/disable notification listening for automatic transaction confirmation.
- *
- * Architecture (Secure-Sync):
- * - When ON: Headless service listens for transaction notifications
- * - Sends local push → User confirms on dedicated screen → Final API call
- * - When OFF: No automatic transaction interception
- */
 export default function NotificationListenerToggle() {
   const {colors} = useTheme();
   const [isEnabled, setIsEnabled] = useState(false);
@@ -45,13 +34,12 @@ export default function NotificationListenerToggle() {
     return () => subscription.remove();
   }, []);
 
-  const handleToggle = async (value: boolean) => {
+  const handleToggle = async () => {
     setIsLoading(true);
     try {
       RNAndroidNotificationListener.requestPermission();
       await checkPermission();
     } catch {
-      // Re-check to get actual permission state
       await checkPermission();
     } finally {
       setIsLoading(false);
@@ -62,17 +50,17 @@ export default function NotificationListenerToggle() {
     <View
       style={[styles.container, {backgroundColor: colors.elevation.level2}]}
     >
-      <View style={{flex: 1, marginRight: 16}}>
-        <Text variant="titleMedium" style={{fontWeight: "bold"}}>
-          Enable Notification Listening
+      <View style={styles.textContainer}>
+        <Text variant="titleSmall" style={styles.title}>
+          Akses Notifikasi
         </Text>
         <Text
           variant="bodySmall"
           style={{color: colors.onSurfaceVariant, marginTop: 4}}
         >
           {isEnabled
-            ? "UangKu will send you a notification to confirm each transaction."
-            : "Grant notification access so UangKu can track and confirm transactions automatically."}
+            ? "Aktif. Transaksimu akan tercatat otomatis dari notifikasi."
+            : "Nonaktif. Aktifkan agar transaksi tercatat otomatis."}
         </Text>
       </View>
 
@@ -94,5 +82,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     marginVertical: 8,
+  },
+  textContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
+  title: {
+    fontWeight: "600",
   },
 });

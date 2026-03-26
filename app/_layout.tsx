@@ -5,7 +5,7 @@ import {
   setupNotificationCategories,
   setupNotificationChannel,
   syncPendingTransactions,
-} from "@/services/NotificationService";
+} from "@/services/notification/notification-service";
 import {useAuthStore} from "@/store";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import {
@@ -19,14 +19,14 @@ import {StatusBar} from "expo-status-bar";
 import React, {useEffect} from "react";
 import {AppState, AppStateStatus} from "react-native";
 import {adaptNavigationTheme, PaperProvider} from "react-native-paper";
-import {en, registerTranslation} from "react-native-paper-dates";
+import {id, registerTranslation} from "react-native-paper-dates";
 import "react-native-reanimated";
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from "react-native-safe-area-context";
 
-registerTranslation("en", en);
+registerTranslation("id", id);
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -44,7 +44,7 @@ const {LightTheme, DarkTheme} = adaptNavigationTheme({
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const {user} = useAuthStore();
+  const {user, isOnboarding} = useAuthStore();
 
   // One-time app startup setup
   useEffect(() => {
@@ -97,12 +97,15 @@ export default function RootLayout() {
               <Stack.Screen name="auth" />
             </Stack.Protected>
 
-            <Stack.Protected guard={Boolean(user)}>
+            <Stack.Protected guard={Boolean(user && isOnboarding)}>
+              <Stack.Screen name="onboarding" />
+            </Stack.Protected>
+
+            <Stack.Protected guard={Boolean(user && !isOnboarding)}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="modal" options={{presentation: "modal"}} />
             </Stack.Protected>
           </Stack>
-
           <StatusBar style={isDark ? "light" : "dark"} />
         </ThemeProvider>
       </PaperProvider>

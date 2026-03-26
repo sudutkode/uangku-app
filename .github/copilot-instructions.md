@@ -47,11 +47,11 @@
 
 ## 📱 Screen-Specific Requirements
 
-### Profile Screen (`app/(tabs)/profile.tsx`)
+### Settings Screen (`app/(tabs)/settings.tsx`)
 
 **Structure (Strict):**
 
-- **Section 1 (User Profile):** Avatar, name, email, "Joined Since" date
+- **Section 1 (User Settings):** Avatar, name, email, "Joined Since" date
 - **Section 2 (Settings):** NotificationListenerToggle component (displays Secure-Sync status)
 - **Section 3 (About UangKu):** SupportedApps component (displays supported apps from `SUPPORTED_APPS_CATEGORIZED` exported by constants/supported-apps.ts)
 - **Section 4 (Account):** Logout action card
@@ -75,7 +75,7 @@
 **Updating Supported Apps:**
 
 - To add/remove apps: Edit both `SUPPORTED_APPS_LIST` and `SUPPORTED_APPS_CATEGORIZED` in `constants/supported-apps.ts`
-- Update `ALLOWED_APPS_REGEX` in `services/NotificationService.ts` with matching app package names (in same order)
+- Update `ALLOWED_APPS_REGEX` in `services/notification/notification-service.ts` with matching app package names (in same order)
 - UI automatically reflects changes with proper categorization
 - Keep `ALLOWED_APPS_REGEX` in sync for notification package matching
 - Component automatically reflects changes (no code edits needed)
