@@ -104,6 +104,7 @@ export class WalletsService {
             amount: Math.abs(balanceDiff),
             walletId: wallet.id,
             transactionCategoryId: transactionCategory.id,
+            createdAt: new Date().toISOString(),
           },
         );
 

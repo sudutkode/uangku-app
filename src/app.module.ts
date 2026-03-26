@@ -11,6 +11,7 @@ import { TransactionCategoriesModule } from './features/transaction-categories/t
 import { TransactionsModule } from './features/transactions/transactions.module';
 import { ReportsModule } from './features/reports/reports.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
+import { UsersModule } from './features/users/users.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { NotificationsModule } from './features/notifications/notifications.modu
     TransactionsModule,
     ReportsModule,
     NotificationsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

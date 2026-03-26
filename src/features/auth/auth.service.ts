@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
-import { Wallet } from '../../database/entities/wallet.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 import { hashPassword } from '../../common/utils/bcrypt.util';
 import { JwtPayload } from './types/jwt-payload.type';
@@ -80,13 +79,6 @@ export class AuthService {
 
         user = await queryRunner.manager.save(User, newUser);
         isNewUser = true;
-
-        // default wallet
-        const wallet = queryRunner.manager.create(Wallet, {
-          name: 'Cash',
-          user,
-        });
-        await queryRunner.manager.save(Wallet, wallet);
 
         // default categories
         const categories = TRANSACTION_CATEGORIES.map((c) =>
