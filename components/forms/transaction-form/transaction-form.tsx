@@ -2,7 +2,14 @@ import {LoadingState, Snackbar} from "@/components/ui";
 import {Stack} from "expo-router";
 import React from "react";
 import {ScrollView, StyleSheet, View} from "react-native";
-import {Button, Dialog, Modal, Portal, useTheme} from "react-native-paper";
+import {
+  Button,
+  Dialog,
+  Modal,
+  Portal,
+  Text,
+  useTheme,
+} from "react-native-paper";
 
 import TransactionCategoryPicker from "./transaction-category-picker";
 import TransactionDisplay from "./transaction-display";
@@ -116,6 +123,27 @@ export default function TransactionForm({id}: {id?: string}) {
               Cancel
             </Button>
             <Button onPress={vm.handleDeleteConfirm}>Delete</Button>
+          </Dialog.Actions>
+        </Dialog>
+        <Dialog
+          visible={vm.showDeleteDialog}
+          onDismiss={() => vm.setShowDeleteDialog(false)}
+        >
+          <Dialog.Icon icon="alert" color={colors.error} />
+          <Dialog.Title style={{textAlign: "center"}}>
+            Hapus transaksi?
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Ini akan menghapus secara permanen transaksi ini. Tindakan ini
+              tidak dapat dibatalkan.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => vm.setShowDeleteDialog(false)}>Batal</Button>
+            <Button textColor={colors.error} onPress={vm.handleDeleteConfirm}>
+              Hapus
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

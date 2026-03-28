@@ -9,6 +9,7 @@ import {useRouter} from "expo-router";
 import {useEffect, useMemo, useRef, useState} from "react";
 import {Animated, PanResponder} from "react-native";
 import {
+  CreateTransactionDto,
   FormState,
   NOTIFICATION_CATEGORY_NAME,
   TRANSFER_TYPE_ID,
@@ -85,7 +86,7 @@ export function useTransactionForm(id?: string) {
     mutate: mutateTransaction,
     loading: loadingTransaction,
     error: saveError,
-  } = useMutation<MutationTransactionResponse, FormState>(
+  } = useMutation<MutationTransactionResponse, CreateTransactionDto>(
     id ? `/transactions/${id}` : "/transactions",
     {method: id ? "patch" : "post"},
   );
@@ -153,7 +154,25 @@ export function useTransactionForm(id?: string) {
 
   const handleSave = async () => {
     try {
-      await mutateTransaction(form);
+      const now = new Date();
+      // Kita buat objek Date baru berdasarkan tanggal yang ada di form
+      const finalDate = new Date(form.createdAt);
+
+      // Timpa jam, menit, detik, dan milidetik dengan waktu "detik ini"
+      finalDate.setHours(
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds(),
+      );
+
+      const payload = {
+        ...form,
+        // Kirim tanggal (pilihan user) + jam (terbaru saat klik simpan)
+        createdAt: finalDate.toISOString(),
+      };
+
+      await mutateTransaction(payload);
       refetchData();
       router.back();
     } catch {}

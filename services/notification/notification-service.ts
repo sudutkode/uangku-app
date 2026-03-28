@@ -57,6 +57,12 @@ const headlessNotificationListener = async ({
 
     if (!ALLOWED_APP_NAMES.find((n) => n.toLowerCase() === appName)) return;
 
+    const appConfig = SUPPORTED_APPS_CONFIG.find(
+      (a) => a.name.toLowerCase() === appName,
+    );
+
+    const walletLabel = appConfig?.label ?? parsed.app;
+
     const text = parsed.text?.trim() || parsed.bigText?.trim() || "";
     const title = parsed.title?.trim() || "";
     const combined = `${title} ${text}`;
@@ -70,15 +76,18 @@ const headlessNotificationListener = async ({
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: `${transactionTypeId === 1 ? "+" : "-"}Rp ${amount.toLocaleString("id-ID")}`,
+        title: `${
+          transactionTypeId === 1 ? "+" : "-"
+        }Rp ${amount.toLocaleString("id-ID")} • ${walletLabel}`,
+
         body: text || title,
+
         categoryIdentifier: "transaction_actions",
+
         data: {
           type: "transaction_confirmation",
           app: parsed.app,
-          appLabel:
-            SUPPORTED_APPS_CONFIG.find((a) => a.name.toLowerCase() === appName)
-              ?.label ?? parsed.app,
+          appLabel: walletLabel,
           title,
           text,
           date: parsed.time

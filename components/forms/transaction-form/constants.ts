@@ -11,4 +11,8 @@ export interface FormState {
   note?: string | null;
 }
 
+export interface CreateTransactionDto extends Omit<FormState, "createdAt"> {
+  createdAt: string; // ISO String untuk JSON
+}
+
 export const NOTIFICATION_CATEGORY_NAME: string = "Notification";
