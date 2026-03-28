@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
-import { startOfDay, endOfDay } from 'date-fns';
+import { toDate } from 'date-fns-tz';
 
 import { Transaction } from '../../database/entities/transaction.entity';
 import { TransactionWallet } from '../../database/entities/transaction-wallet.entity';
@@ -27,34 +27,22 @@ export class TransactionsService {
   ) {}
 
   /* -------------------------------------------------------------------------- */
-  /* HELPERS                                   */
+  /* HELPERS                                                                    */
   /* -------------------------------------------------------------------------- */
 
   private parseSmartDate(dtoDate?: string | Date): Date {
     if (!dtoDate) return new Date();
 
     const parsedDate = new Date(dtoDate);
-    const now = new Date();
 
-    // Jika Mobile hanya kirim tanggal (jam, menit, detik masih 0)
-    // Tempelkan waktu saat ini agar sorting tetap akurat secara kronologis
-    if (
-      parsedDate.getHours() === 0 &&
-      parsedDate.getMinutes() === 0 &&
-      parsedDate.getSeconds() === 0
-    ) {
-      parsedDate.setHours(
-        now.getHours(),
-        now.getMinutes(),
-        now.getSeconds(),
-        now.getMilliseconds(),
-      );
+    if (isNaN(parsedDate.getTime())) {
+      return new Date();
     }
     return parsedDate;
   }
 
   /* -------------------------------------------------------------------------- */
-  /* CREATE                                    */
+  /* CREATE                                                                     */
   /* -------------------------------------------------------------------------- */
 
   async create(user: User, dto: CreateTransactionDto) {
@@ -113,19 +101,20 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /* FIND                                     */
+  /* FIND                                                                       */
   /* -------------------------------------------------------------------------- */
 
   async findAll(user: User, options: FindAllOptions) {
     const { page, limit, date } = options;
     const skip = (page - 1) * limit;
+    const timeZone = 'Asia/Jakarta';
 
     let startDate: Date | undefined;
     let endDate: Date | undefined;
 
     if (date) {
-      startDate = startOfDay(new Date(date));
-      endDate = endOfDay(new Date(date));
+      startDate = toDate(`${date}T00:00:00.000`, { timeZone });
+      endDate = toDate(`${date}T23:59:59.999`, { timeZone });
     }
 
     const query = this.transactionRepo
@@ -156,18 +145,6 @@ export class TransactionsService {
     // SUMMARY QUERY
     // ========================
 
-    const summaryQuery = this.transactionRepo
-      .createQueryBuilder('transaction')
-      .leftJoin('transaction.transactionType', 'transactionType')
-      .where('transaction.userId = :userId', { userId: user.id });
-
-    if (date) {
-      summaryQuery.andWhere('transaction.createdAt BETWEEN :start AND :end', {
-        start: startDate,
-        end: endDate,
-      });
-    }
-
     const summaryRaw = await this.transactionRepo
       .createQueryBuilder('transaction')
       .leftJoin('transaction.transactionType', 'type')
@@ -177,23 +154,12 @@ export class TransactionsService {
         date ? { start: startDate, end: endDate } : {},
       )
       .select([
-        `
-    SUM(
-      CASE 
-        WHEN type.id = 1 THEN transaction.amount
-        ELSE 0
-      END
-    ) as income
-    `,
-        `
-    SUM(
-      CASE 
-        WHEN type.id = 2 THEN transaction.amount
-        WHEN type.id = 3 THEN "transaction"."adminFee"
-        ELSE 0
-      END
-    ) as expense
-    `,
+        `SUM(CASE WHEN type.id = 1 THEN transaction.amount ELSE 0 END) as income`,
+        `SUM(CASE 
+            WHEN type.id = 2 THEN transaction.amount 
+            WHEN type.id = 3 THEN "transaction"."adminFee"
+            ELSE 0 
+          END) as expense`,
       ])
       .getRawOne();
 
@@ -234,7 +200,7 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /* UPDATE                                   */
+  /* UPDATE                                                                     */
   /* -------------------------------------------------------------------------- */
 
   async update(id: number, dto: UpdateTransactionDto) {
@@ -302,7 +268,7 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /* DELETE                                   */
+  /* DELETE                                                                     */
   /* -------------------------------------------------------------------------- */
 
   async remove(id: number) {
@@ -329,7 +295,7 @@ export class TransactionsService {
           wallet.balance += txWallet.amount;
         }
 
-        wallet.updatedAt = new Date(); // Force timestamp update saat delete
+        wallet.updatedAt = new Date();
 
         await queryRunner.manager.save(wallet);
       }
@@ -348,7 +314,7 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /* SHARED APPLY LOGIC                              */
+  /* SHARED APPLY LOGIC                                                         */
   /* -------------------------------------------------------------------------- */
 
   private async applyTransactionWithManager(
@@ -372,7 +338,6 @@ export class TransactionsService {
       ? transaction.amount + adminFee
       : transaction.amount;
 
-    // SOURCE WALLET
     const sourceTxWallet = manager.create(TransactionWallet, {
       transaction,
       wallet: sourceWallet,
@@ -383,11 +348,10 @@ export class TransactionsService {
     await manager.save(sourceTxWallet);
 
     sourceWallet.balance += isIncome ? transaction.amount : -finalAmount;
-    sourceWallet.updatedAt = new Date(); // Force timestamp update
+    sourceWallet.updatedAt = new Date();
 
     await manager.save(sourceWallet);
 
-    // TARGET WALLET (TRANSFER)
     if (isTransfer && dto.targetWalletId) {
       const targetWallet = await manager.findOne(Wallet, {
         where: { id: dto.targetWalletId },
@@ -407,7 +371,7 @@ export class TransactionsService {
       await manager.save(targetTxWallet);
 
       targetWallet.balance += transaction.amount;
-      targetWallet.updatedAt = new Date(); // Force timestamp update
+      targetWallet.updatedAt = new Date();
       await manager.save(targetWallet);
     }
   }
