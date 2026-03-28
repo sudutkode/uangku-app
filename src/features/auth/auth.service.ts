@@ -6,20 +6,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import { OAuth2Client } from 'google-auth-library';
+import { createHash } from 'crypto';
+
 import { User } from '../../database/entities/user.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
-import { hashPassword } from '../../common/utils/bcrypt.util';
 import { JwtPayload } from './types/jwt-payload.type';
-import { JwtService } from '@nestjs/jwt';
 import { TRANSACTION_CATEGORIES } from '../../common/constants';
 import { GoogleSignInDto } from './dto/google-sign-in.dto';
-import { randomBytes } from 'crypto';
-import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-
   private readonly googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
   );
@@ -33,6 +32,17 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * Mengubah email menjadi hash unik agar identitas asli user tidak tersimpan di DB.
+   * Gunakan SALT dari .env untuk keamanan ekstra.
+   */
+  private hashIdentifier(email: string): string {
+    const salt = process.env.APP_AUTH_SALT || 'default_salt_uangku_2026';
+    return createHash('sha256')
+      .update(email.toLowerCase() + salt)
+      .digest('hex');
+  }
+
   async googleSignIn(
     dto: GoogleSignInDto,
   ): Promise<{ user: User; accessToken: string; isNewUser: boolean }> {
@@ -42,8 +52,9 @@ export class AuthService {
     let isNewUser = false;
 
     try {
-      await queryRunner.startTransaction(); // ✅ ensure start here
+      await queryRunner.startTransaction();
 
+      // 1. Verifikasi Token Google
       const ticket = await this.googleClient.verifyIdToken({
         idToken: dto.idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -54,66 +65,58 @@ export class AuthService {
         throw new BadRequestException('Invalid Google Token');
       }
 
-      const verifiedEmail = payload.email;
-      const verifiedName = payload.name;
-      const verifiedAvatar = payload.picture;
+      // 2. Transformasi Email menjadi Anonymous Identifier
+      const identifierHash = this.hashIdentifier(payload.email);
 
+      // 3. Cari User berdasarkan IdentifierHash (Bukan Email)
       let user = await queryRunner.manager.findOne(User, {
-        where: { email: verifiedEmail },
+        where: { identifierHash },
       });
 
       if (!user) {
-        if (!verifiedName) {
-          throw new BadRequestException('Name is required from Google Profile');
-        }
+        isNewUser = true;
 
-        const randomPassword = randomBytes(32).toString('hex');
-        const hashed = await hashPassword(randomPassword);
+        // Generate Username Default (Ambil 6 karakter pertama dari hash)
+        const defaultUsername = `User_${identifierHash.substring(0, 6)}`;
 
         const newUser = queryRunner.manager.create(User, {
-          email: verifiedEmail,
-          password: hashed,
-          name: verifiedName,
-          avatar: verifiedAvatar,
+          identifierHash,
+          username: defaultUsername,
         });
 
         user = await queryRunner.manager.save(User, newUser);
-        isNewUser = true;
 
-        // default categories
+        // 4. Inisialisasi Kategori Default untuk User Baru
         const categories = TRANSACTION_CATEGORIES.map((c) =>
           queryRunner.manager.create(TransactionCategory, { ...c, user }),
         );
         await queryRunner.manager.save(TransactionCategory, categories);
-      } else {
-        if (verifiedAvatar && user.avatar !== verifiedAvatar) {
-          await queryRunner.manager.update(User, user.id, {
-            avatar: verifiedAvatar,
-          });
-          user.avatar = verifiedAvatar;
-        }
       }
 
       await queryRunner.commitTransaction();
 
+      // 5. Generate JWT Access Token
+      // Payload hanya berisi ID dan Hash, tidak ada data pribadi
       const jwtPayload: JwtPayload = {
         id: user.id,
-        email: user.email,
+        sub: user.identifierHash,
       };
 
       const accessToken = await this.jwtService.signAsync(jwtPayload);
 
-      if (user.password) delete user.password;
-
       return { user, accessToken, isNewUser };
     } catch (error) {
-      this.logger.error('Google Sign-In failed', error);
+      this.logger.error('Google Sign-In failed', error.stack);
 
       if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction(); // ✅ safe rollback
+        await queryRunner.rollbackTransaction();
       }
 
-      throw new InternalServerErrorException('Google Sign-In failed');
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Authentication process failed');
     } finally {
       await queryRunner.release();
     }
