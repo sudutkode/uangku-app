@@ -103,7 +103,7 @@ export const TRANSACTION_CATEGORIES = [
   { name: 'Investasi', transactionType: { id: 1 }, iconName: 'chart-line' },
 
   // --- LIFESTYLE & HOBBIES ---
-  { name: 'Kecantikan', transactionType: { id: 2 }, iconName: 'sparkles' },
+  { name: 'Kecantikan', transactionType: { id: 2 }, iconName: 'sparkle' },
   { name: 'Mobil', transactionType: { id: 2 }, iconName: 'car-outline' },
   { name: 'Elektronik', transactionType: { id: 2 }, iconName: 'laptop' },
   { name: 'Liburan', transactionType: { id: 2 }, iconName: 'airplane' },
@@ -135,7 +135,7 @@ export const TRANSACTION_CATEGORIES = [
     transactionType: { id: 2 },
     iconName: 'food-apple-outline',
   },
-  { name: 'Sayuran', transactionType: { id: 2 }, iconName: 'leaf-outline' },
+  { name: 'Sayuran', transactionType: { id: 2 }, iconName: 'leaf' },
   {
     name: 'Transfer Bank',
     transactionType: { id: 3 },
