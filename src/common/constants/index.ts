@@ -103,7 +103,11 @@ export const TRANSACTION_CATEGORIES = [
   { name: 'Investasi', transactionType: { id: 1 }, iconName: 'chart-line' },
 
   // --- LIFESTYLE & HOBBIES ---
-  { name: 'Kecantikan', transactionType: { id: 2 }, iconName: 'sparkle' },
+  {
+    name: 'Kecantikan',
+    transactionType: { id: 2 },
+    iconName: 'creation-outline',
+  },
   { name: 'Mobil', transactionType: { id: 2 }, iconName: 'car-outline' },
   { name: 'Elektronik', transactionType: { id: 2 }, iconName: 'laptop' },
   { name: 'Liburan', transactionType: { id: 2 }, iconName: 'airplane' },
