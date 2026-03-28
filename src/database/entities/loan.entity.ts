@@ -32,15 +32,15 @@ export class Loan {
   @OneToMany(() => LoanWallet, (lw) => lw.loan)
   loanWallets: LoanWallet[];
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' })
   givenDate: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   paidDate: Date | null;
 }

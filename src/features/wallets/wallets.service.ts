@@ -34,7 +34,7 @@ export class WalletsService {
     return this.walletRepo.find({
       where: { user: { id: user.id } },
       relations: ['user'],
-      order: { id: 'ASC' },
+      order: { updatedAt: 'DESC' }, // Sorting wallet berdasarkan aktivitas terbaru
     });
   }
 
@@ -88,15 +88,18 @@ export class WalletsService {
       await queryRunner.startTransaction();
 
       try {
-        // Hapus balance dari copy DTO agar tidak ikut terupdate manual
         const updateData = { ...dto };
         delete updateData.balance;
 
         if (Object.keys(updateData).length > 0) {
-          await queryRunner.manager.update(Wallet, id, updateData);
+          const walletToUpdate = await queryRunner.manager.findOne(Wallet, {
+            where: { id },
+          });
+          Object.assign(walletToUpdate, updateData);
+          walletToUpdate.updatedAt = new Date(); // Force update timestamp manual
+          await queryRunner.manager.save(walletToUpdate);
         }
 
-        // Biarkan TransactionsService yang mengurus update saldo via TransactionWallet
         await this.transactionsService.createWithManager(
           queryRunner.manager,
           user,
@@ -119,12 +122,12 @@ export class WalletsService {
       }
     }
 
-    // Jika tidak ada perubahan saldo, hapus balance dari dto sebelum save
     const updateData = { ...dto };
     delete updateData.balance;
 
     if (Object.keys(updateData).length > 0) {
       Object.assign(wallet, updateData);
+      wallet.updatedAt = new Date(); // Force update timestamp manual
       return await this.walletRepo.save(wallet);
     }
 

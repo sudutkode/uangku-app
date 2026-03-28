@@ -41,9 +41,9 @@ export class Wallet {
   @OneToMany(() => LoanWallet, (lw) => lw.wallet)
   loanWallets: LoanWallet[];
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

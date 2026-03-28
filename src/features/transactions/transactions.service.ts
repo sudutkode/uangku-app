@@ -27,7 +27,34 @@ export class TransactionsService {
   ) {}
 
   /* -------------------------------------------------------------------------- */
-  /*                                  CREATE                                    */
+  /* HELPERS                                   */
+  /* -------------------------------------------------------------------------- */
+
+  private parseSmartDate(dtoDate?: string | Date): Date {
+    if (!dtoDate) return new Date();
+
+    const parsedDate = new Date(dtoDate);
+    const now = new Date();
+
+    // Jika Mobile hanya kirim tanggal (jam, menit, detik masih 0)
+    // Tempelkan waktu saat ini agar sorting tetap akurat secara kronologis
+    if (
+      parsedDate.getHours() === 0 &&
+      parsedDate.getMinutes() === 0 &&
+      parsedDate.getSeconds() === 0
+    ) {
+      parsedDate.setHours(
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds(),
+      );
+    }
+    return parsedDate;
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /* CREATE                                    */
   /* -------------------------------------------------------------------------- */
 
   async create(user: User, dto: CreateTransactionDto) {
@@ -43,7 +70,7 @@ export class TransactionsService {
         transactionCategory: { id: dto.transactionCategoryId },
         user,
         note: dto.note,
-        ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
+        createdAt: this.parseSmartDate(dto.createdAt),
       });
 
       await queryRunner.manager.save(transaction);
@@ -76,7 +103,7 @@ export class TransactionsService {
       transactionCategory: { id: dto.transactionCategoryId },
       user,
       note: dto.note,
-      ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
+      createdAt: this.parseSmartDate(dto.createdAt),
     });
 
     await manager.save(transaction);
@@ -86,7 +113,7 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /*                                   FIND                                     */
+  /* FIND                                     */
   /* -------------------------------------------------------------------------- */
 
   async findAll(user: User, options: FindAllOptions) {
@@ -119,7 +146,7 @@ export class TransactionsService {
       });
     }
 
-    // pagination
+    // pagination & sorting
     query.skip(skip).take(limit);
     query.orderBy('transaction.createdAt', 'DESC');
 
@@ -207,7 +234,7 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /*                                   UPDATE                                   */
+  /* UPDATE                                   */
   /* -------------------------------------------------------------------------- */
 
   async update(id: number, dto: UpdateTransactionDto) {
@@ -243,8 +270,9 @@ export class TransactionsService {
         amount: dto.amount ?? transaction.amount,
         adminFee: dto.adminFee ?? transaction.adminFee,
         createdAt: dto.createdAt
-          ? new Date(dto.createdAt)
+          ? this.parseSmartDate(dto.createdAt)
           : transaction.createdAt,
+        updatedAt: new Date(),
         transactionType: dto.transactionTypeId
           ? { id: dto.transactionTypeId }
           : transaction.transactionType,
@@ -274,7 +302,7 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /*                                   DELETE                                   */
+  /* DELETE                                   */
   /* -------------------------------------------------------------------------- */
 
   async remove(id: number) {
@@ -301,6 +329,8 @@ export class TransactionsService {
           wallet.balance += txWallet.amount;
         }
 
+        wallet.updatedAt = new Date(); // Force timestamp update saat delete
+
         await queryRunner.manager.save(wallet);
       }
 
@@ -318,7 +348,7 @@ export class TransactionsService {
   }
 
   /* -------------------------------------------------------------------------- */
-  /*                             SHARED APPLY LOGIC                              */
+  /* SHARED APPLY LOGIC                              */
   /* -------------------------------------------------------------------------- */
 
   private async applyTransactionWithManager(
@@ -353,6 +383,7 @@ export class TransactionsService {
     await manager.save(sourceTxWallet);
 
     sourceWallet.balance += isIncome ? transaction.amount : -finalAmount;
+    sourceWallet.updatedAt = new Date(); // Force timestamp update
 
     await manager.save(sourceWallet);
 
@@ -376,6 +407,7 @@ export class TransactionsService {
       await manager.save(targetTxWallet);
 
       targetWallet.balance += transaction.amount;
+      targetWallet.updatedAt = new Date(); // Force timestamp update
       await manager.save(targetWallet);
     }
   }

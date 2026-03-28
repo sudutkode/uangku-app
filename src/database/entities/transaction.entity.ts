@@ -57,9 +57,9 @@ export class Transaction {
   @Column({ type: 'text', nullable: true })
   note: string | null;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

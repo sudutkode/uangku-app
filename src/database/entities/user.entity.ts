@@ -32,9 +32,9 @@ export class User {
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }
