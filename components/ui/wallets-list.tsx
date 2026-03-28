@@ -22,11 +22,16 @@ const WalletsList: FC<WalletsListProps> = ({data, loading, refetch}) => {
       router.push(`/wallets/${item.id}`);
     };
 
+    const dateFormatted = format(
+      new Date(item.updatedAt),
+      "dd MMM yyyy • HH:mm",
+    );
+
     return (
       <List.Item
         title={item.name}
         titleStyle={styles.title}
-        description={`Diperbarui ${format(new Date(item.updatedAt), "dd MMM yyyy").toUpperCase()}`}
+        description={`Diperbarui ${dateFormatted}`}
         descriptionStyle={[styles.description, {color: colors.secondary}]}
         style={styles.item}
         onPress={handlePress}

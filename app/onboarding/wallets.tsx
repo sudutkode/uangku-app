@@ -98,7 +98,7 @@ export default function WalletsScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text variant="titleMedium" style={styles.headline}>
-            Pilih dompet yang ingin dilacak
+            Pilih dompet
           </Text>
           <Text
             variant="bodySmall"

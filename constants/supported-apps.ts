@@ -1,4 +1,4 @@
-const categories = ["Mobile Banking", "E-Wallet"] as const;
+const categories = ["M-Banking", "E-Wallet"] as const;
 
 export const SUPPORTED_APPS_CONFIG = [
   // Mobile Banking

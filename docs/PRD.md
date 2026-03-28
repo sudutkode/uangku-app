@@ -518,13 +518,11 @@ Response: { "transactionId": 1 } OR { "status": "skipped" }
 
 ```typescript
 interface User {
-  id: number;
-  googleId: string;
-  name: string;
-  email: string;
-  photoUrl: string;
-  createdAt: string;
-  updatedAt: string;
+  id: string;
+  identifierHash: string;
+  username: string;
+  avatar?: string;
+  createdAt: Date;
 }
 ```
 

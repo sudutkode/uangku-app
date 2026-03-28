@@ -50,7 +50,7 @@ export default function RootLayout() {
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      scopes: ["profile", "email"],
+      scopes: ["email"],
     });
     setupNotificationChannel();
     setupNotificationCategories();

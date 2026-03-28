@@ -9,7 +9,7 @@ import {Button, Text, useTheme} from "react-native-paper";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 const PERMISSION_POINTS = [
-  "Membaca notifikasi dari BCA, GoPay, OVO, DANA, dan 15+ aplikasi lain",
+  "Membaca notifikasi aplikasi mobile banking & dompet digital anda",
   "Tidak membaca pesan pribadi, OTP, atau notifikasi non-transaksi",
   "Kamu bisa cabut izin ini kapan saja di Pengaturan",
 ];
@@ -39,7 +39,7 @@ export default function PermissionsScreen() {
         }
         setIsLoading(false);
       }, 2000);
-    } catch (error) {
+    } catch {
       setIsLoading(false);
     }
   };

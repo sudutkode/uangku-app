@@ -27,7 +27,7 @@ Then:
   - AuthStore is populated with user metadata
   - User is redirected to /onboarding/intro
   - accessToken cached in SecureStore (@uangku/headless_token)
-  - User metadata (name, photo, email) stored in SecureStore
+  - User metadata (username) stored in SecureStore
 ```
 
 **Test Case**:
@@ -556,7 +556,7 @@ Then:
 **Test Case**:
 
 1. Navigate to /profile
-2. Verify user info loads (name, email, photo)
+2. Verify user info loads (username)
 3. Check notification toggle reflects system permission status
 4. Verify supported apps list displays correctly
 5. Verify logout button present

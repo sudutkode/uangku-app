@@ -12,9 +12,11 @@ const isWeb = Platform.OS === "web";
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  isOnboarding: boolean;
+
   signin: (payload: SignInResponse) => void;
   signout: () => void;
-  isOnboarding: boolean;
+  setUser: (user: User) => void;
   completeOnboarding: () => void;
 }
 
@@ -31,6 +33,10 @@ const useAuthStore = create<AuthState>()(
           accessToken: data?.accessToken,
           isOnboarding: data?.isNewUser,
         });
+      },
+
+      setUser: (user) => {
+        set({user});
       },
 
       signout: () => {

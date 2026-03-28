@@ -51,7 +51,7 @@
 
 **Structure (Strict):**
 
-- **Section 1 (User Settings):** Avatar, name, email, "Joined Since" date
+- **Section 1 (User Settings):** username, "Joined Since" date
 - **Section 2 (Settings):** NotificationListenerToggle component (displays Secure-Sync status)
 - **Section 3 (About UangKu):** SupportedApps component (displays supported apps from `SUPPORTED_APPS_CATEGORIZED` exported by constants/supported-apps.ts)
 - **Section 4 (Account):** Logout action card

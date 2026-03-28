@@ -1,8 +1,16 @@
+// app/onboarding/intro.tsx
 import {Icon} from "@/components/ui";
 import {router} from "expo-router";
-import React from "react";
-import {Image, StyleSheet, View} from "react-native";
-import {Button, Text, useTheme} from "react-native-paper";
+import React, {useState} from "react";
+import {Image, ScrollView, StyleSheet, View} from "react-native";
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  Portal,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 const FEATURES = [
@@ -10,24 +18,25 @@ const FEATURES = [
     icon: "bell-ring-outline" as const,
     title: "Notifikasi Otomatis",
     description:
-      "Transaksi dari BCA, GoPay, OVO, DANA, dan 15+ aplikasi lain langsung tercatat — tanpa input manual.",
+      "Mencatat transaksi dari notifikasi m-banking & e-wallet yang muncul.",
   },
   {
     icon: "wallet-bifold-outline" as const,
     title: "Semua Dompet, Satu Tempat",
     description:
-      "Satu tampilan untuk semua saldo. Tidak perlu buka aplikasi satu per satu lagi.",
+      "Pantau semua saldo sekaligus tanpa buka aplikasi satu per satu.",
   },
   {
     icon: "chart-arc" as const,
     title: "Laporan Bulanan",
-    description:
-      "Analisis pengeluaran dan pemasukan bulananmu dengan grafik yang mudah dipahami.",
+    description: "Grafik pengeluaran & pemasukan bulanan yang mudah dipahami.",
   },
 ];
 
 export default function IntroScreen() {
   const {colors} = useTheme();
+  const [isAgreed, setIsAgreed] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   return (
     <SafeAreaView
@@ -40,14 +49,14 @@ export default function IntroScreen() {
         />
 
         <Text variant="titleMedium" style={styles.headline}>
-          Kelola semua uangmu dengan UangKu
+          Kelola uangmu dengan UangKu
         </Text>
         <Text
           variant="bodySmall"
           style={[styles.subtitle, {color: colors.onSurfaceVariant}]}
         >
-          UangKu membaca notifikasi transaksi dari bank dan e-wallet-mu, lalu
-          mencatatnya otomatis, jadi kamu selalu tahu uangmu di mana dan berapa.
+          Catat keuangan dari berbagai rekening m-banking dan e-wallet anda
+          dalam satu dashboard.
         </Text>
 
         <View style={styles.featuresContainer}>
@@ -84,15 +93,90 @@ export default function IntroScreen() {
       </View>
 
       <View style={styles.footer}>
+        <View style={styles.checkboxArea}>
+          <Checkbox.Android
+            status={isAgreed ? "checked" : "unchecked"}
+            onPress={() => setIsAgreed(!isAgreed)}
+            color={colors.primary}
+          />
+          <Text variant="bodySmall" style={styles.checkboxText}>
+            Saya setuju dengan{" "}
+            <Text
+              style={{color: colors.primary, fontWeight: "bold"}}
+              onPress={() => setShowPrivacy(true)}
+            >
+              Kebijakan Privasi
+            </Text>{" "}
+            UangKu.
+          </Text>
+        </View>
+
         <Button
           mode="contained"
           onPress={() => router.push("/onboarding/permissions")}
           style={styles.button}
           contentStyle={styles.buttonContent}
+          disabled={!isAgreed}
         >
           Mulai Sekarang
         </Button>
       </View>
+
+      <Portal>
+        <Dialog
+          visible={showPrivacy}
+          onDismiss={() => setShowPrivacy(false)}
+          style={{maxHeight: "80%", borderRadius: 20}}
+        >
+          <Dialog.Title style={{fontWeight: "700"}}>
+            Kebijakan Privasi
+          </Dialog.Title>
+          <Dialog.ScrollArea style={{paddingHorizontal: 0}}>
+            <ScrollView
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingVertical: 16,
+              }}
+            >
+              <Text variant="bodySmall" style={styles.policyText}>
+                <Text style={styles.policyHeader}>1. Data Anonim{"\n"}</Text>
+                UangKu menggunakan sistem {`"Pseudonymization"`}. Email Anda
+                diubah menjadi kode unik (Hash) dan tidak disimpan dalam bentuk
+                teks biasa. Nama asli Anda tidak akan tersimpan di server kami.
+                {"\n\n"}
+                <Text style={styles.policyHeader}>
+                  2. Pembacaan Notifikasi{"\n"}
+                </Text>
+                UangKu memerlukan izin akses notifikasi hanya untuk mendeteksi
+                transaksi dari aplikasi perbankan dan dompet digital resmi. Kami
+                tidak membaca pesan pribadi seperti WhatsApp atau SMS personal.
+                {"\n\n"}
+                <Text style={styles.policyHeader}>3. Keamanan Data{"\n"}</Text>
+                Semua data transaksi dienkripsi dan hanya dapat diakses oleh
+                Anda melalui akun Google yang terhubung. Kami tidak menjual data
+                Anda kepada pihak ketiga mana pun.{"\n\n"}
+                <Text style={styles.policyHeader}>
+                  4. Penghapusan Akun{"\n"}
+                </Text>
+                Anda memiliki hak penuh untuk menghapus akun dan seluruh data
+                transaksi kapan saja melalui menu Pengaturan.
+              </Text>
+            </ScrollView>
+          </Dialog.ScrollArea>
+          <Dialog.Actions>
+            <Button onPress={() => setShowPrivacy(false)}>Tutup</Button>
+            <Button
+              onPress={() => {
+                setIsAgreed(true);
+                setShowPrivacy(false);
+              }}
+              mode="contained"
+            >
+              Setuju
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 }
@@ -114,21 +198,21 @@ const styles = StyleSheet.create({
   headline: {
     fontWeight: "600",
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subtitle: {
     textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 28,
+    lineHeight: 18,
+    marginBottom: 24,
     paddingHorizontal: 8,
   },
   featuresContainer: {
-    gap: 12,
+    gap: 10,
   },
   featureCard: {
     flexDirection: "row",
     alignItems: "flex-start",
-    padding: 16,
+    padding: 14,
     borderRadius: 12,
     gap: 14,
   },
@@ -142,13 +226,22 @@ const styles = StyleSheet.create({
   },
   featureText: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   featureTitle: {
     fontWeight: "600",
   },
   footer: {
     padding: 24,
+  },
+  checkboxArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingRight: 16,
+  },
+  checkboxText: {
+    flexShrink: 1,
   },
   button: {
     borderRadius: 8,
@@ -157,4 +250,6 @@ const styles = StyleSheet.create({
   buttonContent: {
     height: 52,
   },
+  policyText: {lineHeight: 20},
+  policyHeader: {fontWeight: "700", fontSize: 13},
 });

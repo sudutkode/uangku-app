@@ -1,5 +1,6 @@
 import {Transaction} from "@/types";
 import {formatIdr, getOperatorSymbol, screenWidth} from "@/utils/common-utils";
+import {format} from "date-fns";
 import {useRouter} from "expo-router";
 import type {FC} from "react";
 import {useCallback} from "react";
@@ -33,9 +34,8 @@ const TransactionsList: FC<TransactionsListProps> = ({
             ? colors.error
             : colors.tertiary;
 
-      // Show note truncated if present, else fall back to category name.
-      // numberOfLines={1} on List.Item title handles the ellipsis natively.
       const title = item.note?.trim() || item.transactionCategory.name;
+      const timeString = format(new Date(item.createdAt), "HH:mm");
 
       return (
         <List.Item
@@ -43,7 +43,7 @@ const TransactionsList: FC<TransactionsListProps> = ({
           titleNumberOfLines={1}
           titleEllipsizeMode="tail"
           titleStyle={styles.title}
-          description={item.transactionCategory.name}
+          description={`${timeString} • ${item.transactionCategory.name}`}
           descriptionStyle={styles.description}
           contentStyle={styles.content}
           style={styles.item}
