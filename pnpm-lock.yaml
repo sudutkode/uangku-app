@@ -38,9 +38,6 @@ importers:
       axios:
         specifier: ^1.13.6
         version: 1.13.6
-      bcryptjs:
-        specifier: ^3.0.2
-        version: 3.0.2
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -1025,10 +1022,6 @@ packages:
 
   baseline-browser-mapping@2.8.10:
     resolution: {integrity: sha512-uLfgBi+7IBNay8ECBO2mVMGZAc1VgZWEChxm4lv+TobGdG82LnXMjuNGo/BSSZZL4UmkWhxEHP2f5ziLNwGWMA==}
-    hasBin: true
-
-  bcryptjs@3.0.2:
-    resolution: {integrity: sha512-k38b3XOZKv60C4E2hVsXTolJWfkGRMbILBIe2IBITXciy5bOsTKot5kDrf3ZfufQtQOUN5mXceUEpU1rTl9Uog==}
     hasBin: true
 
   bignumber.js@9.3.1:
@@ -4524,8 +4517,6 @@ snapshots:
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.8.10: {}
-
-  bcryptjs@3.0.2: {}
 
   bignumber.js@9.3.1: {}
 
