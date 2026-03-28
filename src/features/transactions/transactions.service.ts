@@ -31,13 +31,13 @@ export class TransactionsService {
   /* -------------------------------------------------------------------------- */
 
   private parseSmartDate(dtoDate?: string | Date): Date {
-    if (!dtoDate) return new Date();
+    const now = new Date();
+
+    if (!dtoDate) return now;
 
     const parsedDate = new Date(dtoDate);
+    if (isNaN(parsedDate.getTime())) return now;
 
-    if (isNaN(parsedDate.getTime())) {
-      return new Date();
-    }
     return parsedDate;
   }
 
