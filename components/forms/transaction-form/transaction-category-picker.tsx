@@ -1,7 +1,8 @@
 import {ErrorState, Icon, LoadingState} from "@/components/ui";
 import {useFetch, useMutation} from "@/hooks/axios";
+import useTransactionCategoriesStore from "@/store/use-transaction-categories";
 import {TransactionCategoriesResponse} from "@/types";
-import React, {memo, useCallback, useState} from "react";
+import React, {memo, useCallback, useEffect, useState} from "react";
 import {StyleSheet, TouchableOpacity, View} from "react-native";
 import {
   Button,
@@ -111,7 +112,7 @@ const AddCategoryItem = memo(({onPress}: {onPress: () => void}) => {
         variant="labelSmall"
         style={[styles.catLabel, {color: colors.outline}]}
       >
-        Add
+        Tambah
       </Text>
     </TouchableOpacity>
   );
@@ -129,6 +130,18 @@ const TransactionCategoryPicker = ({
 }: TransactionCategoryPickerProps) => {
   const {colors} = useTheme();
 
+  // Zustand Store
+  const categories = useTransactionCategoriesStore(
+    (s) => s.transactionCategories,
+  );
+  const needsRefetch = useTransactionCategoriesStore((s) => s.needsRefetch);
+  const setCategoriesData = useTransactionCategoriesStore(
+    (s) => s.setTransactionCategoriesData,
+  );
+  const setNeedsRefetch = useTransactionCategoriesStore(
+    (s) => s.setNeedsRefetch,
+  );
+
   const [formVisible, setFormVisible] = useState(false);
   const [editData, setEditData] = useState<TransactionCategoryFormData | null>(
     null,
@@ -136,10 +149,24 @@ const TransactionCategoryPicker = ({
   const [deleteTarget, setDeleteTarget] =
     useState<TransactionCategoryFormData | null>(null);
 
-  const {data, loading, error, refetch} =
-    useFetch<TransactionCategoriesResponse>("/transaction-categories", {
+  // Logic skip fetch jika data sudah ada di store dan tidak butuh refetch
+  const shouldSkip = categories.length > 0 && !needsRefetch;
+
+  const {data, loading, error} = useFetch<TransactionCategoriesResponse>(
+    "/transaction-categories",
+    {
       params: {withNotification: isNotification},
-    });
+    },
+    shouldSkip,
+  );
+
+  // Sinkronisasi data API ke Store
+  useEffect(() => {
+    if (data?.data) {
+      setCategoriesData(data.data);
+      setNeedsRefetch(false);
+    }
+  }, [data, setCategoriesData, setNeedsRefetch]);
 
   const {
     mutate: deleteCategory,
@@ -149,7 +176,6 @@ const TransactionCategoryPicker = ({
     method: "delete",
   });
 
-  const categories = data?.data?.data ?? [];
   const filtered = categories.filter(
     (c) => c.transactionType.id === transactionTypeId,
   );
@@ -166,16 +192,15 @@ const TransactionCategoryPicker = ({
     setFormVisible(true);
   }, []);
 
-  // Long press on category → show edit form
-  // From edit form, user can choose to delete instead
   const handleLongPress = useCallback((data: TransactionCategoryFormData) => {
     setEditData(data);
     setFormVisible(true);
   }, []);
 
   const handleFormSuccess = useCallback(() => {
-    refetch();
-  }, [refetch]);
+    setNeedsRefetch(true); // Memaksa re-hit API pada render berikutnya
+    setFormVisible(false);
+  }, [setNeedsRefetch]);
 
   const handleDeleteRequest = useCallback(
     (data: TransactionCategoryFormData) => {
@@ -193,16 +218,16 @@ const TransactionCategoryPicker = ({
         onCategoryChange(0);
       }
       setDeleteTarget(null);
-      refetch();
+      setNeedsRefetch(true); // Memaksa re-hit API untuk update store
     } catch {
-      // error shown via Snackbar
+      // error ditampilkan via Snackbar di bawah
     }
   }, [
     deleteTarget,
     deleteCategory,
     transactionCategoryId,
     onCategoryChange,
-    refetch,
+    setNeedsRefetch,
   ]);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -213,19 +238,19 @@ const TransactionCategoryPicker = ({
         value={String(transactionTypeId)}
         onValueChange={handleTypeChange}
         buttons={[
-          {value: "1", label: "Income", icon: "plus"},
-          {value: "2", label: "Expense", icon: "minus"},
+          {value: "1", label: "Masuk", icon: "plus"},
+          {value: "2", label: "Keluar", icon: "minus"},
           {value: "3", label: "Transfer", icon: "swap-horizontal"},
         ]}
       />
 
-      {loading ? (
+      {loading && categories.length === 0 ? (
         <View style={styles.stateContainer}>
-          <LoadingState message="Loading categories..." />
+          <LoadingState message="Memuat kategori..." />
         </View>
-      ) : error ? (
+      ) : error && categories.length === 0 ? (
         <View style={styles.stateContainer}>
-          <ErrorState message="Failed to load categories" />
+          <ErrorState message="Gagal memuat kategori" />
         </View>
       ) : (
         <View style={styles.grid}>
@@ -245,7 +270,7 @@ const TransactionCategoryPicker = ({
         </View>
       )}
 
-      {/* Create / edit form */}
+      {/* Form Create / Edit */}
       <TransactionCategoryFormSheet
         visible={formVisible}
         onDismiss={() => setFormVisible(false)}
@@ -255,7 +280,7 @@ const TransactionCategoryPicker = ({
         editData={editData}
       />
 
-      {/* Delete confirmation */}
+      {/* Dialog Konfirmasi Hapus */}
       <Portal>
         <Dialog
           visible={!!deleteTarget}
@@ -263,23 +288,23 @@ const TransactionCategoryPicker = ({
         >
           <Dialog.Icon icon="alert" color={colors.error} />
           <Dialog.Title style={styles.dialogTitle}>
-            Delete category?
+            Hapus kategori?
           </Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium">
-              Delete{" "}
+              Hapus kategori{" "}
               <Text style={{fontWeight: "bold"}}>{deleteTarget?.name}</Text>?
-              Transactions using this category will be moved to Unknown.
+              Transaksi dengan kategori ini akan menjadi tidak diketahui.
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button onPress={() => setDeleteTarget(null)}>Batal</Button>
             <Button
               textColor={colors.error}
               onPress={handleDeleteConfirm}
               loading={loadingDelete}
             >
-              Delete
+              Hapus
             </Button>
           </Dialog.Actions>
         </Dialog>
@@ -298,10 +323,6 @@ const TransactionCategoryPicker = ({
     </View>
   );
 };
-
-export default TransactionCategoryPicker;
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   stateContainer: {
@@ -334,3 +355,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+export default TransactionCategoryPicker;

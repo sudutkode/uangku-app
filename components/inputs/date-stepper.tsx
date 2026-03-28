@@ -1,4 +1,5 @@
 import {format} from "date-fns";
+import {id} from "date-fns/locale";
 import React, {useState} from "react";
 import {StyleSheet, TouchableOpacity, View} from "react-native";
 import {IconButton, Text, useTheme} from "react-native-paper";
@@ -52,8 +53,8 @@ export default function DateStepper({
 
   const formattedDate =
     mode === "month"
-      ? format(date, "MMMM yyyy")
-      : format(date, "EEE, dd MMM yyyy");
+      ? format(date, "MMMM yyyy", {locale: id})
+      : format(date, "EEEE, dd MMM yyyy", {locale: id});
 
   return (
     <View style={[styles.container, {backgroundColor: colors.surface}]}>
@@ -84,7 +85,7 @@ export default function DateStepper({
       />
 
       <DatePickerModal
-        locale="en"
+        locale="id"
         mode="single"
         visible={open}
         onDismiss={() => setOpen(false)}

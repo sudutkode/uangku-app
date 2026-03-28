@@ -62,7 +62,7 @@ const TransactionFields = memo(
         <View style={styles.row}>
           <View style={styles.walletCol}>
             <Dropdown
-              label="Wallet"
+              label="Dompet"
               value={form.walletId.toString()}
               onSelect={handleWalletChange}
               options={walletOptions}
@@ -70,7 +70,7 @@ const TransactionFields = memo(
           </View>
           <View style={styles.dateCol}>
             <DatePicker
-              label="Date"
+              label="Tanggal"
               value={form.createdAt}
               onChange={handleDateChange}
             />
@@ -80,7 +80,7 @@ const TransactionFields = memo(
         {form.transactionTypeId === TRANSFER_TYPE_ID && (
           <View style={styles.spacing}>
             <Dropdown
-              label="Recipient Wallet"
+              label="Dompet Tujuan"
               value={form.targetWalletId.toString()}
               onSelect={handleTargetWalletChange}
               options={targetWalletOptions}
@@ -92,7 +92,7 @@ const TransactionFields = memo(
           {isNotification ? (
             <TextInput
               mode="outlined"
-              label="Note (auto-imported)"
+              label="Catatan (otomatis)"
               value={form.note ?? ""}
               editable={false}
               multiline
@@ -105,14 +105,14 @@ const TransactionFields = memo(
           ) : (
             <>
               <Switch
-                label="With note"
+                label="Tambah Catatan"
                 value={isWithNote}
                 onValueChange={handleSwitchWithNote}
               />
               {isWithNote ? (
                 <TextInput
                   mode="outlined"
-                  label="Note"
+                  label="Catatan"
                   value={form.note ?? ""}
                   onChangeText={handleNoteChange}
                   multiline

@@ -154,7 +154,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
           disabled={loadingDelete}
           loading={loadingDelete}
         >
-          Delete
+          Hapus
         </Button>
       ) : null,
     [isEdit, colors.error, loadingDelete],
@@ -165,7 +165,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
     setForm((p) => ({...p, appName: "", name: ""}));
   };
 
-  if (loadingExisting) return <LoadingState />;
+  if (loadingExisting) return <LoadingState message="Memuat dompet..." />;
 
   const disabledSave = isSupported ? !form.appName : !form.name;
   const activeError = saveError || deleteError;
@@ -174,7 +174,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
     <View style={[styles.container, {backgroundColor: colors.background}]}>
       <Stack.Screen
         options={{
-          title: isEdit ? "Edit Wallet" : "New Wallet",
+          title: isEdit ? "Ubah Dompet" : "Dompet Baru",
           headerRight: headerRight, // Tambahkan tombol delete di header
         }}
       />
@@ -182,7 +182,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
       <View style={styles.fields}>
         {!isEdit && (
           <Switch
-            label="Supported App"
+            label="Dompet Terintegrasi"
             value={isSupported}
             onValueChange={handleSwitchSupportApp}
           />
@@ -190,7 +190,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
 
         {isSupported ? (
           <Dropdown
-            label="Select Wallet"
+            label="Pilih Dompet"
             value={form.appName}
             onSelect={handleAppSelect}
             options={appOptions}
@@ -199,7 +199,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
         ) : (
           <TextInput
             mode="outlined"
-            label="Wallet Name"
+            label="Nama Dompet"
             value={form.name}
             onChangeText={(v) => setForm((p) => ({...p, name: v}))}
           />
@@ -207,7 +207,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
 
         <TextInput
           mode="outlined"
-          label="Balance"
+          label="Saldo"
           value={form.balance}
           onChangeText={(v) =>
             setForm((p) => ({...p, balance: formatBalanceInput(v)}))
@@ -224,7 +224,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
         style={styles.submitBtn}
         disabled={disabledSave || loadingSubmit}
       >
-        {isEdit ? "Update Wallet" : "Save Wallet"}
+        Simpan
       </Button>
 
       {/* Dialog Konfirmasi Delete */}
@@ -235,19 +235,19 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
         >
           <Dialog.Icon icon="alert" color={colors.error} />
           <Dialog.Title style={{textAlign: "center"}}>
-            Delete wallet?
+            Hapus dompet?
           </Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium">
-              This will permanently delete{" "}
-              <Text style={{fontWeight: "bold"}}>{form.name}</Text> and all its
-              transaction history. This cannot be undone.
+              Ini akan menghapus secara permanen dompet{" "}
+              <Text style={{fontWeight: "bold"}}>{form.name}</Text> beserta
+              seluruh riwayat transaksinya. Tindakan ini tidak dapat dibatalkan.
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setShowDeleteDialog(false)}>Cancel</Button>
+            <Button onPress={() => setShowDeleteDialog(false)}>Batal</Button>
             <Button textColor={colors.error} onPress={handleDeleteConfirm}>
-              Delete
+              Hapus
             </Button>
           </Dialog.Actions>
         </Dialog>

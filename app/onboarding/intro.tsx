@@ -1,7 +1,7 @@
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {router} from "expo-router";
 import React from "react";
-import {StyleSheet, View} from "react-native";
+import {Image, StyleSheet, View} from "react-native";
 import {Button, Text, useTheme} from "react-native-paper";
 import {SafeAreaView} from "react-native-safe-area-context";
 
@@ -19,7 +19,7 @@ const FEATURES = [
       "Satu tampilan untuk semua saldo. Tidak perlu buka aplikasi satu per satu lagi.",
   },
   {
-    icon: "chart-pie" as const,
+    icon: "chart-arc" as const,
     title: "Laporan Bulanan",
     description:
       "Analisis pengeluaran dan pemasukan bulananmu dengan grafik yang mudah dipahami.",
@@ -34,6 +34,11 @@ export default function IntroScreen() {
       style={[styles.container, {backgroundColor: colors.background}]}
     >
       <View style={styles.content}>
+        <Image
+          source={require("../../assets/images/splash-icon.png")}
+          style={styles.logo}
+        />
+
         <Text variant="titleMedium" style={styles.headline}>
           Kelola semua uangmu dengan UangKu
         </Text>
@@ -104,6 +109,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    alignSelf: "center",
   },
   headline: {
     fontWeight: "600",

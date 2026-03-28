@@ -8,12 +8,12 @@ import {Icon} from "@/components/ui";
 const tabs = [
   {
     name: "transactions",
-    title: "Transactions",
+    title: "Transaksi",
     icon: "money-bill-transfer",
   },
-  {name: "wallets", title: "Wallets", icon: "wallet"},
-  {name: "report", title: "Report", icon: "chart-pie"},
-  {name: "settings", title: "Settings", icon: "user-gear"},
+  {name: "wallets", title: "Dompet", icon: "wallet"},
+  {name: "report", title: "Laporan", icon: "chart-pie"},
+  {name: "settings", title: "Pengaturan", icon: "user-gear"},
 ];
 
 export default function TabLayout() {

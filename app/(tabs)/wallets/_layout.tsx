@@ -44,7 +44,7 @@ export default function WalletsLayout() {
                   alignItems: "center",
                 }}
               >
-                <Text variant="labelLarge">Total Balance</Text>
+                <Text variant="labelLarge">Total Saldo</Text>
                 <Text variant="titleSmall">{formatIdr(totalBalance)}</Text>
               </View>
             </SafeAreaView>

@@ -13,7 +13,7 @@ export interface DatePickerProps extends Omit<
 }
 
 const DatePicker: FC<DatePickerProps> = ({
-  locale = "en",
+  locale = "id",
   inputMode = "start",
   ...props
 }) => {

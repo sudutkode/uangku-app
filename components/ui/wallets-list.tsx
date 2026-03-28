@@ -26,7 +26,7 @@ const WalletsList: FC<WalletsListProps> = ({data, loading, refetch}) => {
       <List.Item
         title={item.name}
         titleStyle={styles.title}
-        description={`UPDATED ${format(new Date(item.updatedAt), "dd MMM yyyy").toUpperCase()}`}
+        description={`Diperbarui ${format(new Date(item.updatedAt), "dd MMM yyyy").toUpperCase()}`}
         descriptionStyle={[styles.description, {color: colors.secondary}]}
         style={styles.item}
         onPress={handlePress}

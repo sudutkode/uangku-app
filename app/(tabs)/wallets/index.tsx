@@ -35,14 +35,14 @@ export default function WalletsScreen() {
   }, [needsRefetch, refetch, setNeedsRefetch, fetchedData]);
 
   const renderContent = useCallback(() => {
-    if (loading) return <LoadingState message="Loading wallets..." />;
+    if (loading) return <LoadingState message="Memuat dompet..." />;
     if (error) return <ErrorState onRetry={refetch} />;
     if (!wallets.length)
       return (
         <EmptyState
           icon="wallet"
-          title="No wallets yet"
-          subtitle="Your wallets will appear here"
+          title="Belum ada dompet"
+          subtitle="Dompet anda akan muncul di sini."
           onRefetch={refetch}
         />
       );

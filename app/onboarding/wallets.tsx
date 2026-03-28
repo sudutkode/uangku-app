@@ -83,8 +83,6 @@ export default function WalletsScreen() {
       );
 
       completeOnboarding();
-    } catch (error) {
-      console.error("Failed to create wallets", error);
     } finally {
       setIsSubmitting(false);
     }

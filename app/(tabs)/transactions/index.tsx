@@ -51,14 +51,14 @@ export default function TransactionScreen() {
   }, [needsRefetch, refetch, setNeedsRefetch, fetchedData]);
 
   const renderContent = useCallback(() => {
-    if (loading) return <LoadingState message="Loading transactions..." />;
+    if (loading) return <LoadingState message="Memuat transaksi..." />;
     if (error) return <ErrorState message={error} onRetry={refetch} />;
     if (!transactions.length)
       return (
         <EmptyState
           icon="receipt"
-          title="No transactions yet"
-          subtitle="Your transactions will appear here"
+          title="Belum ada transaksi"
+          subtitle="Transaksi anda akan muncul di sini."
           onRefetch={refetch}
         />
       );

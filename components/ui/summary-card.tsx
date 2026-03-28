@@ -15,7 +15,7 @@ const SummaryCard = ({data}: SummaryCardProps) => {
       mode="flat"
     >
       <View style={styles.summaryItem}>
-        <Text variant="labelSmall">Income</Text>
+        <Text variant="labelSmall">Pemasukan</Text>
         <Text variant="bodySmall" style={styles.body}>
           + {formatIdr(data?.income || 0)}
         </Text>
@@ -29,7 +29,7 @@ const SummaryCard = ({data}: SummaryCardProps) => {
       />
 
       <View style={styles.summaryItem}>
-        <Text variant="labelSmall">Expense</Text>
+        <Text variant="labelSmall">Pengeluaran</Text>
         <Text variant="bodySmall" style={styles.body}>
           - {formatIdr(data?.expense || 0)}
         </Text>
@@ -43,7 +43,7 @@ const SummaryCard = ({data}: SummaryCardProps) => {
       />
 
       <View style={styles.summaryItem}>
-        <Text variant="labelSmall">Balance</Text>
+        <Text variant="labelSmall">Saldo</Text>
         <Text variant="bodySmall" style={styles.body}>
           {data?.balance ? (data.balance > 0 ? "+" : "-") : ""}{" "}
           {formatIdr(Math.abs(data?.balance || 0))}

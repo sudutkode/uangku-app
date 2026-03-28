@@ -59,7 +59,7 @@ const TransactionDisplay = memo(
           style={amountBoxStyle}
         >
           <Text style={[styles.label, {color: colors.onSurfaceVariant}]}>
-            Amount
+            Jumlah
           </Text>
           <Text
             style={[styles.valueLarge, {color: colors.onSurface}]}
@@ -80,7 +80,7 @@ const TransactionDisplay = memo(
               style={adminFeeBoxStyle}
             >
               <Text style={[styles.label, {color: colors.onSurfaceVariant}]}>
-                Admin Fee
+                Biaya Admin
               </Text>
               <Text
                 style={[styles.valueSmall, {color: colors.onSurface}]}

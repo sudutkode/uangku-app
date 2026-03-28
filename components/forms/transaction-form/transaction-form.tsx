@@ -20,7 +20,22 @@ export default function TransactionForm({id}: {id?: string}) {
 
   return (
     <View style={[styles.root, {backgroundColor: colors.background}]}>
-      <Stack.Screen />
+      <Stack.Screen
+        options={{
+          title: vm.isEdit ? "Detail Transaksi" : "Transaksi Baru",
+          headerRight: () =>
+            vm.isEdit ? (
+              <Button
+                textColor={colors.error}
+                onPress={() => vm.setShowDeleteDialog(true)}
+                disabled={vm.loadingDelete}
+                loading={vm.loadingDelete}
+              >
+                Hapus
+              </Button>
+            ) : null,
+        }}
+      />
 
       {/* CATEGORY */}
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -33,7 +48,6 @@ export default function TransactionForm({id}: {id?: string}) {
               transactionTypeId: typeId,
               transactionCategoryId: 0,
             }));
-            vm.setModalVisible(true);
           }}
           onCategoryChange={(catId) => {
             vm.setForm((p) => ({...p, transactionCategoryId: catId}));
@@ -87,7 +101,6 @@ export default function TransactionForm({id}: {id?: string}) {
             onKeyPress={vm.handleKeyPress}
             onSave={vm.handleSave}
             saveDisabled={vm.saveDisabled}
-            isEdit={vm.isEdit}
             loading={vm.loadingTransaction}
           />
         </Modal>

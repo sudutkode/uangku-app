@@ -24,7 +24,7 @@ interface EmptyStateProps {
 // ─── Loading ──────────────────────────────────────────────────────────────────
 
 export const LoadingState = memo(
-  ({message = "Loading..."}: LoadingStateProps) => {
+  ({message = "Memuat..."}: LoadingStateProps) => {
     const {colors} = useTheme();
     return (
       <View style={styles.center}>
@@ -44,7 +44,7 @@ LoadingState.displayName = "LoadingState";
 // ─── Error ────────────────────────────────────────────────────────────────────
 
 export const ErrorState = memo(
-  ({message = "Something went wrong", onRetry}: ErrorStateProps) => {
+  ({message = "Terjadi kesalahan", onRetry}: ErrorStateProps) => {
     const {colors} = useTheme();
     return (
       <View style={styles.center}>
@@ -66,7 +66,7 @@ export const ErrorState = memo(
             style={styles.actionButton}
             compact
           >
-            Try again
+            Coba lagi
           </Button>
         )}
       </View>
@@ -109,7 +109,7 @@ export const EmptyState = memo(
             icon="refresh"
             compact
           >
-            Refresh
+            Segarkan
           </Button>
         )}
       </View>

@@ -134,7 +134,10 @@ export function useTransactionForm(id?: string) {
   const isEdit = !!id;
 
   const saveDisabled =
-    !form.amount || !form.walletId || (isTransfer && !form.targetWalletId);
+    !form.transactionCategoryId ||
+    !form.amount ||
+    !form.walletId ||
+    (isTransfer && !form.targetWalletId);
 
   useEffect(() => {
     if (saveError || deleteError) {

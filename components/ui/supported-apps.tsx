@@ -28,8 +28,9 @@ export default function SupportedApps() {
                 key={appIndex}
                 variant="bodySmall"
                 style={[styles.appItem, {color: colors.onSurfaceVariant}]}
+                numberOfLines={1}
               >
-                {app}
+                • {app}
               </Text>
             ))}
           </View>
@@ -65,11 +66,11 @@ const styles = StyleSheet.create({
   columnContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 4,
   },
   appItem: {
     width: "33.333%",
     paddingVertical: 3,
+    fontSize: 11,
   },
   disclaimer: {
     marginTop: 12,

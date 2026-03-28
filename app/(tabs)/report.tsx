@@ -58,33 +58,21 @@ export default function ReportScreen() {
   }, [data?.breakdown, activeTab]);
 
   const renderContent = useCallback(() => {
-    if (loading) return <LoadingState message="Loading report..." />;
+    if (loading) return <LoadingState message="Memuat laporan..." />;
     if (error)
       return <ErrorState message="Failed to load report" onRetry={refetch} />;
     if (!chartData.length)
       return (
         <EmptyState
           icon="chart-pie"
-          title="No report data"
-          subtitle="Your report will appear here"
+          title="Belum ada data laporan"
+          subtitle="Data laporan anda akan muncul di sini."
+          onRefetch={refetch}
         />
       );
-    return (
-      <>
-        <SegmentedButtons
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as ReportTab)}
-          buttons={[
-            {value: "expense", label: "Expense"},
-            {value: "income", label: "Income"},
-          ]}
-          style={styles.segmented}
-        />
-        <ReportChart data={chartData} />
-      </>
-    );
+    return <ReportChart data={chartData} />;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, error, chartData, activeTab]);
+  }, [loading, error, chartData]);
 
   return (
     <>
@@ -104,6 +92,15 @@ export default function ReportScreen() {
             </SafeAreaView>
           ),
         }}
+      />
+      <SegmentedButtons
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as ReportTab)}
+        buttons={[
+          {value: "expense", label: "Pengeluaran"},
+          {value: "income", label: "Pemasukan"},
+        ]}
+        style={styles.segmented}
       />
       <View style={styles.container}>{renderContent()}</View>
     </>

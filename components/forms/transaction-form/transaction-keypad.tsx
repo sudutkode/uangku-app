@@ -13,7 +13,6 @@ interface TransactionKeypadProps {
   onKeyPress: (value: string) => void;
   onSave: () => void;
   saveDisabled: boolean;
-  isEdit: boolean;
   loading: boolean;
 }
 
@@ -59,13 +58,7 @@ KeypadButton.displayName = "KeypadButton";
 // ─── TransactionKeypad ────────────────────────────────────────────────────────
 
 const TransactionKeypad = memo(
-  ({
-    onKeyPress,
-    onSave,
-    saveDisabled,
-    isEdit,
-    loading,
-  }: TransactionKeypadProps) => (
+  ({onKeyPress, onSave, saveDisabled, loading}: TransactionKeypadProps) => (
     <View style={styles.wrapper}>
       {/* BUG FIX: was using row index as key — now uses row content as key */}
       {KEYPAD_ROWS.map((row) => (
@@ -85,7 +78,7 @@ const TransactionKeypad = memo(
           onPress={onSave}
           loading={loading}
         >
-          {isEdit ? "Update" : "Save"}
+          Simpan
         </Button>
       </View>
     </View>

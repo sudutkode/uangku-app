@@ -66,7 +66,7 @@ const TransactionsList: FC<TransactionsListProps> = ({
               </Text>
 
               {item.adminFee > 0 && (
-                <Text style={styles.fee}>{formatIdr(item.adminFee)} fee</Text>
+                <Text style={styles.fee}>{formatIdr(item.adminFee)} admin</Text>
               )}
 
               <View style={styles.badgeContainer}>
