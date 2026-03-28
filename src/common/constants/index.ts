@@ -5,116 +5,184 @@ export const TRANSACTION_TYPE_ID: Record<string, number> = {
 };
 
 export const NOTIFICATION_CATEGORY_NAME: string = 'Notification';
+export const BALANCE_CORRECTION_CATEGORY_NAME: string = 'Koreksi Saldo';
 
 export const TRANSACTION_CATEGORIES = [
-  // --- LEAST FREQUENT / CORRECTIONS ---
+  // --- HIGH FREQUENCY ---
   {
-    name: 'Balance Correction',
-    transactionType: { id: 1 },
-    iconName: 'scale-balanced',
-  },
-  {
-    name: 'Balance Correction',
+    name: 'Makanan',
     transactionType: { id: 2 },
-    iconName: 'scale-unbalanced',
+    iconName: 'silverware-fork-knife',
   },
-  { name: 'Tax', transactionType: { id: 2 }, iconName: 'file-invoice-dollar' },
-  { name: 'Insurance', transactionType: { id: 2 }, iconName: 'shield-halved' },
-  { name: 'Lottery', transactionType: { id: 2 }, iconName: 'ticket' },
-
-  // --- INFREQUENT EXPENSES ---
+  { name: 'Gaji', transactionType: { id: 1 }, iconName: 'cash-multiple' },
+  { name: 'Belanja', transactionType: { id: 2 }, iconName: 'cart-outline' },
+  { name: 'Camilan', transactionType: { id: 2 }, iconName: 'cookie-outline' },
+  { name: 'Transportasi', transactionType: { id: 2 }, iconName: 'bus-side' },
   {
-    name: 'Repairs',
+    name: 'Pulsa & Data',
     transactionType: { id: 2 },
-    iconName: 'screwdriver-wrench',
-  },
-  { name: 'Home', transactionType: { id: 2 }, iconName: 'couch' },
-  { name: 'Housing', transactionType: { id: 2 }, iconName: 'house-chimney' },
-  { name: 'Pets', transactionType: { id: 2 }, iconName: 'paw' },
-  { name: 'Kids', transactionType: { id: 2 }, iconName: 'baby' },
-  {
-    name: 'Donations',
-    transactionType: { id: 2 },
-    iconName: 'hand-holding-heart',
-  },
-  { name: 'Gifts', transactionType: { id: 2 }, iconName: 'box-open' },
-
-  // --- LIFESTYLE & HOBBIES ---
-  { name: 'Alcohol', transactionType: { id: 2 }, iconName: 'wine-glass' },
-  { name: 'Cigarettes', transactionType: { id: 2 }, iconName: 'smoking' },
-  { name: 'Game', transactionType: { id: 2 }, iconName: 'gamepad' },
-  { name: 'Sports', transactionType: { id: 2 }, iconName: 'dumbbell' },
-  { name: 'Travel', transactionType: { id: 2 }, iconName: 'plane' },
-  {
-    name: 'Entertainment',
-    transactionType: { id: 2 },
-    iconName: 'clapperboard',
+    iconName: 'cellphone-wireless',
   },
   {
-    name: 'Beauty',
-    transactionType: { id: 2 },
-    iconName: 'spray-can-sparkles',
-  },
-  { name: 'Education', transactionType: { id: 2 }, iconName: 'book-open' },
-
-  // --- INCOME (MID-FREQUENCY) ---
-  { name: 'Selling', transactionType: { id: 1 }, iconName: 'tags' },
-  {
-    name: 'Refunds',
-    transactionType: { id: 1 },
-    iconName: 'hand-holding-dollar',
-  },
-  { name: 'Interest', transactionType: { id: 1 }, iconName: 'percent' },
-  { name: 'Bonus', transactionType: { id: 1 }, iconName: 'gift' },
-  { name: 'Part-Time', transactionType: { id: 1 }, iconName: 'business-time' },
-  { name: 'Investments', transactionType: { id: 1 }, iconName: 'chart-line' },
-
-  // --- TRANSFERS ---
-  { name: 'Top Up', transactionType: { id: 3 }, iconName: 'sack-dollar' },
-  {
-    name: 'Withdrawal',
+    name: 'Top Up',
     transactionType: { id: 3 },
-    iconName: 'hand-holding-dollar',
+    iconName: 'wallet-plus-outline',
   },
+
+  // --- MID FREQUENCY ---
   {
-    name: 'Bank Transfer',
-    transactionType: { id: 3 },
-    iconName: 'building-columns',
+    name: 'Sosial',
+    transactionType: { id: 2 },
+    iconName: 'account-group-outline',
   },
+  { name: 'Kesehatan', transactionType: { id: 2 }, iconName: 'heart-pulse' },
   {
     name: 'E-Wallet',
     transactionType: { id: 3 },
-    iconName: 'mobile-screen-button',
+    iconName: 'cellphone-arrow-down',
+  },
+  {
+    name: 'Transfer Bank',
+    transactionType: { id: 3 },
+    iconName: 'bank-outline',
+  },
+  { name: 'Sayuran', transactionType: { id: 2 }, iconName: 'leaf-outline' },
+  {
+    name: 'Buah-buahan',
+    transactionType: { id: 2 },
+    iconName: 'food-apple-outline',
+  },
+  {
+    name: 'Pakaian',
+    transactionType: { id: 2 },
+    iconName: 'tshirt-crew-outline',
+  },
+  {
+    name: 'Sampingan',
+    transactionType: { id: 1 },
+    iconName: 'briefcase-clock-outline',
   },
 
-  // --- HIGH FREQUENCY ---
-  { name: 'Electronics', transactionType: { id: 2 }, iconName: 'laptop' },
-  { name: 'Health', transactionType: { id: 2 }, iconName: 'heart-pulse' },
-  { name: 'Car', transactionType: { id: 2 }, iconName: 'car' },
-  { name: 'Transportation', transactionType: { id: 2 }, iconName: 'bus' },
-  { name: 'Social', transactionType: { id: 2 }, iconName: 'users' },
-  { name: 'Phone', transactionType: { id: 2 }, iconName: 'mobile-screen' },
-  { name: 'Clothing', transactionType: { id: 2 }, iconName: 'shirt' },
-  { name: 'Fruits', transactionType: { id: 2 }, iconName: 'apple-whole' },
-  { name: 'Vegetables', transactionType: { id: 2 }, iconName: 'leaf' },
-  { name: 'Snacks', transactionType: { id: 2 }, iconName: 'cookie' },
-  { name: 'Shopping', transactionType: { id: 2 }, iconName: 'cart-shopping' },
-  { name: 'Food', transactionType: { id: 2 }, iconName: 'utensils' },
-  { name: 'Salary', transactionType: { id: 1 }, iconName: 'money-bill-wave' },
+  // --- LIFESTYLE & HOBBIES ---
+  {
+    name: 'Game',
+    transactionType: { id: 2 },
+    iconName: 'gamepad-variant-outline',
+  },
+  {
+    name: 'Hiburan',
+    transactionType: { id: 2 },
+    iconName: 'movie-open-outline',
+  },
+  { name: 'Olahraga', transactionType: { id: 2 }, iconName: 'dumbbell' },
+  { name: 'Liburan', transactionType: { id: 2 }, iconName: 'airplane' },
+  { name: 'Elektronik', transactionType: { id: 2 }, iconName: 'laptop' },
+  { name: 'Mobil', transactionType: { id: 2 }, iconName: 'car-outline' },
+  {
+    name: 'Kecantikan',
+    transactionType: { id: 2 },
+    iconName: 'sparkles',
+  },
 
+  // --- LOW FREQUENCY / INVESTASI ---
+  { name: 'Investasi', transactionType: { id: 1 }, iconName: 'chart-line' },
+  {
+    name: 'Penjualan',
+    transactionType: { id: 1 },
+    iconName: 'tag-multiple-outline',
+  },
+  {
+    name: 'Edukasi',
+    transactionType: { id: 2 },
+    iconName: 'book-open-variant',
+  },
+  { name: 'Hadiah', transactionType: { id: 2 }, iconName: 'gift-outline' },
+  {
+    name: 'Bonus',
+    transactionType: { id: 1 },
+    iconName: 'star-circle-outline',
+  },
+  {
+    name: 'Refund',
+    transactionType: { id: 1 },
+    iconName: 'cash-refund',
+  },
+  {
+    name: 'Bunga Bank',
+    transactionType: { id: 1 },
+    iconName: 'percent-outline',
+  },
+
+  // --- INFREQUENT / OTHERS ---
+  {
+    name: 'Properti',
+    transactionType: { id: 2 },
+    iconName: 'home-variant-outline',
+  },
+  {
+    name: 'Perabot Rumah',
+    transactionType: { id: 2 },
+    iconName: 'sofa-outline',
+  },
+  { name: 'Perbaikan', transactionType: { id: 2 }, iconName: 'tools' },
+  {
+    name: 'Donasi',
+    transactionType: { id: 2 },
+    iconName: 'hand-heart-outline',
+  },
+  { name: 'Hewan Peliharaan', transactionType: { id: 2 }, iconName: 'paw' },
+  {
+    name: 'Anak-anak',
+    transactionType: { id: 2 },
+    iconName: 'baby-face-outline',
+  },
+  {
+    name: 'Pajak',
+    transactionType: { id: 2 },
+    iconName: 'file-percent-outline',
+  },
+  {
+    name: 'Asuransi',
+    transactionType: { id: 2 },
+    iconName: 'shield-check-outline',
+  },
+  {
+    name: 'Undian',
+    transactionType: { id: 2 },
+    iconName: 'ticket-percent-outline',
+  },
+  { name: 'Minuman', transactionType: { id: 2 }, iconName: 'glass-wine' },
+  { name: 'Rokok', transactionType: { id: 2 }, iconName: 'smoking' },
+  {
+    name: 'Tarik Tunai',
+    transactionType: { id: 3 },
+    iconName: 'cash-minus',
+  },
+
+  // --- SYSTEM CATEGORIES ---
   {
     name: NOTIFICATION_CATEGORY_NAME,
     transactionType: { id: 1 },
-    iconName: 'money-bill-transfer',
+    iconName: 'cash-sync',
   },
   {
     name: NOTIFICATION_CATEGORY_NAME,
     transactionType: { id: 2 },
-    iconName: 'money-bill-transfer',
+    iconName: 'cash-sync',
   },
   {
     name: NOTIFICATION_CATEGORY_NAME,
     transactionType: { id: 3 },
-    iconName: 'money-bill-transfer',
+    iconName: 'cash-sync',
+  },
+  {
+    name: BALANCE_CORRECTION_CATEGORY_NAME,
+    transactionType: { id: 1 },
+    iconName: 'scale-balance',
+  },
+  {
+    name: BALANCE_CORRECTION_CATEGORY_NAME,
+    transactionType: { id: 2 },
+    iconName: 'scale-balance',
   },
 ];

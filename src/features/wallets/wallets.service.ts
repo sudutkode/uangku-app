@@ -13,6 +13,7 @@ import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { User } from '../../database/entities/user.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 import { TransactionsService } from '../transactions/transactions.service';
+import { BALANCE_CORRECTION_CATEGORY_NAME } from 'src/common/constants';
 
 @Injectable()
 export class WalletsService {
@@ -71,14 +72,14 @@ export class WalletsService {
       const transactionCategory = await this.transactionCategoryRepo.findOne({
         where: {
           user: { id: user.id },
-          name: 'Balance Correction',
+          name: BALANCE_CORRECTION_CATEGORY_NAME,
           transactionType: { id: transactionTypeId },
         },
       });
 
       if (!transactionCategory) {
         throw new NotFoundException(
-          `Kategori 'Balance Correction' tidak ditemukan.`,
+          `Kategori ${BALANCE_CORRECTION_CATEGORY_NAME} tidak ditemukan.`,
         );
       }
 

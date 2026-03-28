@@ -6,6 +6,7 @@ import { TransactionCategory } from '../../database/entities/transaction-categor
 import { TransactionsService } from '../transactions/transactions.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { BALANCE_CORRECTION_CATEGORY_NAME } from 'src/common/constants';
 
 describe('WalletsService', () => {
   let service: WalletsService;
@@ -18,7 +19,7 @@ describe('WalletsService', () => {
   const mockWallet = { id: 1, balance: 1000, user: mockUser } as Wallet;
   const mockCategory = {
     id: 10,
-    name: 'Balance Correction',
+    name: BALANCE_CORRECTION_CATEGORY_NAME,
   } as TransactionCategory;
 
   beforeEach(async () => {
@@ -137,7 +138,7 @@ describe('WalletsService', () => {
     expect(categoryRepo.findOne).toHaveBeenCalledWith({
       where: {
         user: { id: mockUser.id },
-        name: 'Balance Correction',
+        name: BALANCE_CORRECTION_CATEGORY_NAME,
         transactionType: { id: 1 },
       },
     });

@@ -10,6 +10,7 @@ import { CreateTransactionCategoryDto } from './dto/create-transaction-category.
 import { UpdateTransactionCategoryDto } from './dto/update-transaction-category.dto';
 import { User } from '../../database/entities/user.entity';
 import { FindAllOptions } from 'src/common/interfaces/find.interfaces';
+import { BALANCE_CORRECTION_CATEGORY_NAME } from 'src/common/constants';
 
 @Injectable()
 export class TransactionCategoriesService {
@@ -59,7 +60,7 @@ export class TransactionCategoriesService {
     const skip = (page - 1) * limit;
 
     // Start with the base exclusion
-    const nameConditions: any[] = [Not('Balance Correction')];
+    const nameConditions: any[] = [Not(BALANCE_CORRECTION_CATEGORY_NAME)];
 
     // Only add the Notification exclusion if withNotification is false/undefined
     if (!withNotification) {
