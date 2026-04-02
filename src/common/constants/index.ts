@@ -6,9 +6,15 @@ export const TRANSACTION_TYPE_ID: Record<string, number> = {
 
 export const NOTIFICATION_CATEGORY_NAME: string = 'Notification';
 export const BALANCE_CORRECTION_CATEGORY_NAME: string = 'Koreksi Saldo';
+export const INITIAL_BALANCE_CATEGORY_NAME: string = 'Saldo Awal';
 
 export const TRANSACTION_CATEGORIES = [
   // --- SYSTEM CATEGORIES (Akan punya ID terkecil, muncul paling bawah) ---
+  {
+    name: INITIAL_BALANCE_CATEGORY_NAME, // Tambahkan kategori ini
+    transactionType: { id: 1 }, // Income
+    iconName: 'wallet-plus',
+  },
   {
     name: BALANCE_CORRECTION_CATEGORY_NAME,
     transactionType: { id: 1 },

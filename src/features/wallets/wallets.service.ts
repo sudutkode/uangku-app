@@ -13,7 +13,7 @@ import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { User } from '../../database/entities/user.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 import { TransactionsService } from '../transactions/transactions.service';
-import { BALANCE_CORRECTION_CATEGORY_NAME } from 'src/common/constants';
+import { BALANCE_CORRECTION_CATEGORY_NAME, INITIAL_BALANCE_CATEGORY_NAME } from '../../common/constants';
 
 @Injectable()
 export class WalletsService {
@@ -48,11 +48,71 @@ export class WalletsService {
   }
 
   async create(user: User, dto: CreateWalletDto) {
-    const wallet = this.walletRepo.create({
-      ...dto,
-      user: { id: user.id },
-    });
-    return await this.walletRepo.save(wallet);
+    if (dto.balance !== undefined && dto.balance < 0) {
+      throw new BadRequestException('Balance cannot be negative');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const initialBalance = dto.balance || 0;
+      const walletData = {
+        ...dto,
+        balance: 0,
+        user: { id: user.id },
+      };
+
+      let wallet = queryRunner.manager.create(Wallet, walletData);
+      wallet = await queryRunner.manager.save(wallet);
+
+      if (initialBalance > 0) {
+        const transactionTypeId = 1;
+        const transactionCategory = await queryRunner.manager.findOne(
+          TransactionCategory,
+          {
+            where: {
+              user: { id: user.id },
+              name: INITIAL_BALANCE_CATEGORY_NAME,
+              transactionType: { id: transactionTypeId },
+            },
+          },
+        );
+
+        if (!transactionCategory) {
+          throw new NotFoundException(
+            `Kategori ${INITIAL_BALANCE_CATEGORY_NAME} tidak ditemukan.`,
+          );
+        }
+
+        await this.transactionsService.createWithManager(
+          queryRunner.manager,
+          user,
+          {
+            transactionTypeId,
+            amount: initialBalance,
+            walletId: wallet.id,
+            transactionCategoryId: transactionCategory.id,
+            note: 'Saldo Awal',
+            createdAt: new Date().toISOString(),
+          } as any, 
+        );
+
+        wallet = await queryRunner.manager.findOne(Wallet, {
+          where: { id: wallet.id },
+          relations: ['user'],
+        });
+      }
+
+      await queryRunner.commitTransaction();
+      return wallet;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async update(user: User, id: number, dto: UpdateWalletDto) {
@@ -109,7 +169,7 @@ export class WalletsService {
             walletId: wallet.id,
             transactionCategoryId: transactionCategory.id,
             createdAt: new Date().toISOString(),
-          },
+          } as any,
         );
 
         await queryRunner.commitTransaction();
