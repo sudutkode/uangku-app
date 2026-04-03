@@ -10,7 +10,10 @@ import { CreateTransactionCategoryDto } from './dto/create-transaction-category.
 import { UpdateTransactionCategoryDto } from './dto/update-transaction-category.dto';
 import { User } from '../../database/entities/user.entity';
 import { FindAllOptions } from 'src/common/interfaces/find.interfaces';
-import { BALANCE_CORRECTION_CATEGORY_NAME } from 'src/common/constants';
+import {
+  BALANCE_CORRECTION_CATEGORY_NAME,
+  NOTIFICATION_CATEGORY_NAME,
+} from 'src/common/constants';
 
 @Injectable()
 export class TransactionCategoriesService {
@@ -64,7 +67,7 @@ export class TransactionCategoriesService {
 
     // Only add the Notification exclusion if withNotification is false/undefined
     if (!withNotification) {
-      nameConditions.push(Not('Notification'));
+      nameConditions.push(Not(NOTIFICATION_CATEGORY_NAME));
     }
 
     // Initialize the where object

@@ -13,7 +13,11 @@ import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { User } from '../../database/entities/user.entity';
 import { TransactionCategory } from '../../database/entities/transaction-category.entity';
 import { TransactionsService } from '../transactions/transactions.service';
-import { BALANCE_CORRECTION_CATEGORY_NAME, INITIAL_BALANCE_CATEGORY_NAME } from '../../common/constants';
+import {
+  BALANCE_CORRECTION_CATEGORY_NAME,
+  INITIAL_BALANCE_CATEGORY_NAME,
+} from '../../common/constants';
+import { Transaction } from '../../database/entities/transaction.entity';
 
 @Injectable()
 export class WalletsService {
@@ -96,7 +100,7 @@ export class WalletsService {
             transactionCategoryId: transactionCategory.id,
             note: 'Saldo Awal',
             createdAt: new Date().toISOString(),
-          } as any, 
+          } as any,
         );
 
         wallet = await queryRunner.manager.findOne(Wallet, {
@@ -196,7 +200,37 @@ export class WalletsService {
 
   async remove(id: number) {
     const wallet = await this.findOne(id);
-    await this.walletRepo.remove(wallet);
-    return { deleted: true };
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Ambil semua ID transaksi yang terhubung ke wallet ini melalui TransactionWallet
+      const relatedTransactions = await queryRunner.manager
+        .createQueryBuilder(Transaction, 'transaction')
+        .innerJoin('transaction.transactionWallets', 'tw')
+        .where('tw.walletId = :walletId', { walletId: id })
+        .select('transaction.id')
+        .getMany();
+
+      const transactionIds = relatedTransactions.map((t) => t.id);
+
+      // 2. Hapus Transactions (Ini otomatis menghapus TransactionWallet karena CASCADE di level entity)
+      if (transactionIds.length > 0) {
+        await queryRunner.manager.delete(Transaction, transactionIds);
+      }
+
+      // 3. Hapus Wallet-nya sendiri
+      await queryRunner.manager.remove(Wallet, wallet);
+
+      await queryRunner.commitTransaction();
+      return { deleted: true };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

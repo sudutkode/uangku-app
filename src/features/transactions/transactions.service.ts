@@ -16,13 +16,6 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepo: Repository<Transaction>,
-
-    @InjectRepository(TransactionWallet)
-    private readonly transactionWalletRepo: Repository<TransactionWallet>,
-
-    @InjectRepository(Wallet)
-    private readonly walletRepo: Repository<Wallet>,
-
     private readonly dataSource: DataSource,
   ) {}
 

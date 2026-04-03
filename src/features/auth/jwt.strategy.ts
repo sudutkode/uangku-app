@@ -23,7 +23,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    // Cari user berdasarkan ID yang ada di payload JWT
     const user = await this.userRepo.findOne({
       where: { id: payload.id },
     });
@@ -32,7 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User session invalid or user not found');
     }
 
-    // Tidak perlu lagi delete user.password karena kolomnya sudah dihapus dari Entity
     return user;
   }
 }

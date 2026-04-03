@@ -4,7 +4,7 @@ export const TRANSACTION_TYPE_ID: Record<string, number> = {
   transfer: 3,
 };
 
-export const NOTIFICATION_CATEGORY_NAME: string = 'Notification';
+export const NOTIFICATION_CATEGORY_NAME: string = 'Notifikasi';
 export const BALANCE_CORRECTION_CATEGORY_NAME: string = 'Koreksi Saldo';
 export const INITIAL_BALANCE_CATEGORY_NAME: string = 'Saldo Awal';
 
@@ -24,21 +24,6 @@ export const TRANSACTION_CATEGORIES = [
     name: BALANCE_CORRECTION_CATEGORY_NAME,
     transactionType: { id: 2 },
     iconName: 'scale-balance',
-  },
-  {
-    name: NOTIFICATION_CATEGORY_NAME,
-    transactionType: { id: 1 },
-    iconName: 'cash-sync',
-  },
-  {
-    name: NOTIFICATION_CATEGORY_NAME,
-    transactionType: { id: 2 },
-    iconName: 'cash-sync',
-  },
-  {
-    name: NOTIFICATION_CATEGORY_NAME,
-    transactionType: { id: 3 },
-    iconName: 'cash-sync',
   },
 
   // --- INFREQUENT / OTHERS ---
@@ -182,5 +167,21 @@ export const TRANSACTION_CATEGORIES = [
     name: 'Makanan',
     transactionType: { id: 2 },
     iconName: 'silverware-fork-knife',
+  },
+
+  {
+    name: NOTIFICATION_CATEGORY_NAME,
+    transactionType: { id: 1 },
+    iconName: 'cash-sync',
+  },
+  {
+    name: NOTIFICATION_CATEGORY_NAME,
+    transactionType: { id: 2 },
+    iconName: 'cash-sync',
+  },
+  {
+    name: NOTIFICATION_CATEGORY_NAME,
+    transactionType: { id: 3 },
+    iconName: 'cash-sync',
   },
 ];
