@@ -9,23 +9,22 @@ import { TransactionCategory } from '../../database/entities/transaction-categor
 import { CreateTransactionCategoryDto } from './dto/create-transaction-category.dto';
 import { UpdateTransactionCategoryDto } from './dto/update-transaction-category.dto';
 import { User } from '../../database/entities/user.entity';
-import { FindAllOptions } from 'src/common/interfaces/find.interfaces';
+import { FindAllOptions } from '../../common/interfaces/find.interfaces';
 import {
   BALANCE_CORRECTION_CATEGORY_NAME,
   NOTIFICATION_CATEGORY_NAME,
-} from 'src/common/constants';
+} from '../../common/constants';
+import { Icon } from '../../database/entities/icon.entity';
 
 @Injectable()
 export class TransactionCategoriesService {
   constructor(
     @InjectRepository(TransactionCategory)
     private readonly transactionCategoryRepo: Repository<TransactionCategory>,
+    @InjectRepository(Icon)
+    private readonly iconRepo: Repository<Icon>,
   ) {}
 
-  /**
-   * Create new transaction category for a user.
-   * Ensures name uniqueness per user and transaction type.
-   */
   async create(user: User, dto: CreateTransactionCategoryDto) {
     const existing = await this.transactionCategoryRepo.findOne({
       where: {
@@ -51,9 +50,6 @@ export class TransactionCategoriesService {
     return this.transactionCategoryRepo.save(transactionCategory);
   }
 
-  /**
-   * Get paginated list of categories with optional filtering
-   */
   async findAll(
     user: User,
     options: FindAllOptions & { search?: string; withNotification?: boolean },
@@ -62,15 +58,12 @@ export class TransactionCategoriesService {
       options;
     const skip = (page - 1) * limit;
 
-    // Start with the base exclusion
     const nameConditions: any[] = [Not(BALANCE_CORRECTION_CATEGORY_NAME)];
 
-    // Only add the Notification exclusion if withNotification is false/undefined
     if (!withNotification) {
       nameConditions.push(Not(NOTIFICATION_CATEGORY_NAME));
     }
 
-    // Initialize the where object
     const where: any = {
       user: { id: user.id },
       name: And(...nameConditions),
@@ -80,8 +73,6 @@ export class TransactionCategoriesService {
       where.transactionType = { id: transactionTypeId };
     }
 
-    // If there is a search query, it overrides the specific name exclusions
-    // in many TypeORM setups, so we append it to the And array if needed
     if (search) {
       where.name = And(...nameConditions, ILike(`%${search}%`));
     }
@@ -105,9 +96,6 @@ export class TransactionCategoriesService {
     };
   }
 
-  /**
-   * Find a single category by id
-   */
   async findOne(id: number) {
     const transactionCategory = await this.transactionCategoryRepo.findOne({
       where: { id },
@@ -121,9 +109,6 @@ export class TransactionCategoriesService {
     return transactionCategory;
   }
 
-  /**
-   * Update category with validation
-   */
   async update(id: number, dto: UpdateTransactionCategoryDto) {
     const transactionCategory = await this.findOne(id);
 
@@ -149,12 +134,46 @@ export class TransactionCategoriesService {
     return this.transactionCategoryRepo.save(transactionCategory);
   }
 
-  /**
-   * Remove category by id
-   */
   async remove(id: number) {
     const transactionCategory = await this.findOne(id);
     await this.transactionCategoryRepo.remove(transactionCategory);
     return { deleted: true };
+  }
+
+  async findAllIcons(
+    search?: string,
+    limit: number = 60,
+    offset: number = 0,
+    selected?: string,
+  ) {
+    const query = this.iconRepo.createQueryBuilder('icon');
+    console.log('Selected icon:', selected);
+
+    // Logic Pencarian
+    if (search) {
+      query.where('(icon.label ILIKE :s OR icon.name ILIKE :s)', {
+        s: `%${search}%`,
+      });
+    }
+
+    // Logic Prioritas Ikon Terpilih (Hanya di page 1 / offset 0)
+    if (selected && offset === 0) {
+      query.addSelect(
+        `CASE WHEN icon.name = :selected THEN 0 ELSE 1 END`,
+        'priority',
+      );
+      query.setParameter('selected', selected);
+      query.orderBy('priority', 'ASC');
+      query.addOrderBy('icon.label', 'ASC');
+    } else {
+      query.orderBy('icon.label', 'ASC');
+    }
+
+    const [items, total] = await query
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount();
+
+    return { items, total };
   }
 }

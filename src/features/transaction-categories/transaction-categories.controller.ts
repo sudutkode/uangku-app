@@ -101,4 +101,19 @@ export class TransactionCategoriesController {
       HttpStatus.NO_CONTENT,
     );
   }
+
+  @Get('icons')
+  async getIcons(
+    @Query('search') search?: string,
+    @Query('limit') limit: string = '60',
+    @Query('offset') offset: string = '0',
+    @Query('selected') selected?: string, // Tambahkan ini
+  ) {
+    return this.transactionCategoriesService.findAllIcons(
+      search,
+      Number(limit),
+      Number(offset),
+      selected,
+    );
+  }
 }

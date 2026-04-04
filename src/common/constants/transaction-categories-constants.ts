@@ -1,12 +1,8 @@
-export const TRANSACTION_TYPE_ID: Record<string, number> = {
-  income: 1,
-  expense: 2,
-  transfer: 3,
-};
-
-export const NOTIFICATION_CATEGORY_NAME: string = 'Notifikasi';
-export const BALANCE_CORRECTION_CATEGORY_NAME: string = 'Koreksi Saldo';
-export const INITIAL_BALANCE_CATEGORY_NAME: string = 'Saldo Awal';
+import {
+  BALANCE_CORRECTION_CATEGORY_NAME,
+  INITIAL_BALANCE_CATEGORY_NAME,
+  NOTIFICATION_CATEGORY_NAME,
+} from '.';
 
 export const TRANSACTION_CATEGORIES = [
   // --- 1. SYSTEM & ADJUSTMENT (Bottom of the list) ---
@@ -35,7 +31,7 @@ export const TRANSACTION_CATEGORIES = [
   },
   { name: 'Refund', transactionType: { id: 1 }, iconName: 'cash-refund' },
   {
-    name: 'Hadiah / Bonus',
+    name: 'Bonus',
     transactionType: { id: 1 },
     iconName: 'star-circle-outline',
   },
@@ -47,12 +43,12 @@ export const TRANSACTION_CATEGORIES = [
 
   // --- 3. MONTHLY / LARGE EXPENSES (Mid-Low Frequency) ---
   {
-    name: 'Pajak & Asuransi',
+    name: 'Pajak',
     transactionType: { id: 2 },
     iconName: 'file-percent-outline',
   },
   {
-    name: 'Edukasi / Kursus',
+    name: 'Edukasi',
     transactionType: { id: 2 },
     iconName: 'book-open-variant',
   },
@@ -64,12 +60,12 @@ export const TRANSACTION_CATEGORIES = [
   },
   { name: 'Liburan', transactionType: { id: 2 }, iconName: 'airplane' },
   {
-    name: 'Hobi / Game',
+    name: 'Game',
     transactionType: { id: 2 },
     iconName: 'gamepad-variant-outline',
   },
   {
-    name: 'Kecantikan / Salon',
+    name: 'Kecantikan',
     transactionType: { id: 2 },
     iconName: 'creation-outline',
   },
@@ -81,7 +77,7 @@ export const TRANSACTION_CATEGORIES = [
 
   // --- 4. LIFESTYLE & SOCIAL (Mid Frequency) ---
   {
-    name: 'Hiburan / Nonton',
+    name: 'Nonton',
     transactionType: { id: 2 },
     iconName: 'movie-open-outline',
   },
@@ -91,13 +87,13 @@ export const TRANSACTION_CATEGORIES = [
     transactionType: { id: 2 },
     iconName: 'hand-heart-outline',
   },
-  { name: 'Kesehatan / Obat', transactionType: { id: 2 }, iconName: 'pill' },
+  { name: 'Obat', transactionType: { id: 2 }, iconName: 'pill' },
   {
-    name: 'Sosial / Kado',
+    name: 'Sosial',
     transactionType: { id: 2 },
     iconName: 'account-group-outline',
   },
-  { name: 'Perbaikan / Servis', transactionType: { id: 2 }, iconName: 'tools' },
+  { name: 'Perbaikan', transactionType: { id: 2 }, iconName: 'tools' },
 
   // --- 5. TRANSFER & CASHFLOW (Mid-High Frequency) ---
   { name: 'Tarik Tunai', transactionType: { id: 3 }, iconName: 'cash-minus' },
@@ -148,7 +144,7 @@ export const TRANSACTION_CATEGORIES = [
     iconName: 'cellphone-wireless',
   },
   {
-    name: 'Bensin / Parkir',
+    name: 'Bensin',
     transactionType: { id: 2 },
     iconName: 'gas-station-outline',
   },

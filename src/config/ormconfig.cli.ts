@@ -8,6 +8,7 @@ import { Transaction } from '../database/entities/transaction.entity';
 import { TransactionWallet } from '../database/entities/transaction-wallet.entity';
 import { Loan } from '../database/entities/loan.entity';
 import { LoanWallet } from '../database/entities/loan-wallet.entity';
+import { Icon } from '../database/entities/icon.entity';
 
 config(); // Load .env file
 
@@ -31,6 +32,7 @@ export default new DataSource({
     TransactionType,
     Loan,
     LoanWallet,
+    Icon,
   ],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,

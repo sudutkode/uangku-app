@@ -8,6 +8,7 @@ import { Transaction } from '../database/entities/transaction.entity';
 import { TransactionWallet } from '../database/entities/transaction-wallet.entity';
 import { Loan } from '../database/entities/loan.entity';
 import { LoanWallet } from '../database/entities/loan-wallet.entity';
+import { Icon } from '../database/entities/icon.entity';
 
 export const getTypeOrmConfig = (
   configService: ConfigService,
@@ -31,6 +32,7 @@ export const getTypeOrmConfig = (
     TransactionType,
     Loan,
     LoanWallet,
+    Icon,
   ],
   synchronize: false, // Keep this false in production
   logging: configService.get('NODE_ENV') === 'development',
