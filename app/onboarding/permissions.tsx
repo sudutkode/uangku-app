@@ -1,6 +1,6 @@
 import {NotificationIllustration} from "@/components/illustrations";
 import {useAuthStore} from "@/store";
-import {screenWidth} from "@/utils/common-utils";
+import {screenWidth} from "@/utils";
 import {router} from "expo-router";
 import React, {useState} from "react";
 import {Platform, StyleSheet, View} from "react-native";

@@ -2,17 +2,19 @@ import {ErrorState, Icon, LoadingState} from "@/components/ui";
 import {useFetch, useMutation} from "@/hooks/axios";
 import useTransactionCategoriesStore from "@/store/use-transaction-categories";
 import {TransactionCategoriesResponse} from "@/types";
-import React, {memo, useCallback, useEffect, useState} from "react";
+import React, {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {StyleSheet, TouchableOpacity, View} from "react-native";
 import {
   Button,
   Dialog,
   Portal,
+  Searchbar,
   SegmentedButtons,
   Snackbar,
   Text,
   useTheme,
 } from "react-native-paper";
+import {NOTIFICATION_CATEGORY_NAME} from "./constants";
 import TransactionCategoryFormSheet, {
   TransactionCategoryFormData,
 } from "./transaction-category-form";
@@ -130,6 +132,9 @@ const TransactionCategoryPicker = ({
 }: TransactionCategoryPickerProps) => {
   const {colors} = useTheme();
 
+  // 1. State untuk pencarian
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Zustand Store
   const categories = useTransactionCategoriesStore(
     (s) => s.transactionCategories,
@@ -149,18 +154,30 @@ const TransactionCategoryPicker = ({
   const [deleteTarget, setDeleteTarget] =
     useState<TransactionCategoryFormData | null>(null);
 
-  // Logic skip fetch jika data sudah ada di store dan tidak butuh refetch
-  const shouldSkip = categories.length > 0 && !needsRefetch;
+  const shouldSkip = useMemo(() => {
+    if (categories.length > 0 && !needsRefetch) {
+      const hasNotification = categories.find(
+        (c) => c.name === NOTIFICATION_CATEGORY_NAME,
+      );
+      if (isNotification && !hasNotification) return false;
+      if (!isNotification && hasNotification) return false;
+      return true;
+    }
+    return false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories.length, needsRefetch, isNotification]);
 
   const {data, loading, error} = useFetch<TransactionCategoriesResponse>(
     "/transaction-categories",
     {
-      params: {withNotification: isNotification},
+      params: {
+        withNotification: isNotification,
+        // search dihapus dari sini karena menggunakan FE search saja
+      },
     },
     shouldSkip,
   );
 
-  // Sinkronisasi data API ke Store
   useEffect(() => {
     if (data?.data) {
       setCategoriesData(data.data);
@@ -176,14 +193,24 @@ const TransactionCategoryPicker = ({
     method: "delete",
   });
 
-  const filtered = categories.filter(
-    (c) => c.transactionType.id === transactionTypeId,
-  );
+  // 2. Logika Filter Gabungan FE (Type ID + Search Query)
+  const filtered = useMemo(() => {
+    return categories.filter((c) => {
+      const matchType = c.transactionType.id === transactionTypeId;
+      const matchSearch = c.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchType && matchSearch;
+    });
+  }, [categories, transactionTypeId, searchQuery]);
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const handleTypeChange = useCallback(
-    (val: string) => onTypeChange(Number(val)),
+    (val: string) => {
+      onTypeChange(Number(val));
+      setSearchQuery(""); // Reset search saat ganti tipe biar tidak membingungkan
+    },
     [onTypeChange],
   );
 
@@ -198,7 +225,7 @@ const TransactionCategoryPicker = ({
   }, []);
 
   const handleFormSuccess = useCallback(() => {
-    setNeedsRefetch(true); // Memaksa re-hit API pada render berikutnya
+    setNeedsRefetch(true);
     setFormVisible(false);
   }, [setNeedsRefetch]);
 
@@ -218,9 +245,9 @@ const TransactionCategoryPicker = ({
         onCategoryChange(0);
       }
       setDeleteTarget(null);
-      setNeedsRefetch(true); // Memaksa re-hit API untuk update store
+      setNeedsRefetch(true);
     } catch {
-      // error ditampilkan via Snackbar di bawah
+      // error via Snackbar
     }
   }, [
     deleteTarget,
@@ -242,6 +269,15 @@ const TransactionCategoryPicker = ({
           {value: "2", label: "Keluar", icon: "minus"},
           {value: "3", label: "Transfer", icon: "swap-horizontal"},
         ]}
+      />
+
+      <Searchbar
+        placeholder="Cari kategori..."
+        onChangeText={setSearchQuery}
+        value={searchQuery}
+        style={styles.searchBar}
+        inputStyle={styles.searchInput}
+        mode="bar"
       />
 
       {loading && categories.length === 0 ? (
@@ -266,7 +302,18 @@ const TransactionCategoryPicker = ({
               onLongPress={handleLongPress}
             />
           ))}
-          <AddCategoryItem onPress={handleAddPress} />
+
+          {/* Tombol tambah hanya muncul jika tidak sedang mencari */}
+          {searchQuery === "" && <AddCategoryItem onPress={handleAddPress} />}
+        </View>
+      )}
+
+      {/* 4. State jika hasil pencarian lokal kosong */}
+      {filtered.length === 0 && searchQuery !== "" && (
+        <View style={styles.emptyContainer}>
+          <Text variant="bodyMedium" style={{color: colors.outline}}>
+            {`Kategori "${searchQuery}" tidak ditemukan`}
+          </Text>
         </View>
       )}
 
@@ -329,6 +376,18 @@ const styles = StyleSheet.create({
     height: 160,
     justifyContent: "center",
   },
+  searchBar: {
+    marginTop: 16,
+    height: 45,
+    backgroundColor: "transparent",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.05)",
+    elevation: 0,
+  },
+  searchInput: {
+    fontSize: 14,
+    minHeight: 0,
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -353,6 +412,10 @@ const styles = StyleSheet.create({
   },
   dialogTitle: {
     textAlign: "center",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
   },
 });
 

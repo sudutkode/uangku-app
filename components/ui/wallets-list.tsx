@@ -1,5 +1,5 @@
 import {Wallet} from "@/types";
-import {formatIdr, screenWidth} from "@/utils/common-utils";
+import {formatIdr, screenWidth} from "@/utils";
 import {format} from "date-fns";
 import {useRouter} from "expo-router";
 import type {FC} from "react";

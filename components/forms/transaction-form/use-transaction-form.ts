@@ -75,7 +75,7 @@ export function useTransactionForm(id?: string) {
   ).current;
 
   // ─── fetch ───
-  const {data: existingData, loading: loadingExisting} =
+  const {data: existingData, loading: loadingExistingData} =
     useFetch<TransactionResponse>(`/transactions/${id}`, {}, !id);
   const isNotification =
     existingData?.data.transactionCategory.name === NOTIFICATION_CATEGORY_NAME;
@@ -222,7 +222,7 @@ export function useTransactionForm(id?: string) {
     targetWalletOptions,
     isTransfer,
     isEdit,
-    loadingExisting,
+    loadingExistingData,
     loadingTransaction,
     loadingDelete,
     activeFieldDisplay,

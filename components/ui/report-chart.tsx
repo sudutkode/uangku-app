@@ -1,4 +1,4 @@
-import {formatIdr} from "@/utils/common-utils";
+import {formatIdr} from "@/utils";
 import React, {useEffect, useRef} from "react";
 import {Animated, ScrollView, StyleSheet, View} from "react-native";
 import {PieChart} from "react-native-gifted-charts";

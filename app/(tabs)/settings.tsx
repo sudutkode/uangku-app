@@ -1,7 +1,11 @@
-import {NotificationListenerToggle, SupportedApps} from "@/components/ui";
+import {
+  ConfirmationDialog,
+  NotificationListenerToggle,
+  SupportedApps,
+} from "@/components/ui";
 import {useMutation} from "@/hooks/axios";
 import {useAuthStore} from "@/store";
-import {screenHeight} from "@/utils/common-utils";
+import {screenHeight} from "@/utils";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import {format} from "date-fns";
 import {id} from "date-fns/locale";
@@ -10,7 +14,6 @@ import {Keyboard, ScrollView, StyleSheet, TextInput, View} from "react-native";
 import {
   ActivityIndicator,
   Button,
-  Dialog,
   Divider,
   IconButton,
   Portal,
@@ -26,11 +29,9 @@ export default function SettingsScreen() {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // State untuk Edit Username
   const [isEditingName, setIsEditingName] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username || "");
 
-  // Reset local state if user changes from store
   useEffect(() => {
     if (user?.username) {
       setNewUsername(user.username);
@@ -254,68 +255,25 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* Dialogs */}
       <Portal>
-        <Dialog
+        <ConfirmationDialog
+          title="Keluar dari UangKu?"
+          content="Kamu bisa masuk kembali menggunakan akun Google yang sama untuk
+              mengakses datamu."
           visible={showLogoutDialog}
           onDismiss={() => setShowLogoutDialog(false)}
-        >
-          <Dialog.Title>Keluar dari UangKu?</Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium">
-              Kamu bisa masuk kembali menggunakan akun Google yang sama untuk
-              mengakses datamu.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button
-              onPress={() => setShowLogoutDialog(false)}
-              disabled={loading}
-            >
-              Batal
-            </Button>
-            <Button
-              onPress={handleLogoutConfirm}
-              textColor={colors.error}
-              loading={loading}
-              disabled={loading}
-            >
-              Keluar
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+          handleConfirm={handleLogoutConfirm}
+        />
 
-        <Dialog
+        <ConfirmationDialog
+          title="Hapus Akun?"
+          content="Sistem akan menghapus identitas anonim dan seluruh data
+              keuanganmu selamanya."
+          withAlert
           visible={showDeleteDialog}
           onDismiss={() => setShowDeleteDialog(false)}
-        >
-          <Dialog.Icon icon="alert" color={colors.error} />
-          <Dialog.Title style={{textAlign: "center"}}>
-            Hapus Semua Data?
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium" style={{textAlign: "center"}}>
-              Sistem akan menghapus identitas anonim dan seluruh catatan
-              keuanganmu selamanya.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button
-              onPress={() => setShowDeleteDialog(false)}
-              disabled={loading}
-            >
-              Batal
-            </Button>
-            <Button
-              onPress={handleDeleteAccount}
-              textColor={colors.error}
-              loading={loading}
-              disabled={loading}
-            >
-              Ya, Hapus Akun
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+          handleConfirm={handleDeleteAccount}
+        />
       </Portal>
     </SafeAreaView>
   );

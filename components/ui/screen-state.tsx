@@ -50,7 +50,7 @@ export const ErrorState = memo(
         <View
           style={[styles.iconWrapper, {backgroundColor: colors.errorContainer}]}
         >
-          <Icon name="triangle-exclamation" size={22} color={colors.error} />
+          <Icon name="alert" size={22} color={colors.error} />
         </View>
         <Text
           variant="titleSmall"

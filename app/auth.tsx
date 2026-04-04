@@ -3,7 +3,7 @@ import {Icon} from "@/components/ui";
 import {useMutation} from "@/hooks/axios";
 import {useAuthStore} from "@/store";
 import {SignInResponse} from "@/types";
-import {screenWidth} from "@/utils/common-utils";
+import {screenWidth} from "@/utils";
 import {
   GoogleSignin,
   SignInResponse as GoogleSignInResponse,

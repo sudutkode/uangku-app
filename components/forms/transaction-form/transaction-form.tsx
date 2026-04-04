@@ -1,15 +1,8 @@
-import {LoadingState, Snackbar} from "@/components/ui";
+import {ConfirmationDialog, LoadingState, Snackbar} from "@/components/ui";
 import {Stack} from "expo-router";
 import React from "react";
 import {ScrollView, StyleSheet, View} from "react-native";
-import {
-  Button,
-  Dialog,
-  Modal,
-  Portal,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import {Button, Modal, Portal, useTheme} from "react-native-paper";
 
 import TransactionCategoryPicker from "./transaction-category-picker";
 import TransactionDisplay from "./transaction-display";
@@ -21,7 +14,7 @@ export default function TransactionForm({id}: {id?: string}) {
   const {colors} = useTheme();
   const vm = useTransactionForm(id);
 
-  if (vm.loadingExisting) {
+  if (vm.loadingExistingData) {
     return <LoadingState message="Loading transaction..." />;
   }
 
@@ -112,40 +105,13 @@ export default function TransactionForm({id}: {id?: string}) {
           />
         </Modal>
 
-        {/* DELETE */}
-        <Dialog
+        <ConfirmationDialog
+          title="Hapus transaksi?"
+          content="Ini akan menghapus secara permanen transaksi ini. Tindakan ini tidak dapat dibatalkan"
           visible={vm.showDeleteDialog}
           onDismiss={() => vm.setShowDeleteDialog(false)}
-        >
-          <Dialog.Title>Delete transaction?</Dialog.Title>
-          <Dialog.Actions>
-            <Button onPress={() => vm.setShowDeleteDialog(false)}>
-              Cancel
-            </Button>
-            <Button onPress={vm.handleDeleteConfirm}>Delete</Button>
-          </Dialog.Actions>
-        </Dialog>
-        <Dialog
-          visible={vm.showDeleteDialog}
-          onDismiss={() => vm.setShowDeleteDialog(false)}
-        >
-          <Dialog.Icon icon="alert" color={colors.error} />
-          <Dialog.Title style={{textAlign: "center"}}>
-            Hapus transaksi?
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium">
-              Ini akan menghapus secara permanen transaksi ini. Tindakan ini
-              tidak dapat dibatalkan.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => vm.setShowDeleteDialog(false)}>Batal</Button>
-            <Button textColor={colors.error} onPress={vm.handleDeleteConfirm}>
-              Hapus
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+          handleConfirm={vm.handleDeleteConfirm}
+        />
       </Portal>
 
       <Snackbar

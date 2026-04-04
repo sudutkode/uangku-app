@@ -1,5 +1,5 @@
 import {Dropdown, Switch} from "@/components/inputs";
-import {LoadingState, Snackbar} from "@/components/ui";
+import {ConfirmationDialog, LoadingState, Snackbar} from "@/components/ui";
 import {SUPPORTED_APPS_CONFIG} from "@/constants/supported-apps";
 import {useFetch, useMutation} from "@/hooks/axios";
 import {useTransactionsStore, useWalletsStore} from "@/store"; // Tambah store transaksi
@@ -7,14 +7,7 @@ import {Wallet} from "@/types";
 import {Stack, useRouter} from "expo-router";
 import React, {FC, useCallback, useEffect, useMemo, useState} from "react";
 import {StyleSheet, View} from "react-native";
-import {
-  Button,
-  Dialog,
-  Portal,
-  Text,
-  TextInput,
-  useTheme,
-} from "react-native-paper";
+import {Button, Portal, TextInput, useTheme} from "react-native-paper";
 
 interface WalletFormProps {
   id?: string;
@@ -60,7 +53,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
   }, [wallets, isEdit, form.appName]);
 
   // ─── Data fetching ──────────────────────────────────────────────────────────
-  const {data: existingData, loading: loadingExisting} = useFetch<{
+  const {data: existingData, loading: loadingExistingData} = useFetch<{
     data: Wallet;
   }>(`/wallets/${id}`, {}, !isEdit);
 
@@ -150,13 +143,13 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
         <Button
           textColor={colors.error}
           onPress={() => setShowDeleteDialog(true)}
-          disabled={loadingDelete}
-          loading={loadingDelete}
+          disabled={loadingDelete || loadingExistingData}
+          loading={loadingDelete || loadingExistingData}
         >
           Hapus
         </Button>
       ) : null,
-    [isEdit, colors.error, loadingDelete],
+    [isEdit, colors.error, loadingDelete, loadingExistingData],
   );
 
   const handleSwitchSupportApp = (val: boolean) => {
@@ -164,7 +157,7 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
     setForm((p) => ({...p, appName: "", name: ""}));
   };
 
-  if (loadingExisting) return <LoadingState message="Memuat dompet..." />;
+  if (loadingExistingData) return <LoadingState message="Memuat dompet..." />;
 
   const disabledSave = isSupported ? !form.appName : !form.name;
   const activeError = saveError || deleteError;
@@ -226,30 +219,15 @@ const WalletForm: FC<WalletFormProps> = ({id}) => {
         Simpan
       </Button>
 
-      {/* Dialog Konfirmasi Delete */}
       <Portal>
-        <Dialog
+        <ConfirmationDialog
+          title="Hapus dompet?"
+          content="Ini akan menghapus secara permanen dompet beserta
+              seluruh riwayat transaksinya. Tindakan ini tidak dapat dibatalkan"
           visible={showDeleteDialog}
           onDismiss={() => setShowDeleteDialog(false)}
-        >
-          <Dialog.Icon icon="alert" color={colors.error} />
-          <Dialog.Title style={{textAlign: "center"}}>
-            Hapus dompet?
-          </Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium">
-              Ini akan menghapus secara permanen dompet{" "}
-              <Text style={{fontWeight: "bold"}}>{form.name}</Text> beserta
-              seluruh riwayat transaksinya. Tindakan ini tidak dapat dibatalkan.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowDeleteDialog(false)}>Batal</Button>
-            <Button textColor={colors.error} onPress={handleDeleteConfirm}>
-              Hapus
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+          handleConfirm={handleDeleteConfirm}
+        />
       </Portal>
 
       <Snackbar

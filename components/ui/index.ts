@@ -1,4 +1,5 @@
 export {default as AddButton} from "./add-button";
+export {default as ConfirmationDialog} from "./confirmation-dialog";
 export {default as Icon} from "./icon-mci";
 export {default as NotificationListenerToggle} from "./notification-listener-toggle";
 export {default as ReportChart} from "./report-chart";

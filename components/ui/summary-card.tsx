@@ -1,5 +1,5 @@
 import {TransactionSummary} from "@/types";
-import {formatIdr} from "@/utils/common-utils";
+import {formatIdr} from "@/utils";
 import {StyleSheet, View} from "react-native";
 import {Surface, Text, useTheme} from "react-native-paper";
 
@@ -15,7 +15,7 @@ const SummaryCard = ({data}: SummaryCardProps) => {
       mode="flat"
     >
       <View style={styles.summaryItem}>
-        <Text variant="labelSmall">Pemasukan</Text>
+        <Text variant="labelSmall">Masuk</Text>
         <Text variant="bodySmall" style={styles.body}>
           + {formatIdr(data?.income || 0)}
         </Text>
@@ -29,7 +29,7 @@ const SummaryCard = ({data}: SummaryCardProps) => {
       />
 
       <View style={styles.summaryItem}>
-        <Text variant="labelSmall">Pengeluaran</Text>
+        <Text variant="labelSmall">Keluar</Text>
         <Text variant="bodySmall" style={styles.body}>
           - {formatIdr(data?.expense || 0)}
         </Text>

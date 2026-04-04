@@ -1,89 +1,24 @@
 import {Icon} from "@/components/ui";
 import {useMutation} from "@/hooks/axios";
+import {useIconSearch} from "@/hooks/use-icon-search";
 import React, {memo, useCallback, useEffect, useState} from "react";
-import {FlatList, StyleSheet, TouchableOpacity, View} from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   Button,
   Dialog,
   Portal,
+  Searchbar,
   Snackbar,
   Text,
   TextInput,
   useTheme,
 } from "react-native-paper";
-
-// ─── (Material Community Icons) ──────────────────────────────
-const ICON_OPTIONS = [
-  // Finance & Shopping
-  "tag",
-  "cash",
-  "wallet",
-  "bank",
-  "credit-card",
-  "cart-outline",
-  "shopping",
-  "gift-outline",
-  "sale",
-  "ticket-percent-outline",
-  // Food & Drink
-  "silverware-fork-knife",
-  "coffee",
-  "food-apple-outline",
-  "cookie-outline",
-  "hamburger",
-  "ice-cream",
-  "glass-wine",
-  "muffin",
-  // Transport & Travel
-  "car-outline",
-  "bus-side",
-  "airplane",
-  "motorbike",
-  "train-variant",
-  "gas-station-outline",
-  "map-marker-outline",
-  "taxi",
-  // Home & Bills
-  "home-variant-outline",
-  "sofa-outline",
-  "tools",
-  "flash-outline",
-  "water-outline",
-  "broom",
-  "shield-check-outline",
-  "percent-outline",
-  // Lifestyle & Health
-  "heart-pulse",
-  "medical-bag",
-  "pill",
-  "dumbbell",
-  "gamepad-variant-outline",
-  "movie-open-outline",
-  "music-note",
-  "camera-outline",
-  "book-open-variant",
-  // Tech & Communication
-  "laptop",
-  "cellphone-wireless",
-  "wifi",
-  "television",
-  "controller-classic-outline",
-  "printer-outline",
-  "web",
-  // People & Others
-  "account-group-outline",
-  "baby-face-outline",
-  "paw",
-  "tshirt-crew-outline",
-  "briefcase-outline",
-  "school-outline",
-  "church-outline",
-  "star-outline",
-  "alert-circle-outline",
-  "circle-outline",
-];
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface TransactionCategoryFormData {
   id?: number;
@@ -101,45 +36,61 @@ interface TransactionCategoryFormSheetProps {
   editData?: TransactionCategoryFormData | null;
 }
 
-// ─── Icon picker item ─────────────────────────────────────────────────────────
-
+/**
+ * Komponen Item Ikon (Memoized)
+ */
 const IconOption = memo(
   ({
     name,
+    label,
     isSelected,
     onPress,
   }: {
     name: string;
+    label: string;
     isSelected: boolean;
     onPress: (name: string) => void;
   }) => {
     const {colors} = useTheme();
     const handlePress = useCallback(() => onPress(name), [name, onPress]);
+
     return (
       <TouchableOpacity
         onPress={handlePress}
-        style={[
-          styles.iconOption,
-          {
-            backgroundColor: isSelected
-              ? colors.primary
-              : colors.surfaceVariant,
-          },
-        ]}
+        style={styles.iconOptionContainer}
       >
-        <Icon
-          name={name}
-          size={22}
-          color={isSelected ? colors.onPrimary : colors.onSurfaceVariant}
-        />
+        <View
+          style={[
+            styles.iconCircle,
+            {
+              backgroundColor: isSelected
+                ? colors.primary
+                : colors.surfaceVariant,
+            },
+          ]}
+        >
+          <Icon
+            name={name}
+            size={20}
+            color={isSelected ? colors.onPrimary : colors.onSurfaceVariant}
+          />
+        </View>
+        <Text
+          variant="labelSmall"
+          numberOfLines={2}
+          style={[styles.iconLabelText, {color: colors.onSurfaceVariant}]}
+        >
+          {label}
+        </Text>
       </TouchableOpacity>
     );
   },
 );
 IconOption.displayName = "IconOption";
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
+/**
+ * Form Sheet Utama
+ */
 const TransactionCategoryFormSheet = ({
   visible,
   onDismiss,
@@ -151,19 +102,37 @@ const TransactionCategoryFormSheet = ({
   const {colors} = useTheme();
   const isEdit = !!editData?.id;
 
+  // State Lokal
   const [name, setName] = useState("");
   const [iconName, setIconName] = useState("tag");
 
-  useEffect(() => {
-    if (editData) {
-      setName(editData.name);
-      setIconName(editData.iconName || "tag");
-    } else {
-      setName("");
-      setIconName("tag");
-    }
-  }, [editData, visible]);
+  /**
+   * Hook Pencarian Ikon Dinamis
+   * Kita kirim editData?.iconName agar Backend menaruh ikon tersebut di urutan teratas (Index 0)
+   */
+  const {
+    icons,
+    loading: loadingIcons,
+    searchQuery,
+    onSearchChange,
+    loadMore,
+  } = useIconSearch(editData?.iconName);
 
+  // Sinkronisasi data saat modal dibuka atau data edit berubah
+  useEffect(() => {
+    if (visible) {
+      if (editData) {
+        setName(editData.name);
+        setIconName(editData.iconName || "tag");
+      } else {
+        setName("");
+        setIconName("tag");
+      }
+      onSearchChange(""); // Reset search query saat modal dibuka
+    }
+  }, [editData, visible, onSearchChange]);
+
+  // Mutations
   const {
     mutate: createCategory,
     loading: loadingCreate,
@@ -181,20 +150,20 @@ const TransactionCategoryFormSheet = ({
 
   const handleSave = useCallback(async () => {
     try {
+      const payload = {
+        name: name.trim(),
+        iconName,
+        transactionTypeId,
+      };
+
       if (isEdit) {
-        await updateCategory({name: name.trim(), iconName, transactionTypeId});
+        await updateCategory(payload);
       } else {
-        await createCategory({
-          name: name.trim(),
-          iconName,
-          transactionTypeId,
-        });
+        await createCategory(payload);
       }
       onSuccess();
       onDismiss();
-    } catch {
-      // error ditampilkan via Snackbar
-    }
+    } catch {}
   }, [
     name,
     iconName,
@@ -206,59 +175,75 @@ const TransactionCategoryFormSheet = ({
     onDismiss,
   ]);
 
-  const handleNameChange = useCallback((val: string) => {
-    setName(val);
-  }, []);
-
   return (
     <Portal>
       <Dialog visible={visible} onDismiss={onDismiss} style={styles.dialog}>
-        <Dialog.Title>
+        <Dialog.Title style={styles.dialogTitle}>
           {isEdit ? "Ubah Kategori" : "Kategori Baru"}
         </Dialog.Title>
 
         <Dialog.Content style={styles.dialogContent}>
-          <View style={styles.inputContainer}>
-            <View
-              style={[
-                styles.previewBox,
-                {backgroundColor: colors.primaryContainer},
-              ]}
-            >
-              <Icon name={iconName} size={28} color={colors.primary} />
-            </View>
+          <TextInput
+            mode="outlined"
+            label="Nama Kategori"
+            value={name}
+            onChangeText={setName}
+            dense
+            style={styles.nameInput}
+          />
 
-            <TextInput
-              mode="outlined"
-              label="Nama Kategori"
-              value={name}
-              onChangeText={handleNameChange}
-              style={styles.nameInput}
+          <View style={styles.headerSearchRow}>
+            <Searchbar
+              placeholder="Cari ikon (Inggris / Indonesia)..."
+              onChangeText={onSearchChange}
+              value={searchQuery}
+              style={styles.searchBar}
+              inputStyle={styles.searchInput}
+              iconColor={colors.onSurfaceVariant}
+              mode="bar"
+              elevation={0}
             />
           </View>
 
-          <Text
-            variant="labelMedium"
-            style={[styles.iconLabel, {color: colors.onSurfaceVariant}]}
-          >
-            Pilih Ikon
-          </Text>
-
-          {/* Grid Ikon yang dapat di-scroll */}
           <View style={styles.listWrapper}>
             <FlatList
-              data={ICON_OPTIONS}
-              keyExtractor={(item) => item}
-              numColumns={5}
+              data={icons}
+              // Gabungkan id dan index untuk key yang benar-benar unik saat sorting berubah
+              keyExtractor={(item, index) => `${item.id}-${index}`}
+              numColumns={4}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              // Infinite Scroll Logic
+              onEndReached={loadMore}
+              onEndReachedThreshold={0.5}
               renderItem={({item}) => (
                 <IconOption
-                  name={item}
-                  isSelected={iconName === item}
+                  name={item.name}
+                  label={item.label}
+                  isSelected={iconName === item.name}
                   onPress={setIconName}
                 />
               )}
               contentContainerStyle={styles.iconGrid}
+              // Loading indicator saat tarik data bawah
+              ListFooterComponent={
+                loadingIcons && icons.length > 0 ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={colors.primary}
+                    style={{padding: 10}}
+                  />
+                ) : (
+                  <View style={{height: 20}} />
+                )
+              }
+              ListEmptyComponent={
+                !loadingIcons ? (
+                  <Text style={styles.emptyText}>Ikon tidak ditemukan</Text>
+                ) : (
+                  <ActivityIndicator size="large" style={{marginTop: 20}} />
+                )
+              }
             />
           </View>
         </Dialog.Content>
@@ -276,15 +261,17 @@ const TransactionCategoryFormSheet = ({
             )}
           </View>
           <View style={styles.rightActions}>
-            <Button onPress={onDismiss} disabled={loading}>
+            <Button
+              textColor={colors.tertiary}
+              onPress={onDismiss}
+              disabled={loading}
+            >
               Batal
             </Button>
             <Button
-              mode="contained"
               onPress={handleSave}
               loading={loading}
               disabled={loading || !name.trim()}
-              style={styles.saveBtn}
             >
               Simpan
             </Button>
@@ -306,63 +293,79 @@ const TransactionCategoryFormSheet = ({
   );
 };
 
-export default TransactionCategoryFormSheet;
+export default memo(TransactionCategoryFormSheet);
 
 const styles = StyleSheet.create({
   dialog: {
     maxHeight: "85%",
     borderRadius: 24,
   },
+  dialogTitle: {
+    fontSize: 18,
+    marginBottom: 8,
+    fontWeight: "700",
+  },
   dialogContent: {
     paddingBottom: 0,
   },
-  inputContainer: {
+  nameInput: {
+    marginBottom: 4,
+    height: 40,
+  },
+  headerSearchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 4,
   },
-  previewBox: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 6,
-  },
-  nameInput: {
+  searchBar: {
     flex: 1,
+    height: 40,
+    backgroundColor: "transparent",
+    marginLeft: -12,
+    marginTop: 4,
   },
-  errorText: {
-    marginBottom: 8,
-    marginLeft: 68, // Sesuaikan dengan posisi input teks
-  },
-  iconLabel: {
-    marginTop: 16,
-    marginBottom: 12,
-    fontWeight: "bold",
+  searchInput: {
+    fontSize: 13,
+    minHeight: 0,
   },
   listWrapper: {
-    height: 250, // Memberikan ruang scroll untuk ikon
-    paddingBottom: 8,
+    height: 350,
+    marginTop: 4,
   },
   iconGrid: {
-    paddingBottom: 16,
+    paddingBottom: 20,
   },
-  iconOption: {
+  iconOptionContainer: {
     flex: 1,
-    aspectRatio: 1,
-    maxWidth: "18%", // Sekitar 5 kolom
+    maxWidth: "25%",
+    alignItems: "center",
+    marginVertical: 4,
+    paddingHorizontal: 2,
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    margin: 4,
+    marginBottom: 2,
+  },
+  iconLabelText: {
+    fontSize: 9,
+    textAlign: "center",
+    lineHeight: 10,
+    marginTop: 2,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    opacity: 0.5,
   },
   actions: {
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingTop: 8,
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingBottom: 12,
   },
   leftActions: {
     flex: 1,
@@ -370,9 +373,5 @@ const styles = StyleSheet.create({
   rightActions: {
     flexDirection: "row",
     gap: 4,
-  },
-  saveBtn: {
-    borderRadius: 12,
-    paddingHorizontal: 8,
   },
 });

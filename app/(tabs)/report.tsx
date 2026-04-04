@@ -14,7 +14,7 @@ import {
 } from "@/components/ui";
 import {useFetch} from "@/hooks/axios";
 import {MonthlyReportResponse} from "@/types/api-response-types";
-import {getCategoryColor} from "@/utils/common-utils";
+import {getCategoryColor} from "@/utils";
 
 type ReportTab = "expense" | "income";
 

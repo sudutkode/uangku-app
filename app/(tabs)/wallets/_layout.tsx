@@ -1,6 +1,6 @@
 import {useWalletsStore} from "@/store";
 import {Wallet} from "@/types";
-import {formatIdr} from "@/utils/common-utils";
+import {formatIdr} from "@/utils";
 import {Stack} from "expo-router";
 import {View} from "react-native";
 import {Text, useTheme} from "react-native-paper";

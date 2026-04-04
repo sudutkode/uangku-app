@@ -1,5 +1,5 @@
 import {Transaction} from "@/types";
-import {formatIdr, getOperatorSymbol, screenWidth} from "@/utils/common-utils";
+import {formatIdr, getOperatorSymbol, screenWidth} from "@/utils";
 import {format} from "date-fns";
 import {useRouter} from "expo-router";
 import type {FC} from "react";
@@ -52,7 +52,7 @@ const TransactionsList: FC<TransactionsListProps> = ({
               <View style={[styles.iconWrapper, {backgroundColor: typeColor}]}>
                 <Icon
                   name={item.transactionCategory.iconName || ""}
-                  size={18}
+                  size={20}
                   color={colors.surface}
                 />
               </View>

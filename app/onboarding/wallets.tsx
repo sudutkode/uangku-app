@@ -30,7 +30,7 @@ export default function WalletsScreen() {
 
   const availableWallets = useMemo(() => {
     return [
-      {label: "Cash", name: "manual.cash", category: "Manual"},
+      {label: "Tunai", name: "manual.cash", category: "Manual"},
       ...SUPPORTED_APPS_CONFIG,
     ];
   }, []);
