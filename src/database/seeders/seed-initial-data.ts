@@ -2,7 +2,7 @@ import { DataSource } from 'typeorm';
 import axios from 'axios';
 import { TransactionType } from '../entities/transaction-type.entity';
 import { Icon } from '../entities/icon.entity';
-import { overrides } from '../../common/constants/overrides-icons-constants';
+import { overrides } from '../../common/constants';
 
 async function seedTransactionType(dataSource: DataSource) {
   const transactionTypeRepo = dataSource.getRepository(TransactionType);

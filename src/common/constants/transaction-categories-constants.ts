@@ -83,7 +83,7 @@ export const TRANSACTION_CATEGORIES = [
   },
   { name: 'Olahraga', transactionType: { id: 2 }, iconName: 'dumbbell' },
   {
-    name: 'Donasi / Amal',
+    name: 'Donasi',
     transactionType: { id: 2 },
     iconName: 'hand-heart-outline',
   },
@@ -111,12 +111,12 @@ export const TRANSACTION_CATEGORIES = [
 
   // --- 6. PRIMARY & ROUTINE NEEDS (High Frequency) ---
   {
-    name: 'Cicilan / Hutang',
+    name: 'Cicilan',
     transactionType: { id: 2 },
     iconName: 'credit-card-clock-outline',
   },
   {
-    name: 'Listrik & Air',
+    name: 'Listrik',
     transactionType: { id: 2 },
     iconName: 'flash-outline',
   },
@@ -139,7 +139,7 @@ export const TRANSACTION_CATEGORIES = [
     iconName: 'wallet-plus-outline',
   },
   {
-    name: 'Pulsa & Data',
+    name: 'Pulsa / Data',
     transactionType: { id: 2 },
     iconName: 'cellphone-wireless',
   },
@@ -159,12 +159,12 @@ export const TRANSACTION_CATEGORIES = [
     iconName: 'cart-outline',
   },
   {
-    name: 'Kopi & Jajan',
+    name: 'Kopi',
     transactionType: { id: 2 },
     iconName: 'coffee-outline',
   },
   {
-    name: 'Makanan & Minuman',
+    name: 'Makanan',
     transactionType: { id: 2 },
     iconName: 'silverware-fork-knife',
   },
