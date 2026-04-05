@@ -10,10 +10,7 @@ import { CreateTransactionCategoryDto } from './dto/create-transaction-category.
 import { UpdateTransactionCategoryDto } from './dto/update-transaction-category.dto';
 import { User } from '../../database/entities/user.entity';
 import { FindAllOptions } from '../../common/interfaces/find.interfaces';
-import {
-  BALANCE_CORRECTION_CATEGORY_NAME,
-  NOTIFICATION_CATEGORY_NAME,
-} from '../../common/constants';
+import { NOTIFICATION_CATEGORY_NAME } from '../../common/constants';
 import { Icon } from '../../database/entities/icon.entity';
 
 @Injectable()
@@ -58,7 +55,7 @@ export class TransactionCategoriesService {
       options;
     const skip = (page - 1) * limit;
 
-    const nameConditions: any[] = [Not(BALANCE_CORRECTION_CATEGORY_NAME)];
+    const nameConditions: any[] = [];
 
     if (!withNotification) {
       nameConditions.push(Not(NOTIFICATION_CATEGORY_NAME));
