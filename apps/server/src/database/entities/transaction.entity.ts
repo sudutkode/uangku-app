@@ -1,0 +1,65 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from './user.entity';
+import { TransactionCategory } from './transaction-category.entity';
+import { TransactionWallet } from './transaction-wallet.entity';
+import { TransactionType } from './transaction-type.entity';
+import { moneyTransformer } from '../../common/transformers/money.transformer';
+
+@Entity('transactions')
+export class Transaction {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({
+    type: 'numeric',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: moneyTransformer,
+  })
+  amount: number;
+
+  @ManyToOne(() => TransactionType, { onDelete: 'CASCADE' })
+  transactionType: TransactionType;
+
+  @ManyToOne(() => TransactionCategory, (category) => category.transactions, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  transactionCategory: TransactionCategory;
+
+  @ManyToOne(() => User, (user) => user.transactions, { onDelete: 'CASCADE' })
+  user: User;
+
+  @Column({
+    type: 'numeric',
+    precision: 18,
+    scale: 2,
+    default: 0,
+    transformer: moneyTransformer,
+  })
+  adminFee: number;
+
+  @OneToMany(() => TransactionWallet, (tw) => tw.transaction)
+  transactionWallets: TransactionWallet[];
+
+  @Column({ nullable: true, type: 'varchar', length: 100 })
+  externalRef: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  note: string | null;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt: Date;
+}
