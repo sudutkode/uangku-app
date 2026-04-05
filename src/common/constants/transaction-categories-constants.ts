@@ -1,8 +1,6 @@
-import {
-  BALANCE_CORRECTION_CATEGORY_NAME,
-  INITIAL_BALANCE_CATEGORY_NAME,
-  NOTIFICATION_CATEGORY_NAME,
-} from '.';
+export const NOTIFICATION_CATEGORY_NAME: string = 'Notifikasi';
+export const BALANCE_CORRECTION_CATEGORY_NAME: string = 'Koreksi Saldo';
+export const INITIAL_BALANCE_CATEGORY_NAME: string = 'Saldo Awal';
 
 export const TRANSACTION_CATEGORIES = [
   // --- 1. SYSTEM & ADJUSTMENT (Bottom of the list) ---
