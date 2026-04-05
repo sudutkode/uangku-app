@@ -14,7 +14,11 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
-import {NOTIFICATION_CATEGORY_NAME} from "./constants";
+import {
+  BALANCE_CORRECTION_CATEGORY_NAME,
+  INITIAL_BALANCE_CATEGORY_NAME,
+  NOTIFICATION_CATEGORY_NAME,
+} from "./constants";
 import TransactionCategoryFormSheet, {
   TransactionCategoryFormData,
 } from "./transaction-category-form";
@@ -220,6 +224,12 @@ const TransactionCategoryPicker = ({
   }, []);
 
   const handleLongPress = useCallback((data: TransactionCategoryFormData) => {
+    const protectedCategories = [
+      NOTIFICATION_CATEGORY_NAME,
+      INITIAL_BALANCE_CATEGORY_NAME,
+      BALANCE_CORRECTION_CATEGORY_NAME,
+    ];
+    if (protectedCategories.includes(data.name)) return;
     setEditData(data);
     setFormVisible(true);
   }, []);

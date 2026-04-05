@@ -16,3 +16,5 @@ export interface CreateTransactionDto extends Omit<FormState, "createdAt"> {
 }
 
 export const NOTIFICATION_CATEGORY_NAME: string = "Notifikasi";
+export const INITIAL_BALANCE_CATEGORY_NAME: string = "Saldo Awal";
+export const BALANCE_CORRECTION_CATEGORY_NAME: string = "Koreksi Saldo";

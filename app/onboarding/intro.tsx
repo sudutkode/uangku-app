@@ -49,7 +49,7 @@ export default function IntroScreen() {
         />
 
         <Text variant="titleMedium" style={styles.headline}>
-          Kelola uangmu dengan UangKu
+          Cek kesehatan finansialmu dengan Uangku.
         </Text>
         <Text
           variant="bodySmall"
