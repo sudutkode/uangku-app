@@ -27,7 +27,7 @@ const ConfirmationDialog: FC<ConfirmationDialogProps> = ({
       <Dialog.Actions>
         <Button onPress={props.onDismiss}>Batal</Button>
         <Button textColor={colors.error} onPress={handleConfirm}>
-          Hapus
+          Ya
         </Button>
       </Dialog.Actions>
     </Dialog>
