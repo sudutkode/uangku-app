@@ -61,17 +61,22 @@ export class TransactionCategoriesService {
       nameConditions.push(Not(NOTIFICATION_CATEGORY_NAME));
     }
 
+    if (search) {
+      nameConditions.push(ILike(`%${search}%`));
+    }
+
     const where: any = {
       user: { id: user.id },
-      name: And(...nameConditions),
     };
+
+    if (nameConditions.length > 1) {
+      where.name = And(...nameConditions);
+    } else if (nameConditions.length === 1) {
+      where.name = nameConditions[0];
+    }
 
     if (transactionTypeId) {
       where.transactionType = { id: transactionTypeId };
-    }
-
-    if (search) {
-      where.name = And(...nameConditions, ILike(`%${search}%`));
     }
 
     const [data, total] = await this.transactionCategoryRepo.findAndCount({
@@ -144,7 +149,6 @@ export class TransactionCategoriesService {
     selected?: string,
   ) {
     const query = this.iconRepo.createQueryBuilder('icon');
-    console.log('Selected icon:', selected);
 
     // Logic Pencarian
     if (search) {
