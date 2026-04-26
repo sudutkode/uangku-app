@@ -57,13 +57,13 @@ export default function AuthScreen() {
       <View style={styles.contentContainer}>
         <View style={styles.textSection}>
           <Text variant="titleMedium" style={styles.title}>
-            UangKu
+            Selamat Datang di Atur Keuangan
           </Text>
           <Text
             variant="bodySmall"
             style={[styles.subtitle, {color: colors.onSurfaceVariant}]}
           >
-            Catat semua transaksimu secara otomatis.
+            Masuk untuk mulai mencatat semua transaksimu secara otomatis.
           </Text>
         </View>
 
@@ -98,7 +98,7 @@ export default function AuthScreen() {
             variant="labelSmall"
             style={[styles.footerText, {color: colors.outline}]}
           >
-            Login aman dengan Google OAuth 2.0
+            Data Anda terlindungi dengan keamanan standar Google.
           </Text>
         </View>
       </View>

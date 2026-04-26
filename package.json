@@ -4,7 +4,6 @@
   "scripts": {
     "start:mobile": "pnpm --filter uangku-mobile start",
     "start:server": "pnpm --filter uangku-server start:dev",
-    "install:all": "pnpm install",
     "lint": "pnpm -r lint"
   },
   "packageManager": "pnpm@10.6.1"

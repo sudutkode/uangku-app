@@ -250,14 +250,14 @@ export default function SettingsScreen() {
             variant="labelSmall"
             style={{color: colors.outlineVariant, letterSpacing: 2}}
           >
-            UANGKU v1.0.0
+            ATUR KEUANGAN v1.0.0
           </Text>
         </View>
       </ScrollView>
 
       <Portal>
         <ConfirmationDialog
-          title="Keluar dari UangKu?"
+          title="Keluar dari Atur Keuangan?"
           content="Kamu bisa masuk kembali menggunakan akun Google yang sama untuk
               mengakses datamu."
           visible={showLogoutDialog}

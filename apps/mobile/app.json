@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "UangKu",
-    "slug": "UangKu",
+    "name": "Atur Keuangan",
+    "slug": "atur-keuangan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "uangku",
+    "scheme": "aturkeuangan",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tondikiandika.uangku",
+      "bundleIdentifier": "com.sudutkode.aturkeuangan",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -22,7 +22,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.tondikiandika.uangku",
+      "package": "com.sudutkode.aturkeuangan",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "WAKE_LOCK",
@@ -31,7 +31,9 @@
       "intentFilters": [
         {
           "action": "expo.modules.notifications.REPLY_ACTION",
-          "data": {"scheme": "uangku"}
+          "data": {
+            "scheme": "aturkeuangan"
+          }
         }
       ]
     },
@@ -74,12 +76,12 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
+    "owner": "sudutkode",
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a4fdd8e3-7d73-4c21-882d-f5f96a0a23ae"
+        "projectId": "625ad084-b083-45cb-aea1-7d8c0a42f2ea"
       }
-    },
-    "owner": "tondikiandika"
+    }
   }
 }

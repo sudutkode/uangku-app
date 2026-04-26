@@ -67,8 +67,8 @@ export default function PermissionsScreen() {
           variant="bodySmall"
           style={[styles.subtitle, {color: colors.onSurfaceVariant}]}
         >
-          UangKu butuh izin ini untuk mencatat transaksimu otomatis. Tanpanya,
-          kamu perlu input manual setiap saat.
+          Atur Keuangan butuh izin ini untuk mencatat transaksimu otomatis.
+          Tanpanya, kamu perlu input manual setiap saat.
         </Text>
 
         <View style={styles.pointsContainer}>

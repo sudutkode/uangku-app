@@ -8,9 +8,9 @@ import {SafeAreaView} from "react-native-safe-area-context";
 const FEATURES = [
   {
     icon: "bell-ring-outline" as const,
-    title: "Notifikasi Otomatis",
+    title: "Catat Otomatis",
     description:
-      "Mencatat transaksi dari notifikasi m-banking & e-wallet yang muncul.",
+      "Otomatis mencatat transaksi dari notifikasi m-banking & e-wallet yang muncul.",
   },
   {
     icon: "wallet-bifold-outline" as const,
@@ -25,7 +25,8 @@ const FEATURES = [
   },
 ];
 
-const PRIVACY_POLICY_URL = "https://sudutkode.web.app/uangku/privacy-policy";
+const PRIVACY_POLICY_URL =
+  "https://sudutkode.web.app/atur-keuangan/privacy-policy";
 
 export default function IntroScreen() {
   const {colors} = useTheme();
@@ -54,14 +55,14 @@ export default function IntroScreen() {
         />
 
         <Text variant="titleMedium" style={styles.headline}>
-          Cek kesehatan finansialmu dengan Uangku.
+          Atur Keuangan Jadi Lebih Mudah
         </Text>
         <Text
           variant="bodySmall"
           style={[styles.subtitle, {color: colors.onSurfaceVariant}]}
         >
-          Catat keuangan dari berbagai rekening m-banking dan e-wallet anda
-          dalam satu dashboard.
+          Semua saldo dan transaksi bank serta e-wallet tercatat otomatis dalam
+          satu aplikasi.
         </Text>
 
         <View style={styles.featuresContainer}>
@@ -128,12 +129,16 @@ export default function IntroScreen() {
           >
             Saya setuju dengan{" "}
             <Text
-              style={{color: colors.primary, fontWeight: "bold"}}
+              style={{
+                color: colors.primary,
+                fontWeight: "bold",
+                textDecorationLine: "underline",
+              }}
               onPress={openPrivacyPolicy}
             >
               Kebijakan Privasi
             </Text>{" "}
-            UangKu.
+            Atur Keuangan.
           </Text>
         </View>
 
