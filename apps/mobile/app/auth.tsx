@@ -32,20 +32,29 @@ export default function AuthScreen() {
   const handleSignIn = async () => {
     try {
       setLoading(true);
+      setErrorGoogleSignIn("");
+
       await GoogleSignin.hasPlayServices();
       const res: GoogleSignInResponse = await GoogleSignin.signIn();
-
       const idToken = res.data?.idToken;
-      if (!idToken) return;
+      if (!idToken) {
+        throw new Error(
+          "Gagal mendapatkan ID Token dari Google. Pastikan konfigurasi Web Client ID sudah benar.",
+        );
+      }
 
       const data = await mutateSignin({idToken});
       signin(data);
-    } catch (err) {
-      setErrorGoogleSignIn(
-        err instanceof Error
-          ? err.message
-          : "Terjadi kesalahan saat masuk dengan Google.",
-      );
+    } catch (err: any) {
+      let message = "Terjadi kesalahan saat masuk dengan Google.";
+
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (err?.code) {
+        message = `Google Sign-In Error (${err.code}): ${err.message || "Silakan coba lagi."}`;
+      }
+
+      setErrorGoogleSignIn(message);
     } finally {
       setLoading(false);
     }
