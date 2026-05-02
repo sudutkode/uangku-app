@@ -1,0 +1,107 @@
+import {ExpoConfig, ConfigContext} from "expo/config";
+
+export default ({config}: ConfigContext): ExpoConfig => {
+  const IS_DEV = process.env.APP_VARIANT === "development";
+
+  return {
+    ...config,
+    // Name displayed on the Home Screen
+    name: IS_DEV ? "Atur Keuangan (Dev)" : "Atur Keuangan",
+    slug: "atur-keuangan",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: IS_DEV ? "aturkeuangan-dev" : "aturkeuangan",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+
+    ios: {
+      supportsTablet: true,
+      // Bundle ID is differentiated to allow side-by-side installation on one device
+      bundleIdentifier: IS_DEV
+        ? "com.sudutkode.aturkeuangan.dev"
+        : "com.sudutkode.aturkeuangan",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
+    },
+
+    android: {
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/splash-icon.png",
+        backgroundColor: "#92E3A9",
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+      // Package Name is differentiated for the Dev version
+      package: IS_DEV
+        ? "com.sudutkode.aturkeuangan.dev"
+        : "com.sudutkode.aturkeuangan",
+      permissions: [
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK",
+        "FOREGROUND_SERVICE",
+      ],
+      intentFilters: [
+        {
+          action: "expo.modules.notifications.REPLY_ACTION",
+          data: {
+            scheme: IS_DEV ? "aturkeuangan-dev" : "aturkeuangan",
+          },
+        },
+      ],
+    },
+
+    web: {
+      output: "static",
+      favicon: "./assets/images/favicon.png",
+    },
+
+    plugins: [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          backgroundColor: "#92E3A9",
+          imageWidth: 200,
+          resizeMode: "contain",
+          dark: {
+            backgroundColor: "#1a1a1a",
+          },
+        },
+      ],
+      "expo-secure-store",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          iosUrlScheme:
+            "com.googleusercontent.apps.270912914730-f0lhbp0v45gr5nv5dbpupjlvbg5rffjr",
+        },
+      ],
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#92E3A9",
+        },
+      ],
+      "expo-task-manager",
+      "./withNotificationService.js",
+    ],
+
+    experiments: {
+      typedRoutes: true,
+      reactCompiler: true,
+    },
+
+    owner: "sudutkode",
+
+    extra: {
+      router: {},
+      eas: {
+        projectId: "625ad084-b083-45cb-aea1-7d8c0a42f2ea",
+      },
+    },
+  };
+};
