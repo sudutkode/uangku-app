@@ -9,11 +9,5 @@
       "source": "/(.*)",
       "destination": "/api"
     }
-  ],
-  "crons": [
-    {
-      "path": "/gmail/cron-sync",
-      "schedule": "0 17 * * *"
-    }
   ]
 }
