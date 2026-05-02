@@ -27,6 +27,8 @@ export default function AuthScreen() {
     SigninPayload
   >("/auth/google-sign-in");
 
+  const [errorGoogleSignIn, setErrorGoogleSignIn] = useState<string>("");
+
   const handleSignIn = async () => {
     try {
       setLoading(true);
@@ -38,6 +40,12 @@ export default function AuthScreen() {
 
       const data = await mutateSignin({idToken});
       signin(data);
+    } catch (err) {
+      setErrorGoogleSignIn(
+        err instanceof Error
+          ? err.message
+          : "Terjadi kesalahan saat masuk dengan Google.",
+      );
     } finally {
       setLoading(false);
     }
@@ -85,12 +93,12 @@ export default function AuthScreen() {
             Masuk dengan Google
           </Button>
 
-          {!!error && (
+          {(!!error || !!errorGoogleSignIn) && (
             <Text
               variant="labelSmall"
               style={[styles.errorText, {color: colors.error}]}
             >
-              {error}
+              {String(error || errorGoogleSignIn)}
             </Text>
           )}
 
