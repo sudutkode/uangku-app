@@ -4,16 +4,10 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "start:dev": "APP_VARIANT=development expo start --clear",
-    "start:prod": "APP_VARIANT=production expo start --clear",
-    "android:dev": "APP_VARIANT=development expo run:android",
-    "android:prod": "APP_VARIANT=production expo run:android",
     "prebuild:dev": "APP_VARIANT=development npx expo prebuild --platform android --clean",
     "prebuild:prod": "APP_VARIANT=production npx expo prebuild --platform android --clean",
-    "build:dev": "APP_VARIANT=development eas build --profile development --platform android --local --output='./builds/AturKeuangan-Dev.apk'",
-    "build:public": "APP_VARIANT=production eas build --profile public-apk --platform android --local --output='./builds/AturKeuangan-Public.apk'",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "build:dev": "pnpm prebuild:dev && eas build --profile development --platform android --local --output='./builds/AturKeuangan-Dev.apk'",
+    "build:public": "pnpm prebuild:prod && eas build --profile public-apk --platform android --local --output='./builds/AturKeuangan-Public.apk'"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
