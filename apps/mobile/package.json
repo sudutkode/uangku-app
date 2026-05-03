@@ -6,8 +6,10 @@
     "start": "expo start",
     "prebuild:dev": "APP_VARIANT=development npx expo prebuild --platform android --clean",
     "prebuild:prod": "APP_VARIANT=production npx expo prebuild --platform android --clean",
-    "build:dev": "pnpm prebuild:dev && eas build --profile development --platform android --local --output='./builds/AturKeuangan-Dev.apk'",
-    "build:public": "pnpm prebuild:prod && eas build --profile public-apk --platform android --local --output='./builds/AturKeuangan-Public.apk'",
+    "build:dev": "pnpm prebuild:dev && eas build --profile development --platform android",
+    "build:public": "pnpm prebuild:prod && eas build --profile public-apk --platform android",
+    "build-local:dev": "pnpm build:dev --local --output='./builds/AturKeuangan-Dev.apk'",
+    "build-local:public": "pnpm build:public --local --output='./builds/AturKeuangan-Public.apk'",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },
