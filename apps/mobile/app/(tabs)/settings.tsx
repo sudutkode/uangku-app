@@ -139,7 +139,7 @@ export default function SettingsScreen() {
             variant="labelSmall"
             style={{color: colors.outline, opacity: 0.6}}
           >
-            ANONYMOUS ID: {user?.identifierHash?.substring(0, 12).toUpperCase()}
+            ID: {user?.identifierHash?.substring(0, 12).toUpperCase()}
             ...
           </Text>
         </View>

@@ -55,7 +55,7 @@ export default function RootLayout() {
     setupNotificationCategories();
 
     // Handle notification button actions (foreground & background)
-    // Killed state ditangani oleh Background Task di NotificationService
+    // Killed state handled by Background Task in notification-service.ts
     const subscription = Notifications.addNotificationResponseReceivedListener(
       processNotificationResponse,
     );
@@ -63,16 +63,16 @@ export default function RootLayout() {
     return () => subscription.remove();
   }, []);
 
-  // Permission, cold start sync, dan resume sync saat user terautentikasi
+  // Permission, cold start sync, and resume sync while user authenticated
   useEffect(() => {
     if (!user) return;
 
     Notifications.requestPermissionsAsync().catch(() => {});
 
-    // Sync pending queue yang tersimpan saat killed state
+    // Sync pending queue stored while killed state
     syncPendingTransactions();
 
-    // Sync ulang setiap kali app kembali ke foreground
+    // Sync everytime app back to foreground
     const handleAppStateChange = (nextState: AppStateStatus) => {
       if (nextState === "active") {
         syncPendingTransactions();

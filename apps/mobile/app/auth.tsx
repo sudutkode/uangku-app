@@ -36,11 +36,14 @@ export default function AuthScreen() {
 
       await GoogleSignin.hasPlayServices();
       const res: GoogleSignInResponse = await GoogleSignin.signIn();
+
+      if (!res || !res.data) {
+        return;
+      }
+
       const idToken = res.data?.idToken;
       if (!idToken) {
-        throw new Error(
-          "Gagal mendapatkan ID Token dari Google. Pastikan konfigurasi Web Client ID sudah benar.",
-        );
+        throw new Error("Terjadi kesalahan teknis pada sistem masuk Google");
       }
 
       const data = await mutateSignin({idToken});
@@ -51,7 +54,7 @@ export default function AuthScreen() {
       if (err instanceof Error) {
         message = err.message;
       } else if (err?.code) {
-        message = `Google Sign-In Error (${err.code}): ${err.message || "Silakan coba lagi."}`;
+        message = `Google Sign In Error (${err.code}): ${err.message || "Silakan coba lagi."}`;
       }
 
       setErrorGoogleSignIn(message);
