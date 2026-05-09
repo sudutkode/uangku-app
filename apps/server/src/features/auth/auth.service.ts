@@ -4,8 +4,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { OAuth2Client } from 'google-auth-library';
 import { createHash } from 'crypto';
@@ -15,6 +14,29 @@ import { TransactionCategory } from '../../database/entities/transaction-categor
 import { JwtPayload } from './types/jwt-payload.type';
 import { TRANSACTION_CATEGORIES } from '../../common/constants';
 import { GoogleSignInDto } from './dto/google-sign-in.dto';
+
+const FUN_NAMES = [
+  'FrostedCupcake',
+  'MangoLassi',
+  'CoconutJelly',
+  'BubbleWaffle',
+  'TaroSoftServe',
+  'LycheeSlushie',
+  'HoneyDonut',
+  'PeachSorbet',
+  'CinnamonRoll',
+  'PistachioMochi',
+  'WatermelonPop',
+  'CaramelFlan',
+  'BlueberryCrepe',
+  'MapleToffee',
+  'StrawberryBoba',
+  'PandanCake',
+  'TiramisuBite',
+  'LimoncelloGel',
+  'RaspberrySwirl',
+  'MochaCookie',
+];
 
 @Injectable()
 export class AuthService {
@@ -26,21 +48,32 @@ export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
 
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-
     private readonly jwtService: JwtService,
   ) {}
 
   /**
-   * Mengubah email menjadi hash unik agar identitas asli user tidak tersimpan di DB.
-   * Gunakan SALT dari .env untuk keamanan ekstra.
+   * Creates a short deterministic 8-digit identifier from email + salt.
+   * This ensures no personally identifiable information (PII) is persisted.
+   *
+   * Example output: 48271936
    */
   private hashIdentifier(email: string): string {
-    const salt = process.env.APP_AUTH_SALT || 'default_salt_uangku_2026';
-    return createHash('sha256')
+    const salt = process.env.SALT;
+    const hashHex = createHash('sha256')
       .update(email.toLowerCase() + salt)
       .digest('hex');
+
+    const numericId = Number(BigInt(`0x${hashHex.slice(0, 12)}`) % 100000000n);
+    return numericId.toString().padStart(8, '0');
+  }
+
+  /**
+   * Generates a fun, random default username for new users.
+   */
+  private generateDefaultUsername(): string {
+    const name = FUN_NAMES[Math.floor(Math.random() * FUN_NAMES.length)];
+    const suffix = Math.floor(10 + Math.random() * 90);
+    return `${name}${suffix}`;
   }
 
   async googleSignIn(
@@ -54,7 +87,6 @@ export class AuthService {
     try {
       await queryRunner.startTransaction();
 
-      // 1. Verifikasi Token Google
       const ticket = await this.googleClient.verifyIdToken({
         idToken: dto.idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -65,10 +97,9 @@ export class AuthService {
         throw new BadRequestException('Invalid Google Token');
       }
 
-      // 2. Transformasi Email menjadi Anonymous Identifier
+      // Derive an anonymous identifier from the email — never store the email itself.
       const identifierHash = this.hashIdentifier(payload.email);
 
-      // 3. Cari User berdasarkan IdentifierHash (Bukan Email)
       let user = await queryRunner.manager.findOne(User, {
         where: { identifierHash },
       });
@@ -76,17 +107,15 @@ export class AuthService {
       if (!user) {
         isNewUser = true;
 
-        // Generate Username Default (Ambil 6 karakter pertama dari hash)
-        const defaultUsername = `User_${identifierHash.substring(0, 6)}`;
-
+        const username = this.generateDefaultUsername();
         const newUser = queryRunner.manager.create(User, {
           identifierHash,
-          username: defaultUsername,
+          username,
         });
 
         user = await queryRunner.manager.save(User, newUser);
 
-        // 4. Inisialisasi Kategori Default untuk User Baru
+        // Seed default transaction categories for the new user.
         const categories = TRANSACTION_CATEGORIES.map((c) =>
           queryRunner.manager.create(TransactionCategory, { ...c, user }),
         );
@@ -95,8 +124,6 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
 
-      // 5. Generate JWT Access Token
-      // Payload hanya berisi ID dan Hash, tidak ada data pribadi
       const jwtPayload: JwtPayload = {
         id: user.id,
         sub: user.identifierHash,
@@ -106,7 +133,8 @@ export class AuthService {
 
       return { user, accessToken, isNewUser };
     } catch (error) {
-      this.logger.error('Google Sign-In failed', error.stack);
+      const errorMessage = error instanceof Error ? error.stack : String(error);
+      this.logger.error('Google Sign-In failed', errorMessage);
 
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();

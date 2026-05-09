@@ -15,10 +15,10 @@ export class User {
   id: number;
 
   @Column({ unique: true })
-  identifierHash: string; // Hasil hash email (untuk lookup)
+  identifierHash: string;
 
-  @Column({ unique: true })
-  username: string; // Nama yang bisa di-edit user di settings
+  @Column()
+  username: string;
 
   @OneToMany(() => Wallet, (wallet) => wallet.user)
   wallets: Wallet[];
