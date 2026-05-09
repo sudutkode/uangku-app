@@ -39,8 +39,9 @@ export default function IntroScreen() {
   };
 
   const handleCheckbox = () => {
-    // Only allow checking if user has opened the privacy policy
-    if (!hasOpenedPolicy) return;
+    if (!hasOpenedPolicy) {
+      openPrivacyPolicy();
+    }
     setIsAgreed(!isAgreed);
   };
 

@@ -3,14 +3,20 @@ import {
   NotificationListenerToggle,
   SupportedApps,
 } from "@/components/ui";
-import {useMutation} from "@/hooks/axios";
-import {useAuthStore} from "@/store";
-import {screenHeight} from "@/utils";
-import {GoogleSignin} from "@react-native-google-signin/google-signin";
-import {format} from "date-fns";
-import {id} from "date-fns/locale";
-import React, {useEffect, useState} from "react";
-import {Keyboard, ScrollView, StyleSheet, TextInput, View} from "react-native";
+import { useMutation } from "@/hooks/axios";
+import { useAuthStore } from "@/store";
+import { screenHeight } from "@/utils";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import React, { useEffect, useState } from "react";
+import {
+  Keyboard,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import {
   ActivityIndicator,
   Button,
@@ -20,14 +26,16 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 
 export default function SettingsScreen() {
-  const {colors} = useTheme();
-  const {signout, user, setUser} = useAuthStore();
+  const { colors } = useTheme();
+  const { signout, user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDangerZone, setShowDangerZone] = useState(false);
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username || "");
@@ -38,14 +46,14 @@ export default function SettingsScreen() {
     }
   }, [user?.username]);
 
-  const {mutate: deleteAccount, loading: isDeleting} = useMutation<void, any>(
+  const { mutate: deleteAccount, loading: isDeleting } = useMutation<void, any>(
     "/users/me",
-    {method: "delete"},
+    { method: "delete" },
   );
 
-  const {mutate: updateProfile, loading: isUpdating} = useMutation<any, any>(
+  const { mutate: updateProfile, loading: isUpdating } = useMutation<any, any>(
     "/users/me",
-    {method: "patch"},
+    { method: "patch" },
   );
 
   const handleUpdateUsername = async () => {
@@ -56,7 +64,7 @@ export default function SettingsScreen() {
     }
 
     try {
-      const updatedUser = await updateProfile({username: newUsername});
+      const updatedUser = await updateProfile({ username: newUsername });
       if (setUser) setUser(updatedUser);
       setIsEditingName(false);
       Keyboard.dismiss();
@@ -83,9 +91,11 @@ export default function SettingsScreen() {
     await handleLogoutConfirm();
   };
 
+  const version = Constants.expoConfig?.version ?? "-";
+
   return (
     <SafeAreaView
-      style={[styles.container, {backgroundColor: colors.background}]}
+      style={[styles.container, { backgroundColor: colors.background }]}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -108,14 +118,14 @@ export default function SettingsScreen() {
                   onSubmitEditing={handleUpdateUsername}
                 />
                 {isUpdating ? (
-                  <ActivityIndicator size={20} style={{marginLeft: 8}} />
+                  <ActivityIndicator size={20} style={{ marginLeft: 8 }} />
                 ) : (
                   <IconButton
                     icon="check"
                     size={20}
                     iconColor={colors.primary}
                     onPress={handleUpdateUsername}
-                    style={{margin: 0}}
+                    style={{ margin: 0 }}
                   />
                 )}
               </View>
@@ -129,7 +139,7 @@ export default function SettingsScreen() {
                   size={18}
                   iconColor={colors.outline}
                   onPress={() => setIsEditingName(true)}
-                  style={{margin: 0, marginLeft: 4}}
+                  style={{ margin: 0, marginLeft: 4 }}
                 />
               </View>
             )}
@@ -137,24 +147,28 @@ export default function SettingsScreen() {
 
           <Text
             variant="labelSmall"
-            style={{color: colors.outline, opacity: 0.6}}
+            style={{ color: colors.outline, opacity: 0.6 }}
           >
-            ID: {user?.identifierHash?.substring(0, 12).toUpperCase()}
-            ...
+            ID: {user?.identifierHash}
           </Text>
         </View>
 
         {/* User Info Box */}
         <View
-          style={[styles.infoBox, {backgroundColor: colors.elevation.level1}]}
+          style={[styles.infoBox, { backgroundColor: colors.elevation.level1 }]}
         >
           <View style={styles.infoRow}>
-            <Text variant="bodySmall" style={{color: colors.onSurfaceVariant}}>
+            <Text
+              variant="bodySmall"
+              style={{ color: colors.onSurfaceVariant }}
+            >
               Bergabung sejak
             </Text>
-            <Text variant="bodySmall" style={{fontWeight: "500"}}>
+            <Text variant="bodySmall" style={{ fontWeight: "500" }}>
               {user?.createdAt
-                ? format(new Date(user.createdAt), "dd MMM yyyy", {locale: id})
+                ? format(new Date(user.createdAt), "dd MMM yyyy", {
+                    locale: id,
+                  })
                 : "-"}
             </Text>
           </View>
@@ -172,85 +186,88 @@ export default function SettingsScreen() {
 
         {/* Sign Out Action */}
         <View style={styles.section}>
-          <View
-            style={[
-              styles.actionCard,
-              {backgroundColor: colors.elevation.level2},
-            ]}
+          <Button
+            mode="text"
+            onPress={() => setShowLogoutDialog(true)}
+            loading={loading}
+            disabled={loading}
+            icon="logout"
+            textColor={colors.error}
+            style={styles.logoutButton}
+            contentStyle={styles.logoutButtonContent}
           >
-            <View style={{flex: 1}}>
-              <Text variant="titleSmall" style={styles.actionTitle}>
-                Keluar
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{color: colors.onSurfaceVariant, marginTop: 4}}
-              >
-                Data kamu aman dan terenkripsi di server kami.
-              </Text>
-            </View>
-            <Button
-              mode="outlined"
-              onPress={() => setShowLogoutDialog(true)}
-              textColor={colors.error}
-              disabled={loading}
-              loading={loading}
-              compact
-            >
-              Keluar
-            </Button>
-          </View>
+            Keluar
+          </Button>
         </View>
 
         <Divider style={styles.divider} />
 
         {/* Danger Zone */}
         <View style={styles.section}>
-          <View
-            style={[
-              styles.actionCard,
-              {backgroundColor: colors.errorContainer},
-            ]}
+          <Button
+            mode="text"
+            icon={showDangerZone ? "chevron-up" : "alert-outline"}
+            onPress={() => setShowDangerZone((prev) => !prev)}
+            textColor={colors.error}
+            style={styles.dangerToggleButton}
+            contentStyle={styles.dangerToggleContent}
           >
-            <View style={{flex: 1}}>
-              <Text
-                variant="titleSmall"
-                style={[styles.actionTitle, {color: colors.onErrorContainer}]}
-              >
-                Hapus Akun
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{
-                  color: colors.onErrorContainer,
-                  marginTop: 4,
-                  opacity: 0.8,
-                }}
-              >
-                Semua data transaksi akan dihapus permanen dan tidak bisa pulih.
-              </Text>
-            </View>
-            <Button
-              mode="contained"
-              onPress={() => setShowDeleteDialog(true)}
-              buttonColor={colors.error}
-              textColor={colors.onError}
-              loading={isDeleting}
-              disabled={isDeleting}
-              compact
+            {showDangerZone
+              ? "Sembunyikan Zona Berbahaya"
+              : "Tampilkan Zona Berbahaya"}
+          </Button>
+
+          {showDangerZone ? (
+            <View
+              style={[
+                styles.actionCard,
+                { backgroundColor: colors.errorContainer, marginTop: 10 },
+              ]}
             >
-              Hapus
-            </Button>
-          </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  variant="titleSmall"
+                  style={[
+                    styles.actionTitle,
+                    { color: colors.onErrorContainer },
+                  ]}
+                >
+                  Hapus Akun
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{
+                    color: colors.onErrorContainer,
+                    marginTop: 4,
+                    opacity: 0.8,
+                  }}
+                >
+                  Semua data transaksi akan dihapus permanen dan tidak bisa
+                  pulih.
+                </Text>
+              </View>
+              <Button
+                mode="contained"
+                onPress={() => setShowDeleteDialog(true)}
+                buttonColor={colors.error}
+                textColor={colors.onError}
+                loading={isDeleting}
+                disabled={isDeleting}
+                compact
+              >
+                Hapus
+              </Button>
+            </View>
+          ) : null}
         </View>
 
         {/* Version Info */}
-        <View style={styles.footer}>
+        <View style={styles.versionInfo}>
           <Text
             variant="labelSmall"
-            style={{color: colors.outlineVariant, letterSpacing: 2}}
+            style={{ color: colors.outlineVariant, letterSpacing: 2 }}
           >
-            ATUR KEUANGAN v1.0.0
+            ATUR KEUANGAN v{version}
           </Text>
         </View>
       </ScrollView>
@@ -280,7 +297,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
+  container: { flex: 1 },
   header: {
     alignItems: "center",
     marginTop: screenHeight * 0.04,
@@ -292,7 +309,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 4,
     shadowColor: "#000",
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -340,6 +357,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginVertical: 4,
   },
+  logoutButton: {
+    alignSelf: "flex-start",
+    marginLeft: -8,
+  },
+  logoutButtonContent: {
+    height: 40,
+    paddingHorizontal: 8,
+  },
+  dangerToggleButton: {
+    alignSelf: "center",
+  },
+  dangerToggleContent: {
+    justifyContent: "center",
+  },
   actionCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -352,8 +383,9 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontWeight: "700",
   },
-  footer: {
+  versionInfo: {
     alignItems: "center",
-    paddingVertical: 32,
+    marginTop: 16,
+    padding: 8,
   },
 });

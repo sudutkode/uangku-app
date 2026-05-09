@@ -14,8 +14,8 @@ export default function SupportedApps() {
         Aplikasi yang Didukung
       </Text>
 
-      {SUPPORTED_APPS_CATEGORIZED.map((group, groupIndex) => (
-        <View key={groupIndex} style={styles.categoryContainer}>
+      {SUPPORTED_APPS_CATEGORIZED.map((group, index) => (
+        <View key={index} style={{marginBottom: index === SUPPORTED_APPS_CATEGORIZED.length - 1 ? 0 : 8}}>
           <Text
             variant="labelMedium"
             style={{color: colors.primary, marginBottom: 8}}
@@ -34,18 +34,11 @@ export default function SupportedApps() {
               </Text>
             ))}
           </View>
-          {groupIndex < SUPPORTED_APPS_CATEGORIZED.length - 1 && (
+          {index < SUPPORTED_APPS_CATEGORIZED.length - 1 && (
             <Divider style={{marginTop: 12}} />
           )}
         </View>
       ))}
-
-      <Text
-        variant="labelSmall"
-        style={[styles.disclaimer, {color: colors.onSurfaceVariant}]}
-      >
-        Kami tidak menyimpan kredensial atau informasi pembayaranmu.
-      </Text>
     </View>
   );
 }

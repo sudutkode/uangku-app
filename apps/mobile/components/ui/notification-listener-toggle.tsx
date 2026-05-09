@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState} from "react";
-import {AppState, AppStateStatus, StyleSheet, View} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { AppState, AppStateStatus, StyleSheet, View } from "react-native";
 import RNAndroidNotificationListener from "react-native-android-notification-listener";
-import {Switch, Text, useTheme} from "react-native-paper";
+import { Switch, Text, useTheme } from "react-native-paper";
 
 export default function NotificationListenerToggle() {
-  const {colors} = useTheme();
+  const { colors } = useTheme();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const appState = useRef(AppState.currentState);
@@ -48,7 +48,7 @@ export default function NotificationListenerToggle() {
 
   return (
     <View
-      style={[styles.container, {backgroundColor: colors.elevation.level2}]}
+      style={[styles.container, { backgroundColor: colors.elevation.level2 }]}
     >
       <View style={styles.textContainer}>
         <Text variant="titleSmall" style={styles.title}>
@@ -56,11 +56,11 @@ export default function NotificationListenerToggle() {
         </Text>
         <Text
           variant="bodySmall"
-          style={{color: colors.onSurfaceVariant, marginTop: 4}}
+          style={{ color: colors.onSurfaceVariant, marginTop: 4 }}
         >
           {isEnabled
-            ? "Aktif. Transaksimu akan tercatat otomatis dari notifikasi."
-            : "Nonaktif. Aktifkan agar transaksi tercatat otomatis."}
+            ? "Transaksimu akan tercatat otomatis."
+            : "Aktifkan agar transaksi tercatat otomatis."}
         </Text>
       </View>
 
