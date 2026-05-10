@@ -1,25 +1,32 @@
-import {darkTheme, lightTheme} from "@/constants/theme";
-import {useColorScheme} from "@/hooks/use-color-scheme";
+import { darkTheme, lightTheme } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useNotificationAccessReminder } from "@/hooks/use-notification-access-reminder";
 import {
   processNotificationResponse,
   setupNotificationCategories,
   setupNotificationChannel,
   syncPendingTransactions,
 } from "@/services/notification/notification-service";
-import {useAuthStore} from "@/store";
-import {GoogleSignin} from "@react-native-google-signin/google-signin";
+import { useAuthStore } from "@/store";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
 import * as Notifications from "expo-notifications";
-import {Stack} from "expo-router";
-import {StatusBar} from "expo-status-bar";
-import React, {useEffect} from "react";
-import {AppState, AppStateStatus} from "react-native";
-import {adaptNavigationTheme, PaperProvider} from "react-native-paper";
-import {id, registerTranslation} from "react-native-paper-dates";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect } from "react";
+import { AppState, AppStateStatus, Platform } from "react-native";
+import {
+  adaptNavigationTheme,
+  PaperProvider,
+  Portal,
+  Snackbar,
+  Text,
+} from "react-native-paper";
+import { id, registerTranslation } from "react-native-paper-dates";
 import "react-native-reanimated";
 import {
   initialWindowMetrics,
@@ -37,14 +44,37 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const {LightTheme, DarkTheme} = adaptNavigationTheme({
+const { LightTheme, DarkTheme } = adaptNavigationTheme({
   reactNavigationLight: NavigationDefaultTheme,
   reactNavigationDark: NavigationDarkTheme,
 });
 
+// ─── Inner component agar useTheme tersedia di dalam PaperProvider ────────────
+function NotificationReminderSnackbar({ user }: { user: boolean }) {
+  const { showReminder, dismiss } = useNotificationAccessReminder(
+    user && Platform.OS === "android",
+  );
+
+  return (
+    <Portal>
+      <Snackbar
+        visible={showReminder}
+        onDismiss={dismiss}
+        duration={8000}
+        action={{ label: "Aktifkan", onPress: dismiss }}
+      >
+        <Text variant="bodySmall">
+          Akses notifikasi tidak aktif. Aktifkan agar transaksi tercatat
+          otomatis.
+        </Text>
+      </Snackbar>
+    </Portal>
+  );
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const {user, isOnboarding} = useAuthStore();
+  const { user, isOnboarding } = useAuthStore();
 
   // One-time app startup setup
   useEffect(() => {
@@ -91,7 +121,7 @@ export default function RootLayout() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <PaperProvider theme={paperTheme}>
         <ThemeProvider value={navigationTheme}>
-          <Stack screenOptions={{headerShown: false}}>
+          <Stack screenOptions={{ headerShown: false }}>
             <Stack.Protected guard={!user}>
               <Stack.Screen name="auth" />
             </Stack.Protected>
@@ -102,11 +132,12 @@ export default function RootLayout() {
 
             <Stack.Protected guard={Boolean(user && !isOnboarding)}>
               <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="modal" options={{presentation: "modal"}} />
+              <Stack.Screen name="modal" options={{ presentation: "modal" }} />
             </Stack.Protected>
           </Stack>
           <StatusBar style={isDark ? "light" : "dark"} />
         </ThemeProvider>
+        <NotificationReminderSnackbar user={Boolean(user && !isOnboarding)} />
       </PaperProvider>
     </SafeAreaProvider>
   );
