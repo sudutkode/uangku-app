@@ -1,13 +1,13 @@
-import {WalletForm} from "@/components/forms";
-import {Stack, useLocalSearchParams} from "expo-router";
+import { WalletForm } from "@/components/forms";
+import { Stack, useLocalSearchParams } from "expo-router";
 import React from "react";
 
 export default function DetailWalletScreen() {
-  const {id} = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
 
   return (
     <>
-      <Stack.Screen options={{title: "Wallet"}} />
+      <Stack.Screen options={{ title: "Dompet" }} />
       <WalletForm id={id as string} />
     </>
   );

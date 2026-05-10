@@ -1,7 +1,7 @@
-import {Icon} from "@/components/ui";
-import {useMutation} from "@/hooks/axios";
-import {useIconSearch} from "@/hooks/use-icon-search";
-import React, {memo, useCallback, useEffect, useState} from "react";
+import { Icon } from "@/components/ui";
+import { useMutation } from "@/hooks/axios";
+import { useIconSearch } from "@/hooks/use-icon-search";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -51,7 +51,7 @@ const IconOption = memo(
     isSelected: boolean;
     onPress: (name: string) => void;
   }) => {
-    const {colors} = useTheme();
+    const { colors } = useTheme();
     const handlePress = useCallback(() => onPress(name), [name, onPress]);
 
     return (
@@ -78,7 +78,7 @@ const IconOption = memo(
         <Text
           variant="labelSmall"
           numberOfLines={2}
-          style={[styles.iconLabelText, {color: colors.onSurfaceVariant}]}
+          style={[styles.iconLabelText, { color: colors.onSurfaceVariant }]}
         >
           {label}
         </Text>
@@ -99,7 +99,7 @@ const TransactionCategoryFormSheet = ({
   transactionTypeId,
   editData,
 }: TransactionCategoryFormSheetProps) => {
-  const {colors} = useTheme();
+  const { colors } = useTheme();
   const isEdit = !!editData?.id;
 
   // State Lokal
@@ -117,6 +117,14 @@ const TransactionCategoryFormSheet = ({
     onSearchChange,
     loadMore,
   } = useIconSearch(editData?.iconName);
+
+  const handleSearchChange = useCallback(
+    (query: string) => {
+      onSearchChange(query);
+      setIconName("");
+    },
+    [onSearchChange],
+  );
 
   // Sinkronisasi data saat modal dibuka atau data edit berubah
   useEffect(() => {
@@ -137,13 +145,15 @@ const TransactionCategoryFormSheet = ({
     mutate: createCategory,
     loading: loadingCreate,
     error: createError,
-  } = useMutation("/transaction-categories", {method: "post"});
+  } = useMutation("/transaction-categories", { method: "post" });
 
   const {
     mutate: updateCategory,
     loading: loadingUpdate,
     error: updateError,
-  } = useMutation(`/transaction-categories/${editData?.id}`, {method: "patch"});
+  } = useMutation(`/transaction-categories/${editData?.id}`, {
+    method: "patch",
+  });
 
   const loading = loadingCreate || loadingUpdate;
   const error = createError || updateError;
@@ -195,7 +205,7 @@ const TransactionCategoryFormSheet = ({
           <View style={styles.headerSearchRow}>
             <Searchbar
               placeholder="Cari ikon (Inggris / Indonesia)..."
-              onChangeText={onSearchChange}
+              onChangeText={handleSearchChange}
               value={searchQuery}
               style={styles.searchBar}
               inputStyle={styles.searchInput}
@@ -216,7 +226,7 @@ const TransactionCategoryFormSheet = ({
               // Infinite Scroll Logic
               onEndReached={loadMore}
               onEndReachedThreshold={0.5}
-              renderItem={({item}) => (
+              renderItem={({ item }) => (
                 <IconOption
                   name={item.name}
                   label={item.label}
@@ -231,17 +241,17 @@ const TransactionCategoryFormSheet = ({
                   <ActivityIndicator
                     size="small"
                     color={colors.primary}
-                    style={{padding: 10}}
+                    style={{ padding: 10 }}
                   />
                 ) : (
-                  <View style={{height: 20}} />
+                  <View style={{ height: 20 }} />
                 )
               }
               ListEmptyComponent={
                 !loadingIcons ? (
                   <Text style={styles.emptyText}>Ikon tidak ditemukan</Text>
                 ) : (
-                  <ActivityIndicator size="large" style={{marginTop: 20}} />
+                  <ActivityIndicator size="large" style={{ marginTop: 20 }} />
                 )
               }
             />
@@ -283,9 +293,9 @@ const TransactionCategoryFormSheet = ({
         visible={!!error}
         onDismiss={() => {}}
         duration={3000}
-        style={{backgroundColor: colors.errorContainer}}
+        style={{ backgroundColor: colors.errorContainer }}
       >
-        <Text variant="bodySmall" style={{color: colors.onErrorContainer}}>
+        <Text variant="bodySmall" style={{ color: colors.onErrorContainer }}>
           {error}
         </Text>
       </Snackbar>

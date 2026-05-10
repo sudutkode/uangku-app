@@ -1,5 +1,12 @@
-import {type FC} from "react";
-import {Button, Dialog, DialogProps, Text, useTheme} from "react-native-paper";
+import { type FC } from "react";
+import { StyleSheet, View } from "react-native";
+import {
+  Button,
+  Dialog,
+  DialogProps,
+  Text,
+  useTheme,
+} from "react-native-paper";
 
 interface ConfirmationDialogProps extends Omit<DialogProps, "children"> {
   title: string;
@@ -15,22 +22,73 @@ const ConfirmationDialog: FC<ConfirmationDialogProps> = ({
   withAlert,
   ...props
 }) => {
-  const {colors} = useTheme();
+  const { colors } = useTheme();
 
   return (
-    <Dialog {...props}>
-      {withAlert && <Dialog.Icon icon="alert" size={50} color={colors.error} />}
-      <Dialog.Title style={{textAlign: "center"}}>{title}</Dialog.Title>
-      <Dialog.Content>
-        <Text variant="bodyMedium">{content}</Text>
+    <Dialog {...props} style={[styles.dialog, props.style]}>
+      {withAlert && (
+        <View style={styles.iconWrapper}>
+          <Dialog.Icon icon="alert" size={40} color={colors.error} />
+        </View>
+      )}
+      <Dialog.Title style={styles.title}>{title}</Dialog.Title>
+      <Dialog.Content style={styles.content}>
+        <Text
+          variant="bodyMedium"
+          style={[styles.contentText, { color: colors.onSurfaceVariant }]}
+        >
+          {content}
+        </Text>
       </Dialog.Content>
-      <Dialog.Actions>
-        <Button onPress={props.onDismiss}>Batal</Button>
-        <Button textColor={colors.error} onPress={handleConfirm}>
+      <Dialog.Actions style={styles.actions}>
+        <Button mode="outlined" style={styles.button} onPress={props.onDismiss}>
+          Batal
+        </Button>
+        <Button
+          mode="contained-tonal"
+          buttonColor={colors.errorContainer}
+          textColor={colors.error}
+          style={styles.button}
+          onPress={handleConfirm}
+        >
           Ya
         </Button>
       </Dialog.Actions>
     </Dialog>
   );
 };
+
+const styles = StyleSheet.create({
+  dialog: {
+    borderRadius: 28,
+    paddingBottom: 8,
+  },
+  iconWrapper: {
+    alignItems: "center",
+    paddingTop: 20,
+    paddingBottom: 4,
+  },
+  title: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  content: {
+    paddingTop: 4,
+  },
+  contentText: {
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  actions: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  button: {
+    flex: 1,
+    borderRadius: 50,
+  },
+});
+
 export default ConfirmationDialog;

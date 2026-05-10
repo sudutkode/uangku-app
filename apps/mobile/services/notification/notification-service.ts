@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
 import {AppRegistry, Platform} from "react-native";
 
+import useWalletsStore from "@/store/use-wallets-store";
 import {processNotificationResponseInternal} from "./handler";
 import {TransactionParser} from "./parser";
 import {setupNotificationCategories, setupNotificationChannel} from "./setup";
@@ -73,6 +74,24 @@ const headlessNotificationListener = async ({
     if (!amount) return;
 
     const transactionTypeId = TransactionParser.detectType(title, text);
+
+    // ─── Cek dompet yang cocok dengan appName notifikasi ───────────────────
+    const matchedWallet = useWalletsStore
+      .getState()
+      .wallets.find(
+        (w) => w.appName?.toLowerCase() === appName,
+      );
+    if (!matchedWallet) {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `Dompet ${walletLabel} belum dibuat`,
+          body: `Transaksi ${transactionTypeId === 1 ? "masuk ke" : "keluar dari"} ${walletLabel} Rp ${amount.toLocaleString("id-ID")} terdeteksi. Buat dompet ${walletLabel} di aplikasi untuk mencatatnya.`,
+          data: {type: "no_wallet_info"},
+        },
+        trigger: null,
+      });
+      return;
+    }
 
     await Notifications.scheduleNotificationAsync({
       content: {

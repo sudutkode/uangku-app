@@ -1,17 +1,17 @@
-import {ConfirmationDialog, LoadingState, Snackbar} from "@/components/ui";
-import {Stack} from "expo-router";
+import { ConfirmationDialog, LoadingState, Snackbar } from "@/components/ui";
+import { Stack } from "expo-router";
 import React from "react";
-import {ScrollView, StyleSheet, View} from "react-native";
-import {Button, Modal, Portal, useTheme} from "react-native-paper";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Button, Modal, Portal, useTheme } from "react-native-paper";
 
 import TransactionCategoryPicker from "./transaction-category-picker";
 import TransactionDisplay from "./transaction-display";
 import TransactionFields from "./transaction-fields";
 import TransactionKeypad from "./transaction-keypad";
-import {useTransactionForm} from "./use-transaction-form";
+import { useTransactionForm } from "./use-transaction-form";
 
-export default function TransactionForm({id}: {id?: string}) {
-  const {colors} = useTheme();
+export default function TransactionForm({ id }: { id?: string }) {
+  const { colors } = useTheme();
   const vm = useTransactionForm(id);
 
   if (vm.loadingExistingData) {
@@ -19,7 +19,7 @@ export default function TransactionForm({id}: {id?: string}) {
   }
 
   return (
-    <View style={[styles.root, {backgroundColor: colors.background}]}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <Stack.Screen
         options={{
           title: vm.isEdit ? "Detail Transaksi" : "Transaksi Baru",
@@ -42,15 +42,16 @@ export default function TransactionForm({id}: {id?: string}) {
         <TransactionCategoryPicker
           transactionTypeId={vm.form.transactionTypeId}
           transactionCategoryId={vm.form.transactionCategoryId}
+          isEdit={vm.isEdit}
           onTypeChange={(typeId) => {
             vm.setForm((p) => ({
               ...p,
               transactionTypeId: typeId,
-              transactionCategoryId: 0,
+              transactionCategoryId: vm.isEdit ? p.transactionCategoryId : 0,
             }));
           }}
           onCategoryChange={(catId) => {
-            vm.setForm((p) => ({...p, transactionCategoryId: catId}));
+            vm.setForm((p) => ({ ...p, transactionCategoryId: catId }));
             vm.setModalVisible(true);
             vm.handleFieldPress("amount");
           }}
@@ -67,7 +68,7 @@ export default function TransactionForm({id}: {id?: string}) {
             styles.modal,
             {
               backgroundColor: colors.surface,
-              transform: [{translateY: vm.translateY}],
+              transform: [{ translateY: vm.translateY }],
             },
           ]}
         >
@@ -124,7 +125,7 @@ export default function TransactionForm({id}: {id?: string}) {
 }
 
 const styles = StyleSheet.create({
-  root: {flex: 1},
+  root: { flex: 1 },
 
   scroll: {
     padding: 16,

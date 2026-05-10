@@ -1,9 +1,9 @@
-import {ErrorState, Icon, LoadingState} from "@/components/ui";
-import {useFetch, useMutation} from "@/hooks/axios";
+import { ErrorState, Icon, LoadingState } from "@/components/ui";
+import { useFetch, useMutation } from "@/hooks/axios";
 import useTransactionCategoriesStore from "@/store/use-transaction-categories";
-import {TransactionCategoriesResponse} from "@/types";
-import React, {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {StyleSheet, TouchableOpacity, View} from "react-native";
+import { TransactionCategoriesResponse } from "@/types";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import {
   Button,
   Dialog,
@@ -31,6 +31,7 @@ interface TransactionCategoryPickerProps {
   onTypeChange: (typeId: number) => void;
   onCategoryChange: (catId: number) => void;
   isNotification: boolean;
+  isEdit: boolean;
 }
 
 // ─── CategoryItem ─────────────────────────────────────────────────────────────
@@ -55,11 +56,11 @@ const CategoryItem = memo(
     onPress,
     onLongPress,
   }: CategoryItemProps) => {
-    const {colors} = useTheme();
+    const { colors } = useTheme();
 
     const handlePress = useCallback(() => onPress(id), [id, onPress]);
     const handleLongPress = useCallback(
-      () => onLongPress({id, name, iconName, transactionTypeId}),
+      () => onLongPress({ id, name, iconName, transactionTypeId }),
       [id, name, iconName, transactionTypeId, onLongPress],
     );
 
@@ -97,8 +98,8 @@ CategoryItem.displayName = "CategoryItem";
 
 // ─── AddCategoryItem ──────────────────────────────────────────────────────────
 
-const AddCategoryItem = memo(({onPress}: {onPress: () => void}) => {
-  const {colors} = useTheme();
+const AddCategoryItem = memo(({ onPress }: { onPress: () => void }) => {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity onPress={onPress} style={styles.categoryItem}>
       <View
@@ -116,7 +117,7 @@ const AddCategoryItem = memo(({onPress}: {onPress: () => void}) => {
       </View>
       <Text
         variant="labelSmall"
-        style={[styles.catLabel, {color: colors.outline}]}
+        style={[styles.catLabel, { color: colors.outline }]}
       >
         Tambah
       </Text>
@@ -133,8 +134,9 @@ const TransactionCategoryPicker = ({
   onTypeChange,
   onCategoryChange,
   isNotification,
+  isEdit,
 }: TransactionCategoryPickerProps) => {
-  const {colors} = useTheme();
+  const { colors } = useTheme();
 
   // 1. State untuk pencarian
   const [searchQuery, setSearchQuery] = useState("");
@@ -171,12 +173,11 @@ const TransactionCategoryPicker = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories.length, needsRefetch, isNotification]);
 
-  const {data, loading, error} = useFetch<TransactionCategoriesResponse>(
+  const { data, loading, error } = useFetch<TransactionCategoriesResponse>(
     "/transaction-categories",
     {
       params: {
         withNotification: isNotification,
-        // search dihapus dari sini karena menggunakan FE search saja
       },
     },
     shouldSkip,
@@ -197,6 +198,15 @@ const TransactionCategoryPicker = ({
     method: "delete",
   });
 
+  const protectedCategories = useMemo(
+    () => [
+      NOTIFICATION_CATEGORY_NAME,
+      INITIAL_BALANCE_CATEGORY_NAME,
+      BALANCE_CORRECTION_CATEGORY_NAME,
+    ],
+    [],
+  );
+
   // 2. Logika Filter Gabungan FE (Type ID + Search Query)
   const filtered = useMemo(() => {
     return categories.filter((c) => {
@@ -204,9 +214,22 @@ const TransactionCategoryPicker = ({
       const matchSearch = c.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
-      return matchType && matchSearch;
+      if (!matchType || !matchSearch) return false;
+
+      const isProtectedCategory = protectedCategories.includes(c.name);
+      if (!isProtectedCategory) return true;
+
+      if (!isEdit) return false;
+      return c.id === transactionCategoryId;
     });
-  }, [categories, transactionTypeId, searchQuery]);
+  }, [
+    categories,
+    transactionTypeId,
+    searchQuery,
+    protectedCategories,
+    isEdit,
+    transactionCategoryId,
+  ]);
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
@@ -223,16 +246,14 @@ const TransactionCategoryPicker = ({
     setFormVisible(true);
   }, []);
 
-  const handleLongPress = useCallback((data: TransactionCategoryFormData) => {
-    const protectedCategories = [
-      NOTIFICATION_CATEGORY_NAME,
-      INITIAL_BALANCE_CATEGORY_NAME,
-      BALANCE_CORRECTION_CATEGORY_NAME,
-    ];
-    if (protectedCategories.includes(data.name)) return;
-    setEditData(data);
-    setFormVisible(true);
-  }, []);
+  const handleLongPress = useCallback(
+    (data: TransactionCategoryFormData) => {
+      if (protectedCategories.includes(data.name)) return;
+      setEditData(data);
+      setFormVisible(true);
+    },
+    [protectedCategories],
+  );
 
   const handleFormSuccess = useCallback(() => {
     setNeedsRefetch(true);
@@ -275,9 +296,9 @@ const TransactionCategoryPicker = ({
         value={String(transactionTypeId)}
         onValueChange={handleTypeChange}
         buttons={[
-          {value: "1", label: "Masuk", icon: "plus"},
-          {value: "2", label: "Keluar", icon: "minus"},
-          {value: "3", label: "Transfer", icon: "swap-horizontal"},
+          { value: "1", label: "Masuk", icon: "plus" },
+          { value: "2", label: "Keluar", icon: "minus" },
+          { value: "3", label: "Transfer", icon: "swap-horizontal" },
         ]}
       />
 
@@ -321,7 +342,7 @@ const TransactionCategoryPicker = ({
       {/* 4. State jika hasil pencarian lokal kosong */}
       {filtered.length === 0 && searchQuery !== "" && (
         <View style={styles.emptyContainer}>
-          <Text variant="bodyMedium" style={{color: colors.outline}}>
+          <Text variant="bodyMedium" style={{ color: colors.outline }}>
             {`Kategori "${searchQuery}" tidak ditemukan`}
           </Text>
         </View>
@@ -350,7 +371,7 @@ const TransactionCategoryPicker = ({
           <Dialog.Content>
             <Text variant="bodyMedium">
               Hapus kategori{" "}
-              <Text style={{fontWeight: "bold"}}>{deleteTarget?.name}</Text>?
+              <Text style={{ fontWeight: "bold" }}>{deleteTarget?.name}</Text>?
               Transaksi dengan kategori ini akan menjadi tidak diketahui.
             </Text>
           </Dialog.Content>
@@ -370,9 +391,9 @@ const TransactionCategoryPicker = ({
           visible={!!deleteError}
           onDismiss={() => {}}
           duration={3000}
-          style={{backgroundColor: colors.errorContainer}}
+          style={{ backgroundColor: colors.errorContainer }}
         >
-          <Text variant="bodySmall" style={{color: colors.onErrorContainer}}>
+          <Text variant="bodySmall" style={{ color: colors.onErrorContainer }}>
             {deleteError}
           </Text>
         </Snackbar>

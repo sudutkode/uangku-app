@@ -1,14 +1,14 @@
-import {DatePicker, Dropdown, Switch} from "@/components/inputs";
-import React, {memo, useCallback, useEffect, useState} from "react";
-import {StyleSheet, View} from "react-native";
-import {TextInput, useTheme} from "react-native-paper";
-import {FormState, TRANSFER_TYPE_ID} from "./constants";
+import { DatePicker, Dropdown, Switch } from "@/components/inputs";
+import React, { memo, useCallback, useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { TextInput, useTheme } from "react-native-paper";
+import { FormState, TRANSFER_TYPE_ID } from "./constants";
 
 interface TransactionFieldsProps {
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
-  walletOptions: {label: string; value: string}[];
-  targetWalletOptions: {label: string; value: string}[];
+  walletOptions: { label: string; value: string }[];
+  targetWalletOptions: { label: string; value: string }[];
   isNotification?: boolean;
 }
 
@@ -20,7 +20,7 @@ const TransactionFields = memo(
     targetWalletOptions,
     isNotification = false,
   }: TransactionFieldsProps) => {
-    const {colors} = useTheme();
+    const { colors } = useTheme();
     const [isWithNote, setIsWithNote] = useState(false);
 
     useEffect(() => {
@@ -33,27 +33,28 @@ const TransactionFields = memo(
     const handleSwitchWithNote = (val: boolean) => {
       setIsWithNote(val);
       if (!val) {
-        setForm((p) => ({...p, note: ""}));
+        setForm((p) => ({ ...p, note: "" }));
       }
     };
 
     const handleWalletChange = useCallback(
-      (val?: string) => setForm((p) => ({...p, walletId: Number(val)})),
+      (val?: string) => setForm((p) => ({ ...p, walletId: Number(val) })),
       [setForm],
     );
 
     const handleTargetWalletChange = useCallback(
-      (val?: string) => setForm((p) => ({...p, targetWalletId: Number(val)})),
+      (val?: string) => setForm((p) => ({ ...p, targetWalletId: Number(val) })),
       [setForm],
     );
 
     const handleDateChange = useCallback(
-      (date?: Date) => setForm((p) => ({...p, createdAt: date ?? new Date()})),
+      (date?: Date) =>
+        setForm((p) => ({ ...p, createdAt: date ?? new Date() })),
       [setForm],
     );
 
     const handleNoteChange = useCallback(
-      (val: string) => setForm((p) => ({...p, note: val || null})),
+      (val: string) => setForm((p) => ({ ...p, note: val || null })),
       [setForm],
     );
 
@@ -96,10 +97,9 @@ const TransactionFields = memo(
               value={form.note ?? ""}
               editable={false}
               multiline
-              numberOfLines={3}
               activeOutlineColor={colors.outline}
               outlineColor={colors.outlineVariant}
-              style={{backgroundColor: colors.surface}}
+              style={{ backgroundColor: colors.surface }}
               textColor={colors.onSurfaceVariant}
             />
           ) : (
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginBottom: 12,
   },
-  walletCol: {flex: 1.2, marginRight: 8},
-  dateCol: {flex: 1},
-  spacing: {marginBottom: 12},
+  walletCol: { flex: 1.2, marginRight: 8 },
+  dateCol: { flex: 1 },
+  spacing: { marginBottom: 12 },
 });

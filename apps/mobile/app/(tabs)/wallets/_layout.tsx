@@ -1,14 +1,14 @@
-import {useWalletsStore} from "@/store";
-import {Wallet} from "@/types";
-import {formatIdr} from "@/utils";
-import {Stack} from "expo-router";
-import {View} from "react-native";
-import {Text, useTheme} from "react-native-paper";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { useWalletsStore } from "@/store";
+import { Wallet } from "@/types";
+import { formatIdr } from "@/utils";
+import { Stack } from "expo-router";
+import { View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WalletsLayout() {
-  const {colors} = useTheme();
-  const {wallets} = useWalletsStore();
+  const { colors } = useTheme();
+  const { wallets } = useWalletsStore();
   const totalBalance =
     wallets?.reduce((acc: number, curr: Wallet) => acc + curr.balance, 0) || 0;
 
@@ -19,7 +19,7 @@ export default function WalletsLayout() {
           backgroundColor: colors.surface,
         },
         headerTintColor: colors.onSurface,
-        headerTitle: "Wallet",
+        headerTitle: "Dompet",
         headerShadowVisible: true,
       }}
     >
@@ -51,7 +51,7 @@ export default function WalletsLayout() {
           ),
         }}
       />
-      <Stack.Screen name="add" options={{title: "Add Wallet"}} />
+      <Stack.Screen name="add" options={{ title: "Tambah Dompet" }} />
     </Stack>
   );
 }

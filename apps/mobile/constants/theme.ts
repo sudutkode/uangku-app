@@ -73,8 +73,8 @@ const customColors = {
   // --- Error ---
   error: "#E57373",
   onError: "#FFFFFF",
-  errorContainer: "#FFEBEE",
-  onErrorContainer: "#B71C1C",
+  errorContainer: "#FDECEA",
+  onErrorContainer: "#C0392B",
 };
 
 export const lightTheme = {
@@ -82,7 +82,18 @@ export const lightTheme = {
   colors: {
     ...MD3LightTheme.colors,
     ...customColors,
-    surface: "#F1FAF3", // Background dark green for Light Mode
+    // ─── Light Mode Overrides ───────────────────────────────────────────────
+    surface: "#FFFFFF",                 // Clean white, not green-tinted
+    primaryContainer: "#C8EDDA",        // Confident green tint, not washed-out
+    onPrimaryContainer: "#0A3320",      // Deep forest for readability
+    secondaryContainer: "#D0DCE5",      // Purposeful slate-blue, not pale
+    onSecondaryContainer: "#162530",    // Deep navy
+    infoContainer: "#B9E5F7",          // Clear sky blue
+    onInfoContainer: "#012D42",         // Deep ocean
+    tertiaryContainer: "#FFDEA0",       // Warm honey amber with presence
+    onTertiaryContainer: "#3E2200",     // Deep brown
+    errorContainer: "#FAD4D4",          // Rose with enough presence
+    onErrorContainer: "#7A1515",        // Deep maroon
   },
 };
 
@@ -98,7 +109,7 @@ export const darkTheme = {
     secondaryContainer: "#2B343A",
     infoContainer: "#1F3F4D",
     tertiaryContainer: "#4A3415",
-    errorContainer: "#4B1E1E",
+    errorContainer: "#4D1F1B",
 
     // Improve contrast
     onSecondaryContainer: "#DCE3E8",
