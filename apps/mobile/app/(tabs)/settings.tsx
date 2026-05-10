@@ -40,6 +40,9 @@ export default function SettingsScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newUsername, setNewUsername] = useState(user?.username || "");
 
+  const version = Constants.expoConfig?.version ?? "-";
+  const versionCode = Constants.expoConfig?.android?.versionCode ?? "-";
+
   useEffect(() => {
     if (user?.username) {
       setNewUsername(user.username);
@@ -90,8 +93,6 @@ export default function SettingsScreen() {
     await deleteAccount({});
     await handleLogoutConfirm();
   };
-
-  const version = Constants.expoConfig?.version ?? "-";
 
   return (
     <SafeAreaView
@@ -267,7 +268,7 @@ export default function SettingsScreen() {
             variant="labelSmall"
             style={{ color: colors.outlineVariant, letterSpacing: 2 }}
           >
-            ATUR KEUANGAN v{version}
+            ATUR KEUANGAN v{version} ({versionCode})
           </Text>
         </View>
       </ScrollView>

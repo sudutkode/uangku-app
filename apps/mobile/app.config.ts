@@ -8,7 +8,7 @@ export default ({config}: ConfigContext): ExpoConfig => {
     // Name displayed on the Home Screen
     name: IS_DEV ? "Atur Keuangan (Dev)" : "Atur Keuangan",
     slug: "atur-keuangan",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: IS_DEV ? "aturkeuangan-dev" : "aturkeuangan",
@@ -27,7 +27,6 @@ export default ({config}: ConfigContext): ExpoConfig => {
     },
 
     android: {
-      versionCode: 1,
       adaptiveIcon: {
         foregroundImage: "./assets/images/splash-icon.png",
         backgroundColor: "#92E3A9",
