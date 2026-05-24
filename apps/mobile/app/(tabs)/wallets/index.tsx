@@ -11,6 +11,7 @@ import {
 import {useFetch} from "@/hooks/axios";
 import {useWalletsStore} from "@/store";
 import {WalletsResponse} from "@/types";
+import {saveWalletsToCache} from "@/lib/wallet-cache";
 
 export default function WalletsScreen() {
   const {setWalletsData, wallets, needsRefetch, setNeedsRefetch} =
@@ -24,7 +25,10 @@ export default function WalletsScreen() {
   } = useFetch<WalletsResponse>("/wallets");
 
   useEffect(() => {
-    if (fetchedData?.data) setWalletsData(fetchedData.data);
+    if (fetchedData?.data) {
+      setWalletsData(fetchedData.data);
+      saveWalletsToCache(fetchedData.data);
+    }
   }, [fetchedData, setWalletsData]);
 
   useEffect(() => {
