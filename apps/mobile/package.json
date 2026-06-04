@@ -5,11 +5,17 @@
   "scripts": {
     "start": "expo start",
     "prebuild:dev": "APP_VARIANT=development npx expo prebuild --platform android --clean",
+    "prebuild:dev:windows": "set APP_VARIANT=development&& npx expo prebuild --platform android --clean",
     "prebuild:prod": "APP_VARIANT=production npx expo prebuild --platform android --clean",
+    "prebuild:prod:windows": "set APP_VARIANT=production&& npx expo prebuild --platform android --clean",
     "build:dev": "pnpm prebuild:dev && eas build --profile development --platform android",
+    "build:dev:windows": "pnpm prebuild:dev:windows && eas build --profile development --platform android",
     "build:public": "pnpm prebuild:prod && eas build --profile public-apk --platform android",
+    "build:public:windows": "pnpm prebuild:prod:windows && eas build --profile public-apk --platform android",
     "build-local:dev": "pnpm build:dev --local --output='./builds/AturKeuangan-Dev.apk'",
     "build-local:public": "pnpm build:public --local --output='./builds/AturKeuangan-Public.apk'",
+    "build-local:dev:windows": "pnpm prebuild:dev:windows && cd android && gradlew assembleDebug && cd .. && (if not exist builds mkdir builds) && copy android\\app\\build\\outputs\\apk\\debug\\app-debug.apk builds\\AturKeuangan-Dev.apk",
+    "build-local:public:windows": "pnpm prebuild:prod:windows && cd android && gradlew assembleRelease && cd .. && (if not exist builds mkdir builds) && copy android\\app\\build\\outputs\\apk\\release\\app-release.apk builds\\AturKeuangan-Public.apk",
     "android": "expo run:android",
     "ios": "expo run:ios"
   },
