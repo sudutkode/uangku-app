@@ -29,16 +29,16 @@ export function useNotificationAccessReminder(enabled: boolean) {
         setShowReminder(true);
       }
     } catch {
-      // Gagal cek — skip agar tidak mengganggu user
+      // Handle failed here if needed, for now we just won't show the reminder
     }
   }, [enabled]);
 
-  // Cek saat pertama kali mount (user sudah login)
+  // Cek first time on mount
   useEffect(() => {
     check();
   }, [check]);
 
-  // Cek setiap kali app kembali ke foreground
+  // Cek every time app comes to foreground
   useEffect(() => {
     const sub = AppState.addEventListener(
       "change",

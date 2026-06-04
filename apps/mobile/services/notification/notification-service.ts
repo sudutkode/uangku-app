@@ -6,14 +6,14 @@ import * as Notifications from "expo-notifications";
 import * as TaskManager from "expo-task-manager";
 import {AppRegistry, Platform} from "react-native";
 
-import useWalletsStore from "@/store/use-wallets-store";
 import {processNotificationResponseInternal} from "./handler";
 import {TransactionParser} from "./parser";
 import {setupNotificationCategories, setupNotificationChannel} from "./setup";
 import {syncPendingTransactions} from "./sync";
 import {RawAndroidNotification} from "./types";
+import {getWalletsFromCache} from "@/lib/wallet-cache";
 
-// ─── EXPORTS (TIDAK BOLEH BERUBAH) ───────────────────────────────────────────
+// ─── EXPORTS (FORBIDDEN TO MODIFY) ───────────────────────────────────────────
 
 export const processNotificationResponse = processNotificationResponseInternal;
 export {
@@ -26,7 +26,7 @@ export {
 
 const BACKGROUND_NOTIFICATION_TASK = "BACKGROUND-TRANSACTION-ACTION";
 
-// ─── BACKGROUND TASK (WAJIB DI SINI) ─────────────────────────────────────────
+// ─── BACKGROUND TASK (MUST BE HERE) ─────────────────────────────────────────
 
 TaskManager.defineTask(
   BACKGROUND_NOTIFICATION_TASK,
@@ -42,7 +42,7 @@ if (Platform.OS === "android") {
   Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK).catch(() => {});
 }
 
-// ─── HEADLESS LISTENER (WAJIB DI SINI) ───────────────────────────────────────
+// ─── HEADLESS LISTENER (MUST BE HERE) ───────────────────────────────────────
 
 const headlessNotificationListener = async ({
   notification,
@@ -75,12 +75,11 @@ const headlessNotificationListener = async ({
 
     const transactionTypeId = TransactionParser.detectType(title, text);
 
-    // ─── Cek dompet yang cocok dengan appName notifikasi ───────────────────
-    const matchedWallet = useWalletsStore
-      .getState()
-      .wallets.find(
-        (w) => w.appName?.toLowerCase() === appName,
-      );
+    const cachedWallets = await getWalletsFromCache();
+    const matchedWallet = cachedWallets.find(
+      (w) => w.appName?.toLowerCase() === appName,
+    );
+
     if (!matchedWallet) {
       await Notifications.scheduleNotificationAsync({
         content: {
