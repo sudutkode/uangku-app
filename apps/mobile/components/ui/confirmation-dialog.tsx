@@ -19,7 +19,7 @@ const ConfirmationDialog: FC<ConfirmationDialogProps> = ({
   withAlert,
   confirmText = "Ya",
   cancelText = "Batal",
-  isDestructive = false,
+  isDestructive = true,
   ...props
 }) => {
   const {colors} = useTheme();

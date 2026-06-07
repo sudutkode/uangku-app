@@ -4,7 +4,7 @@ import {AppState, AppStateStatus} from "react-native";
 import RNAndroidNotificationListener from "react-native-android-notification-listener";
 
 const STORAGE_KEY = "notification_access_last_reminded";
-const REMINDER_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 jam
+const REMINDER_INTERVAL_MS = 6 * 60 * 60 * 1000; // every 6 hours
 
 export function useNotificationAccessReminder(enabled: boolean) {
   const [showReminder, setShowReminder] = useState(false);
