@@ -8,7 +8,7 @@ export default ({config}: ConfigContext): ExpoConfig => {
     // Name displayed on the Home Screen
     name: IS_DEV ? "Atur Keuangan (Dev)" : "Atur Keuangan",
     slug: "atur-keuangan",
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: IS_DEV ? "aturkeuangan-dev" : "aturkeuangan",
